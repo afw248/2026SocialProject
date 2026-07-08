@@ -16,7 +16,7 @@ namespace ChangJun.Craft
     {
         [Header("설정")]
         [Tooltip("한 번에 선택 가능한 최대 재료 수")]
-        [SerializeField] private int _maxSlots = 2;
+        [SerializeField] private int _maxSlots = 3;
 
         [Tooltip("금기 위반 패널티 (환불 금액)")]
         [SerializeField] private int _tabooPenalty = 100;

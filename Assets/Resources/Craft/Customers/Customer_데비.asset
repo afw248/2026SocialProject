@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e35f15bdf7190948864b69c829097b4, type: 3}
+  m_Name: "Customer_\uB370\uBE44"
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.CraftCustomerSO
+  customerName: "\uB370\uBE44"
+  orderLine: "\uC18C\uB294\u2026 \uC548 \uB3FC\uC694. \uC57C\uCC44 \uB9E4\uC6B4 \uAC70
+    \uC8FC\uC138\uC694."
+  diet: 4
+  requiredMenu: {fileID: 11400000, guid: f9e506ded82a4ab4cb7a3396ba94f141, type: 2}

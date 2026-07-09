@@ -18,3 +18,4 @@ MonoBehaviour:
   - CUR
   - CHK
   price: 300
+  cultureGroup: 1

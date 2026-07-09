@@ -18,3 +18,4 @@ MonoBehaviour:
   - TFU
   - EGG
   price: 300
+  cultureGroup: 1

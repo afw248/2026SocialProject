@@ -13,5 +13,8 @@ namespace ChangJun.Judge
 
         /// <summary>선택 재료가 어느 메뉴와도 일치하지 않음 → 재료비 손실만</summary>
         WrongRecipe,
+
+        /// <summary>유효 메뉴이나 손님 주문과 불일치 → 이해도 감소</summary>
+        WrongOrder,
     }
 }

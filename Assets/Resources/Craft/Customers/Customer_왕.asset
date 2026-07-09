@@ -17,3 +17,4 @@ MonoBehaviour:
     \uC88B\uC544."
   diet: 0
   requiredMenu: {fileID: 11400000, guid: fdcb392382ea4c44cb5964b47d83b3ce, type: 2}
+  cultureGroup: 1

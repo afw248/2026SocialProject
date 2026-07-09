@@ -17,5 +17,11 @@ namespace ChangJun.Data
 
         [Tooltip("이 재료가 금기인 식이 — 비트 조합 가능")]
         public Diet forbiddenIn;
+
+        [Header("이해도 / 경제")]
+        public CultureGroup cultureGroup;
+        [Range(0, 100)] public int unlockThreshold;
+        public int purchasePrice = 50;
+        public bool isStarterUnlocked;
     }
 }

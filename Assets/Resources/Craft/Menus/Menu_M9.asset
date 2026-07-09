@@ -18,3 +18,4 @@ MonoBehaviour:
   - PRK
   - BRT
   price: 350
+  cultureGroup: 1

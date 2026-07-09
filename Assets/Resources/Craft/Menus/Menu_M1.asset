@@ -18,3 +18,4 @@ MonoBehaviour:
   - HBF
   - SPC
   price: 300
+  cultureGroup: 2

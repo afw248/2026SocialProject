@@ -15,3 +15,7 @@ MonoBehaviour:
   code: SPC
   displayName: "\uB9E4\uC6B4\uC591\uB150"
   forbiddenIn: 0
+  cultureGroup: 2
+  unlockThreshold: 35
+  purchasePrice: 30
+  isStarterUnlocked: 0

@@ -40,7 +40,11 @@ namespace ChangJun.Judge
                     return CraftResult.TabooViolation;
             }
 
-            // 3. 레시피 일치 + 금기 없음 → 성공
+            // 3. 손님이 요청한 메뉴와 일치하는가
+            if (customer.requiredMenu != null && matched != customer.requiredMenu)
+                return CraftResult.WrongOrder;
+
+            // 4. 레시피 일치 + 금기 없음 + 주문 일치 → 성공
             return CraftResult.Success;
         }
     }

@@ -15,3 +15,7 @@ MonoBehaviour:
   code: PRK
   displayName: "\uB3FC\uC9C0\uACE0\uAE30"
   forbiddenIn: 7
+  cultureGroup: 1
+  unlockThreshold: 50
+  purchasePrice: 80
+  isStarterUnlocked: 0

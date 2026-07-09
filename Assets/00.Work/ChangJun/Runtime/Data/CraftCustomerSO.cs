@@ -22,5 +22,8 @@ namespace ChangJun.Data
 
         [Tooltip("손님이 요구하는 메뉴")]
         public MenuRecipeSO requiredMenu;
+
+        [Tooltip("이해도·뉴스 대상 문화")]
+        public CultureGroup cultureGroup;
     }
 }

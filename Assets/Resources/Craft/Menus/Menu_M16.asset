@@ -19,3 +19,4 @@ MonoBehaviour:
   - CUR
   - VEG
   price: 600
+  cultureGroup: 1

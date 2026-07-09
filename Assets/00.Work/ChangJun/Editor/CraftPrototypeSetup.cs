@@ -137,26 +137,27 @@ namespace ChangJun.Editor
 
         private static void CreateCustomers()
         {
-            CreateCustomer("아이샤",   "안녕하세요… 저 돼지 안 돼요. 매운 고기 밥 있어요?",           Diet.Halal, "M1");
-            CreateCustomer("압둘라",   "할랄 있어요? 매운 고기 밥 주세요.",                           Diet.Halal, "M1");
-            CreateCustomer("응웬",     "저기… 돈 많이 없어요. 밥이랑 계란… 싼 거 돼요?",               Diet.None,  "M3");
-            CreateCustomer("첸",       "두부… 계란… 담백한 거 좋아요.",                               Diet.None,  "M4");
-            CreateCustomer("김상철",   "김치 계란 제육. 빨리요.",                                      Diet.None,  "M5");
-            CreateCustomer("박영자",   "늘 먹던 김치 계란으로 줘요.",                                  Diet.None,  "M5");
-            CreateCustomer("미나",     "커리 치킨? 그거 인기래요.",                                    Diet.None,  "M6");
-            CreateCustomer("라라",     "따뜻한 국물… 고기… 힘든 날이에요.",                            Diet.None,  "M9");
-            CreateCustomer("사라",     "동물성은 다 빼주세요. 계란도, 젓갈도요. 김치 되나요?",         Diet.Vegan, "M2");
-            CreateCustomer("유코",     "치즈랑… 새우? 그거 있어요? 인터넷에서 봤어요.",               Diet.None,  "M8");
-            CreateCustomer("데비",     "소는… 안 돼요. 야채 매운 거 주세요.",                          Diet.Hindu, "M7");
-            CreateCustomer("그린",     "완전 채식이요. 두부, 콩나물, 야채. 깔끔하게.",                 Diet.Vegan, "M11");
-            CreateCustomer("마르코",   "치즈! 김치! 퓨전 좋아요. 야채도 넣어줘요.",                     Diet.None,  "M10");
-            CreateCustomer("하산",     "저… 돼지 없는 거… 고기 밥…",                                   Diet.Halal, "M1");
-            CreateCustomer("왕",       "매운 거! 김치 계란 매운 거 좋아.",                             Diet.None,  "M5");
-            CreateCustomer("로사",     "채소 국밥 따뜻한 거요. 오늘 추워서.",                          Diet.Vegan, "M15");
-            CreateCustomer("이수진",   "다문화 상생 인증 매장이라 들었어요. 상생 컵밥 주세요.",         Diet.None,  "M16");
+            CreateCustomer("아이샤", "안녕하세요… 저 돼지 안 돼요. 매운 고기 밥 있어요?", Diet.Halal, CultureGroup.Muslim, "M1");
+            CreateCustomer("압둘라", "할랄 있어요? 매운 고기 밥 주세요.", Diet.Halal, CultureGroup.Muslim, "M1");
+            CreateCustomer("응웬", "저기… 돈 많이 없어요. 밥이랑 계란… 싼 거 돼요?", Diet.None, CultureGroup.SEAsian, "M3");
+            CreateCustomer("첸", "두부… 계란… 담백한 거 좋아요.", Diet.None, CultureGroup.Korean, "M4");
+            CreateCustomer("김상철", "김치 계란 제육. 빨리요.", Diet.None, CultureGroup.Korean, "M5");
+            CreateCustomer("박영자", "늘 먹던 김치 계란으로 줘요.", Diet.None, CultureGroup.Korean, "M5");
+            CreateCustomer("미나", "커리 치킨? 그거 인기래요.", Diet.None, CultureGroup.Korean, "M6");
+            CreateCustomer("라라", "따뜻한 국물… 고기… 힘든 날이에요.", Diet.None, CultureGroup.Korean, "M9");
+            CreateCustomer("사라", "동물성은 다 빼주세요. 계란도, 젓갈도요. 김치 되나요?", Diet.Vegan, CultureGroup.Vegan, "M2");
+            CreateCustomer("유코", "치즈랑… 새우? 그거 있어요? 인터넷에서 봤어요.", Diet.None, CultureGroup.Korean, "M8");
+            CreateCustomer("데비", "소는… 안 돼요. 야채 매운 거 주세요.", Diet.Hindu, CultureGroup.Hindu, "M7");
+            CreateCustomer("그린", "완전 채식이요. 두부, 콩나물, 야채. 깔끔하게.", Diet.Vegan, CultureGroup.Vegan, "M11");
+            CreateCustomer("마르코", "치즈! 김치! 퓨전 좋아요. 야채도 넣어줘요.", Diet.None, CultureGroup.Korean, "M10");
+            CreateCustomer("하산", "저… 돼지 없는 거… 고기 밥…", Diet.Halal, CultureGroup.Muslim, "M1");
+            CreateCustomer("왕", "매운 거! 김치 계란 매운 거 좋아.", Diet.None, CultureGroup.Korean, "M5");
+            CreateCustomer("로사", "채소 국밥 따뜻한 거요. 오늘 추워서.", Diet.Vegan, CultureGroup.Vegan, "M15");
+            CreateCustomer("이수진", "다문화 상생 인증 매장이라 들었어요. 상생 컵밥 주세요.", Diet.None, CultureGroup.Korean, "M16");
         }
 
-        private static void CreateCustomer(string customerName, string orderLine, Diet diet, string menuCode)
+        private static void CreateCustomer(string customerName, string orderLine, Diet diet,
+            CultureGroup culture, string menuCode)
         {
             string path = $"{CusDir}/Customer_{customerName}.asset";
             var menu = AssetDatabase.LoadAssetAtPath<MenuRecipeSO>($"{MenuDir}/Menu_{menuCode}.asset");

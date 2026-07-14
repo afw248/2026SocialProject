@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af5865ff24179a4a926b8a1b16a3ab9, type: 3}
+  m_Name: DayConfig
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.DayConfigSO
+  openHour: 10
+  closeHour: 21
+  morningHour: 8
+  passiveMinutesPerRealSecond: 0.45
+  minutesPerCustomerMin: 10
+  minutesPerCustomerMax: 18
+  minutesPerCustomer: 12
+  understandingGainOnSuccess: 8
+  understandingLossOnWrongOrder: 5
+  understandingLossOnTaboo: 5
+  understandingLossOnWrongRecipe: 2
+  starterStockPerIngredient: 5
+  expressDeliveryMinutes: 30
+  economyDeliveryMinutes: 60
+  expressDeliveryPriceMultiplier: 2

@@ -15,3 +15,7 @@ MonoBehaviour:
   code: TFU
   displayName: "\uB450\uBD80"
   forbiddenIn: 0
+  cultureGroup: 4
+  unlockThreshold: 0
+  purchasePrice: 45
+  isStarterUnlocked: 1

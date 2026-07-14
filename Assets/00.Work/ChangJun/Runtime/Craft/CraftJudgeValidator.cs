@@ -51,11 +51,17 @@ namespace ChangJun.Craft
 
             var book = new RecipeBook(menus);
 
-            // Case 1: Success (HBF+SPC)
+            // Case 1: Success (HBF+SPC) — requires unlocked ingredients; judge only
             var sel1 = new List<IngredientSO> { ingMap["HBF"], ingMap["SPC"] };
             var r1   = RecipeJudge.Judge(sel1, aisha, book, out var m1);
             bool ok1 = r1 == CraftResult.Success;
             Debug.Log($"[Validator] CASE1 expect=Success actual={r1} menu={m1?.displayName} PASS={ok1}");
+
+            // Case 4: WrongOrder (valid M3 served to Aisha who wants M1)
+            var sel4 = new List<IngredientSO> { ingMap["EGG"], ingMap["VEG"] };
+            var r4 = RecipeJudge.Judge(sel4, aisha, book, out var m4);
+            bool ok4 = r4 == CraftResult.WrongOrder;
+            Debug.Log($"[Validator] CASE4 expect=WrongOrder actual={r4} menu={m4?.displayName} PASS={ok4}");
 
             // Case 2: TabooViolation (PRK+BRT to Halal customer)
             var sel2 = new List<IngredientSO> { ingMap["PRK"], ingMap["BRT"] };
@@ -80,7 +86,7 @@ namespace ChangJun.Craft
                 Debug.Log($"[Validator] MONEY before={before} after={after} delta={after-before} PASS={okMoney}");
             }
 
-            bool allPass = ok1 && ok2 && ok3;
+            bool allPass = ok1 && ok2 && ok3 && ok4;
             string summary = allPass ? "ALL_PASS" : "SOME_FAIL";
             Debug.Log($"[Validator] FINAL={summary}");
 
@@ -98,6 +104,7 @@ namespace ChangJun.Craft
             sb.AppendLine($"CASE1 expect=Success      actual={r1} PASS={ok1}  menu={m1?.displayName ?? "null"}");
             sb.AppendLine($"CASE2 expect=TabooVio.    actual={r2} PASS={ok2}  menu={m2?.displayName ?? "null"}");
             sb.AppendLine($"CASE3 expect=WrongRecipe  actual={r3} PASS={ok3}  menu={m3?.displayName ?? "null"}");
+            sb.AppendLine($"CASE4 expect=WrongOrder   actual={r4} PASS={ok4}  menu={m4?.displayName ?? "null"}");
             if (MoneyManager.Instance != null)
                 sb.AppendLine($"MONEY before={MoneyManager.Instance.Money - (m1!=null?m1.price:300)} after={MoneyManager.Instance.Money}");
             sb.AppendLine($"PersistentDataPath={Application.persistentDataPath}");

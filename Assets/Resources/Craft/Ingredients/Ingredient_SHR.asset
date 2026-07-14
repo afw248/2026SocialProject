@@ -15,3 +15,7 @@ MonoBehaviour:
   code: SHR
   displayName: "\uC0C8\uC6B0"
   forbiddenIn: 2
+  cultureGroup: 5
+  unlockThreshold: 60
+  purchasePrice: 110
+  isStarterUnlocked: 0

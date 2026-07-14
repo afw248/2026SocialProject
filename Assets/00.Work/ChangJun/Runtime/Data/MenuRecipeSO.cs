@@ -21,5 +21,8 @@ namespace ChangJun.Data
 
         [Tooltip("판매 가격(원)")]
         public int price;
+
+        [Tooltip("주문·뉴스 대상 문화")]
+        public CultureGroup cultureGroup;
     }
 }

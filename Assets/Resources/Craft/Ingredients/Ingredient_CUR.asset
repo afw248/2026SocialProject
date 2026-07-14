@@ -15,3 +15,7 @@ MonoBehaviour:
   code: CUR
   displayName: "\uCEE4\uB9AC\uD5A5\uC2E0\uB8CC"
   forbiddenIn: 0
+  cultureGroup: 3
+  unlockThreshold: 45
+  purchasePrice: 55
+  isStarterUnlocked: 0

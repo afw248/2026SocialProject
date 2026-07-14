@@ -15,3 +15,7 @@ MonoBehaviour:
   code: BSP
   displayName: "\uCF69\uB098\uBB3C"
   forbiddenIn: 0
+  cultureGroup: 4
+  unlockThreshold: 20
+  purchasePrice: 25
+  isStarterUnlocked: 1

@@ -16,3 +16,4 @@ MonoBehaviour:
   orderLine: "\uB298 \uBA39\uB358 \uAE40\uCE58 \uACC4\uB780\uC73C\uB85C \uC918\uC694."
   diet: 0
   requiredMenu: {fileID: 11400000, guid: fdcb392382ea4c44cb5964b47d83b3ce, type: 2}
+  cultureGroup: 1

@@ -15,3 +15,7 @@ MonoBehaviour:
   code: HBF
   displayName: "\uD560\uB784 \uC18C\uACE0\uAE30"
   forbiddenIn: 6
+  cultureGroup: 2
+  unlockThreshold: 40
+  purchasePrice: 120
+  isStarterUnlocked: 0

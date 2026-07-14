@@ -15,3 +15,7 @@ MonoBehaviour:
   code: BRT
   displayName: "\uC721\uC218(\uCC44\uC218)"
   forbiddenIn: 0
+  cultureGroup: 1
+  unlockThreshold: 25
+  purchasePrice: 40
+  isStarterUnlocked: 1

@@ -1,4 +1,5 @@
 using System;
+using ChangJun.Economy;
 using ChangJun.Time;
 using TMPro;
 using UnityEngine;
@@ -85,6 +86,16 @@ namespace ChangJun.Bootstrap
             sb.AppendLine($"재료 비용: {ledger.IngredientCost:N0}원");
             sb.AppendLine($"패널티: {ledger.PenaltyLoss:N0}원");
             sb.AppendLine($"구매 비용: {ledger.PurchaseCost:N0}원");
+            if (ledger.StockPurchaseCost > 0)
+                sb.AppendLine($"주식 매수: {ledger.StockPurchaseCost:N0}원");
+            if (ledger.StockSaleRevenue > 0)
+                sb.AppendLine($"주식 매도: {ledger.StockSaleRevenue:N0}원");
+            if (StockMarketManager.Instance != null)
+            {
+                int portfolio = StockMarketManager.Instance.GetPortfolioValue();
+                if (portfolio > 0)
+                    sb.AppendLine($"보유 주식 평가: {portfolio:N0}원");
+            }
             sb.AppendLine($"손님 수: {ledger.CustomersServed}명");
             sb.AppendLine();
             sb.AppendLine($"<b>순이익: {ledger.NetProfit:N0}원</b>");

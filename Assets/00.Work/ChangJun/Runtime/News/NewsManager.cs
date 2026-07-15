@@ -15,8 +15,10 @@ namespace ChangJun.News
         private readonly Dictionary<CultureGroup, float> _multipliers = new();
         private List<NewsSO> _newsPool = new();
         private NewsSO _todayNews;
+        private readonly List<NewsSO> _todaySideStories = new();
 
         public NewsSO TodayNews => _todayNews;
+        public IReadOnlyList<NewsSO> TodaySideStories => _todaySideStories;
 
         public event Action<NewsSO> OnNewsPublished;
 
@@ -44,11 +46,13 @@ namespace ChangJun.News
         public void RollDailyNews()
         {
             _todayNews = PickWeightedNews();
+            _todaySideStories.Clear();
             ResetMultipliers();
 
             if (_todayNews == null) return;
 
             _multipliers[_todayNews.cultureGroup] = _todayNews.priceMultiplier;
+            PickSideStories(_todayNews, 2);
             OnNewsPublished?.Invoke(_todayNews);
         }
 
@@ -61,6 +65,23 @@ namespace ChangJun.News
 
         public float GetMultiplier(CultureGroup culture) =>
             _multipliers.TryGetValue(culture, out var m) ? m : 1f;
+
+        private void PickSideStories(NewsSO main, int count)
+        {
+            var candidates = new List<NewsSO>();
+            foreach (var n in _newsPool)
+            {
+                if (n != null && n != main)
+                    candidates.Add(n);
+            }
+
+            while (_todaySideStories.Count < count && candidates.Count > 0)
+            {
+                int idx = UnityEngine.Random.Range(0, candidates.Count);
+                _todaySideStories.Add(candidates[idx]);
+                candidates.RemoveAt(idx);
+            }
+        }
 
         private NewsSO PickWeightedNews()
         {

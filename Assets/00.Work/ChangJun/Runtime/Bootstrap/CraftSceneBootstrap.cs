@@ -170,6 +170,10 @@ namespace ChangJun.Bootstrap
 
                 new GameObject("News").AddComponent<NewsManager>();
 
+            if (StockMarketManager.Instance == null)
+
+                new GameObject("StockMarket").AddComponent<StockMarketManager>();
+
             if (Delivery.DeliveryManager.Instance == null)
 
                 new GameObject("Delivery").AddComponent<Delivery.DeliveryManager>();
@@ -457,6 +461,8 @@ namespace ChangJun.Bootstrap
         {
 
             NewsManager.Instance.RollDailyNews();
+
+            StockMarketManager.Instance?.RollDailyMarket(NewsManager.Instance.TodayNews);
 
             if (!_newsOverlay.TryShow(BeginBusinessAfterMorning))
 

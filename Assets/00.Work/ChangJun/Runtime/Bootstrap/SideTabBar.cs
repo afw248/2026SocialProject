@@ -105,6 +105,13 @@ namespace ChangJun.Bootstrap
             var captured = tab;
             btn.onClick.AddListener(() =>
             {
+                if (captured == _current && captured != MainTab.Craft)
+                {
+                    SelectTab(MainTab.Craft);
+                    onTabSelected?.Invoke(MainTab.Craft);
+                    return;
+                }
+
                 SelectTab(captured);
                 onTabSelected?.Invoke(captured);
             });

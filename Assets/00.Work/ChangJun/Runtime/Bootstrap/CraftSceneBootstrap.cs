@@ -50,6 +50,8 @@ namespace ChangJun.Bootstrap
 
         private CraftHudPresenter _hud;
 
+        private MemoPadPanel _memoPanel;
+
         private CustomerOrderBubble _orderBubble;
 
         private StatusPanel _statusPanel;
@@ -218,6 +220,10 @@ namespace ChangJun.Bootstrap
 
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
+            canvas.sortingOrder = 0;
+
+            canvas.overrideSorting = true;
+
 
 
             var scaler = canvasGo.AddComponent<CanvasScaler>();
@@ -233,6 +239,10 @@ namespace ChangJun.Bootstrap
 
 
             var root = canvasGo.transform as RectTransform;
+
+
+
+            CreateBackground();
 
 
 
@@ -256,7 +266,7 @@ namespace ChangJun.Bootstrap
 
 
 
-            var memoPanel = new MemoPadPanel(_contentArea);
+            _memoPanel = new MemoPadPanel(_contentArea);
 
             var recipePanel = new RecipeBookPanel(_contentArea, _menus, _ingredients);
 
@@ -268,7 +278,7 @@ namespace ChangJun.Bootstrap
 
             _tabBar.RegisterPanel(MainTab.Craft, _hud.CraftRoot.gameObject);
 
-            _tabBar.RegisterPanel(MainTab.Memo, memoPanel.Root);
+            _tabBar.RegisterPanel(MainTab.Memo, _memoPanel.Root);
 
             _tabBar.RegisterPanel(MainTab.Recipe, recipePanel.Root);
 
@@ -300,6 +310,41 @@ namespace ChangJun.Bootstrap
 
 
 
+        private static void CreateBackground()
+        {
+            var canvasGo = new GameObject("BackgroundCanvas");
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = -100;
+            canvas.overrideSorting = true;
+
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var root = canvasGo.GetComponent<RectTransform>();
+            UiFactory.Stretch(root);
+
+            var bg = UiFactory.CreateStretchChild(root, "Background");
+            var img = bg.gameObject.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.preserveAspect = false;
+            img.color = Color.white;
+
+            var sprite = Resources.Load<Sprite>("Craft/Sprites/CraftBackground");
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.type = Image.Type.Simple;
+            }
+            else
+            {
+                img.color = new Color(0.08f, 0.08f, 0.12f, 1f);
+                Debug.LogWarning("[Bootstrap] CraftBackground 스프라이트를 찾지 못했습니다.");
+            }
+        }
+
         private void HandleTabSelected(MainTab tab)
 
         {
@@ -328,7 +373,7 @@ namespace ChangJun.Bootstrap
 
             _morningDelivery.OnReceived += OnMorningReceived;
 
-            _hud.OnDeliveryRequested += () => _expressDelivery.Show(_ingredients);
+            _hud.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
 
             var express = ExpressDeliveryService.Instance;
 
@@ -452,6 +497,8 @@ namespace ChangJun.Bootstrap
 
             ExpressDeliveryService.Instance?.ResetForNewDay();
 
+            _memoPanel?.ClearOrderHistory();
+
         }
 
 
@@ -525,6 +572,8 @@ namespace ChangJun.Bootstrap
         {
 
             _orderAccepted = true;
+
+            _memoPanel?.RecordCustomerOrder(_controller.CurrentCustomer);
 
             if (DayLoopController.Instance.Phase == DayPhase.Open)
 

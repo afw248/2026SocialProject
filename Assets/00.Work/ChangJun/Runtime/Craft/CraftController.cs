@@ -55,12 +55,16 @@ namespace ChangJun.Craft
                 Debug.Log($"[CraftController] 재고 없음: {ingredient.code}");
                 return;
             }
-            if (_selected.Count >= _maxSlots) return;
-
             foreach (var ing in _selected)
             {
-                if (ing.code == ingredient.code) return;
+                if (ing.code == ingredient.code)
+                {
+                    DeselectIngredient(ingredient);
+                    return;
+                }
             }
+
+            if (_selected.Count >= _maxSlots) return;
 
             _selected.Add(ingredient);
             OnSelectionChanged?.Invoke(_selected);
@@ -68,6 +72,7 @@ namespace ChangJun.Craft
 
         public void DeselectIngredient(IngredientSO ingredient)
         {
+            if (!_phaseAllowsCraft) return;
             _selected.Remove(ingredient);
             OnSelectionChanged?.Invoke(_selected);
         }

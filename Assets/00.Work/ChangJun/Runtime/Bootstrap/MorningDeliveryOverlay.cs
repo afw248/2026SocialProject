@@ -36,7 +36,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.Center, 22,
                 new Color(0.15f, 0.15f, 0.2f));
-            _bodyText.enableWordWrapping = true;
+            _bodyText.textWrappingMode = TextWrappingModes.Normal;
 
             var btnRt = UiFactory.CreatePanel(panel, "Btn",
                 new Vector2(0.25f, 0.08f), new Vector2(0.75f, 0.2f),

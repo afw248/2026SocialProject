@@ -13,6 +13,8 @@ namespace ChangJun.Bootstrap
 {
     public sealed class IngredientShopOverlay
     {
+        private const int PurchasePackSize = 10;
+
         private readonly GameObject _root;
         private readonly RectTransform _gridContent;
         private readonly RectTransform _cartListContent;
@@ -239,9 +241,9 @@ namespace ChangJun.Bootstrap
             minusBtn.targetGraphic = minusRt.gameObject.AddComponent<Image>();
             minusBtn.targetGraphic.color = new Color(0.85f, 0.85f, 0.9f);
             string code = ing.code;
-            minusBtn.onClick.AddListener(() => AdjustCart(code, -1));
-            UiFactory.CreateText(minusRt, "T", "-", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 24);
+            minusBtn.onClick.AddListener(() => AdjustCart(code, -PurchasePackSize));
+            UiFactory.CreateText(minusRt, "T", $"-{PurchasePackSize}", Vector2.zero, Vector2.one,
+                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 18);
 
             var plusRt = UiFactory.CreatePanel(card, "Plus",
                 new Vector2(0.52f, 0.08f), new Vector2(0.75f, 0.34f),
@@ -249,9 +251,9 @@ namespace ChangJun.Bootstrap
             var plusBtn = plusRt.gameObject.AddComponent<Button>();
             plusBtn.targetGraphic = plusRt.gameObject.AddComponent<Image>();
             plusBtn.targetGraphic.color = new Color(0.85f, 0.9f, 0.85f);
-            plusBtn.onClick.AddListener(() => AdjustCart(code, 1));
-            UiFactory.CreateText(plusRt, "T", "+", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 24);
+            plusBtn.onClick.AddListener(() => AdjustCart(code, PurchasePackSize));
+            UiFactory.CreateText(plusRt, "T", $"+{PurchasePackSize}", Vector2.zero, Vector2.one,
+                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 18);
         }
 
         private void AdjustCart(string code, int delta)

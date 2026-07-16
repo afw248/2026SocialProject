@@ -176,7 +176,7 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.TopLeft, 40,
                 new Color(0.07f, 0.05f, 0.04f));
             _headline.fontStyle = FontStyles.Bold;
-            _headline.enableWordWrapping = true;
+            _headline.textWrappingMode = TextWrappingModes.Normal;
             _headline.lineSpacing = -6f;
 
             _subheadline = UiFactory.CreateText(page.transform, "Subhead", "",
@@ -185,7 +185,7 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.TopLeft, 20,
                 new Color(0.28f, 0.24f, 0.2f));
             _subheadline.fontStyle = FontStyles.Italic;
-            _subheadline.enableWordWrapping = true;
+            _subheadline.textWrappingMode = TextWrappingModes.Normal;
 
             var colRule = UiFactory.CreatePanel(page.transform, "ColRule",
                 new Vector2(0.66f, 0.04f), new Vector2(0.662f, 0.68f),
@@ -197,7 +197,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 19,
                 new Color(0.16f, 0.14f, 0.12f));
-            _articleBody.enableWordWrapping = true;
+            _articleBody.textWrappingMode = TextWrappingModes.Normal;
             _articleBody.lineSpacing = 4f;
 
             var sideBox = UiFactory.CreatePanel(page.transform, "SideBox",
@@ -233,7 +233,7 @@ namespace ChangJun.Bootstrap
             _sidebarText.fontSize = 14;
             _sidebarText.color = new Color(0.2f, 0.18f, 0.15f);
             _sidebarText.alignment = TextAlignmentOptions.TopLeft;
-            _sidebarText.enableWordWrapping = true;
+            _sidebarText.textWrappingMode = TextWrappingModes.Normal;
             _sidebarText.lineSpacing = 2f;
             _sidebarText.raycastTarget = false;
             KoreanUiFont.Apply(_sidebarText);
@@ -252,7 +252,7 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.02f, 0.05f), new Vector2(0.98f, 0.95f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 15, new Color(0.9f, 0.92f, 0.95f));
-            _tickerStrip.enableWordWrapping = true;
+            _tickerStrip.textWrappingMode = TextWrappingModes.Normal;
 
             return page;
         }
@@ -275,7 +275,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 16,
                 new Color(0.25f, 0.22f, 0.18f));
-            _marketHeader.enableWordWrapping = true;
+            _marketHeader.textWrappingMode = TextWrappingModes.Normal;
 
             _portfolioText = UiFactory.CreateText(page.transform, "Portfolio", "",
                 new Vector2(0.02f, 0.77f), new Vector2(0.98f, 0.83f),
@@ -345,7 +345,7 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.TopLeft, 30,
                 new Color(0.1f, 0.08f, 0.06f));
             _briefingHeadline.fontStyle = FontStyles.Bold;
-            _briefingHeadline.enableWordWrapping = true;
+            _briefingHeadline.textWrappingMode = TextWrappingModes.Normal;
 
             var box = UiFactory.CreatePanel(page.transform, "BriefBox",
                 new Vector2(0.02f, 0.04f), new Vector2(0.98f, 0.76f),
@@ -357,7 +357,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 22,
                 new Color(0.18f, 0.16f, 0.14f));
-            _briefingBody.enableWordWrapping = true;
+            _briefingBody.textWrappingMode = TextWrappingModes.Normal;
             _briefingBody.lineSpacing = 6f;
 
             return page;
@@ -530,7 +530,7 @@ namespace ChangJun.Bootstrap
             for (int i = 0; i < sides.Count; i++)
             {
                 var s = sides[i];
-                sb.AppendLine($"▸ {s.headline}");
+                sb.AppendLine($"- {s.headline}");
                 sb.AppendLine(string.IsNullOrWhiteSpace(s.body) ? s.subheadline : s.body);
                 sb.AppendLine();
             }
@@ -553,18 +553,18 @@ namespace ChangJun.Bootstrap
         private static string BuildEffectBlock(NewsSO news)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"▶ 영향 문화권: {CultureLabel(news.cultureGroup)}");
-            sb.AppendLine($"▶ 보도 톤: {SentimentLabel(news.sentiment)} ({news.sectionTag})");
+            sb.AppendLine($"> 영향 문화권: {CultureLabel(news.cultureGroup)}");
+            sb.AppendLine($"> 보도 톤: {SentimentLabel(news.sentiment)} ({news.sectionTag})");
             sb.AppendLine();
 
             string menuEffect = news.priceMultiplier >= 1f
-                ? $"해당 문화권 메뉴 수요 ↑  (판매가 x{news.priceMultiplier:0.00})"
+                ? $"해당 문화권 메뉴 수요 상승  (판매가 x{news.priceMultiplier:0.00})"
                 : $"해당 문화권 손님 감소 가능  (판매가 x{news.priceMultiplier:0.00})";
             sb.AppendLine("【 가게 영향 】");
             sb.AppendLine(menuEffect);
 
             if (!string.IsNullOrEmpty(news.primaryStockCode))
-                sb.AppendLine($"▶ 관련 종목: {news.primaryStockCode}");
+                sb.AppendLine($"> 관련 종목: {news.primaryStockCode}");
 
             sb.AppendLine();
             sb.AppendLine("【 증권면 안내 】");

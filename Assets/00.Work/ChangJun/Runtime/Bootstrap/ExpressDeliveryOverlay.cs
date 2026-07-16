@@ -174,6 +174,8 @@ namespace ChangJun.Bootstrap
             service.OnOrderArrived += _ => RefreshPending();
         }
 
+        public bool IsVisible => _root.activeSelf;
+
         public void Show(IReadOnlyList<IngredientSO> ingredients)
         {
             if (DayLoopController.Instance.Phase != DayPhase.Open)
@@ -189,6 +191,12 @@ namespace ChangJun.Bootstrap
             RefreshCartTotal();
             RefreshPending();
             _root.SetActive(true);
+        }
+
+        public void Toggle(IReadOnlyList<IngredientSO> ingredients)
+        {
+            if (IsVisible) Hide();
+            else Show(ingredients);
         }
 
         public void Hide()

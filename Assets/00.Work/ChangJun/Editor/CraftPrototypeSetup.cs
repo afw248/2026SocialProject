@@ -67,7 +67,7 @@ namespace ChangJun.Editor
             so.minutesPerCustomerMin = 10;
             so.minutesPerCustomerMax = 18;
             so.minutesPerCustomer = 12;
-            so.starterStockPerIngredient = 5;
+            so.starterStockPerIngredient = 20;
             so.expressDeliveryMinutes = 30;
             so.economyDeliveryMinutes = 60;
             so.expressDeliveryPriceMultiplier = 2f;
@@ -85,10 +85,18 @@ namespace ChangJun.Editor
             CreateIngredient("VEG", "야채모둠", Diet.None, CultureGroup.Korean, 0, 35, true);
             CreateIngredient("SPC", "매운양념", Diet.None, CultureGroup.Muslim, 35, 30, false);
             CreateIngredient("CUR", "커리향신료", Diet.None, CultureGroup.Hindu, 45, 55, false);
-            CreateIngredient("BRT", "육수(채수)", Diet.None, CultureGroup.Korean, 25, 40, true);
             CreateIngredient("BSP", "콩나물", Diet.None, CultureGroup.Vegan, 20, 25, true);
             CreateIngredient("CHS", "치즈", Diet.Vegan, CultureGroup.Korean, 55, 90, false);
             CreateIngredient("SHR", "새우", Diet.Vegan, CultureGroup.SEAsian, 60, 110, false);
+            CreateIngredient("PGD", "다진돼지고기", Diet.Halal | Diet.Vegan | Diet.Hindu, CultureGroup.Korean, 45, 75, false);
+
+            // 제거된 재료 정리 (육수·마늘·계란고명)
+            foreach (var code in new[] { "BRT", "GAR", "EGN" })
+            {
+                string path = $"{IngDir}/Ingredient_{code}.asset";
+                if (AssetDatabase.LoadAssetAtPath<IngredientSO>(path) != null)
+                    AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private static void CreateIngredient(string code, string displayName, Diet forbidden,
@@ -116,14 +124,23 @@ namespace ChangJun.Editor
             CreateMenu("M6", "커리 치킨 컵밥", new[] { "CUR", "CHK" }, 300, CultureGroup.Korean);
             CreateMenu("M7", "채식 커리 컵밥", new[] { "CUR", "VEG" }, 350, CultureGroup.Hindu);
             CreateMenu("M8", "치즈 새우 컵밥", new[] { "SHR", "CHS" }, 400, CultureGroup.Korean);
-            CreateMenu("M9", "돼지국밥풍 컵밥", new[] { "PRK", "BRT" }, 350, CultureGroup.Korean);
+            CreateMenu("M9", "제육 김치 컵밥", new[] { "PRK", "KIM" }, 350, CultureGroup.Korean);
             CreateMenu("M10", "치즈 김치 컵밥", new[] { "KIM", "CHS", "VEG" }, 450, CultureGroup.Korean);
             CreateMenu("M11", "담백 두부 채소 컵밥", new[] { "TFU", "BSP", "VEG" }, 420, CultureGroup.Vegan);
             CreateMenu("M12", "매운 해물 컵밥", new[] { "SHR", "SPC", "BSP" }, 480, CultureGroup.SEAsian);
             CreateMenu("M13", "고향식 커리 컵밥", new[] { "CUR", "CHK", "BSP" }, 550, CultureGroup.Hindu);
             CreateMenu("M14", "든든 삼겹 컵밥", new[] { "PRK", "EGG", "KIM" }, 500, CultureGroup.Korean);
-            CreateMenu("M15", "채소 국밥 컵밥", new[] { "BRT", "VEG", "BSP" }, 420, CultureGroup.Vegan);
+            CreateMenu("M15", "콩나물 채소 컵밥", new[] { "BSP", "VEG" }, 280, CultureGroup.Vegan);
             CreateMenu("M16", "상생 컵밥", new[] { "TFU", "CUR", "VEG" }, 600, CultureGroup.Korean);
+            CreateMenu("M18", "다진돼지 김치 컵밥", new[] { "PGD", "KIM" }, 380, CultureGroup.Korean);
+            CreateMenu("M19", "야채 치킨 컵밥", new[] { "CHK", "VEG" }, 300, CultureGroup.Korean);
+
+            foreach (var code in new[] { "M17" })
+            {
+                string path = $"{MenuDir}/Menu_{code}.asset";
+                if (AssetDatabase.LoadAssetAtPath<MenuRecipeSO>(path) != null)
+                    AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private static void CreateMenu(string code, string displayName, string[] codes, int price, CultureGroup culture)
@@ -147,7 +164,7 @@ namespace ChangJun.Editor
             CreateCustomer("김상철", "김치 계란 제육. 빨리요.", Diet.None, CultureGroup.Korean, "M14");
             CreateCustomer("박영자", "늘 먹던 김치 계란으로 줘요.", Diet.None, CultureGroup.Korean, "M5");
             CreateCustomer("미나", "커리 치킨? 그거 인기래요.", Diet.None, CultureGroup.Korean, "M6");
-            CreateCustomer("라라", "따뜻한 국물… 고기… 힘든 날이에요.", Diet.None, CultureGroup.Korean, "M9");
+            CreateCustomer("라라", "제육에 김치… 든든한 거요. 힘든 날이에요.", Diet.None, CultureGroup.Korean, "M9");
             CreateCustomer("사라", "동물성은 다 빼주세요. 계란도, 젓갈도요. 김치 되나요?", Diet.Vegan, CultureGroup.Vegan, "M2");
             CreateCustomer("유코", "치즈랑… 새우? 그거 있어요? 인터넷에서 봤어요.", Diet.None, CultureGroup.Korean, "M8");
             CreateCustomer("데비", "소는… 안 돼요. 야채 매운 거 주세요.", Diet.Hindu, CultureGroup.Hindu, "M7");
@@ -155,8 +172,17 @@ namespace ChangJun.Editor
             CreateCustomer("마르코", "치즈! 김치! 퓨전 좋아요. 야채도 넣어줘요.", Diet.None, CultureGroup.Korean, "M10");
             CreateCustomer("하산", "저… 돼지 없는 거… 고기 밥…", Diet.Halal, CultureGroup.Muslim, "M1");
             CreateCustomer("왕", "매운 거! 김치 계란 매운 거 좋아.", Diet.None, CultureGroup.Korean, "M5");
-            CreateCustomer("로사", "채소 국밥 따뜻한 거요. 오늘 추워서.", Diet.Vegan, CultureGroup.Vegan, "M15");
+            CreateCustomer("로사", "콩나물이랑 야채요. 담백한 거.", Diet.Vegan, CultureGroup.Vegan, "M15");
             CreateCustomer("이수진", "다문화 상생 인증 매장이라 들었어요. 상생 컵밥 주세요.", Diet.None, CultureGroup.Korean, "M16");
+            CreateCustomer("현우", "다진돼지에 김치! 그거 한 그릇요.", Diet.None, CultureGroup.Korean, "M18");
+            CreateCustomer("나영", "닭고기에 야채 잔뜩. 가볍게 해주세요.", Diet.None, CultureGroup.Korean, "M19");
+
+            foreach (var name in new[] { "지우" })
+            {
+                string path = $"{CusDir}/Customer_{name}.asset";
+                if (AssetDatabase.LoadAssetAtPath<CraftCustomerSO>(path) != null)
+                    AssetDatabase.DeleteAsset(path);
+            }
         }
 
         private static void CreateCustomer(string customerName, string orderLine, Diet diet,
@@ -180,6 +206,7 @@ namespace ChangJun.Editor
             CreateThreshold("Hindu_CUR", CultureGroup.Hindu, 30, "CUR");
             CreateThreshold("Vegan_BSP", CultureGroup.Vegan, 25, "BSP");
             CreateThreshold("Korean_PRK", CultureGroup.Korean, 40, "PRK");
+            CreateThreshold("Korean_PGD", CultureGroup.Korean, 45, "PGD");
             CreateThreshold("Korean_CHS", CultureGroup.Korean, 55, "CHS");
             CreateThreshold("SEAsian_SHR", CultureGroup.SEAsian, 35, "SHR");
         }
@@ -231,7 +258,7 @@ namespace ChangJun.Editor
                 "비건은 단순히 채식을 넘어 난·우유·꿀·젤라틴 등 동물 유래 성분까지 피하는 생활 방식입니다. SNS에서는 비건 인증 마크와 레시피 공유가 활발하며, 식당들도 교차오염 방지를 강조하고 있습니다.\n\n" +
                 "영양학자는 \"비건 메뉴는 단백질·비타민B12 보충 설계가 중요하다\"고 덧붙였습니다. 두부·콩·견과류를 활용한 메뉴가 대안으로 떠오르고 있습니다.",
                 "식단 선택은 개인의 신념이자 건강 문제이기도 합니다.",
-                "완전 채식 손님이 늘 수 있습니다. 계란·치즈·육수 성분을 꼼꼼히 확인하세요.",
+                "완전 채식 손님이 늘 수 있습니다. 계란·치즈·다진고기 성분을 꼼꼼히 확인하세요.",
                 "VGND", 1.15f);
 
             CreateNews("SEAsian_Fusion", CultureGroup.SEAsian, NewsSentiment.Positive, 1.1f,

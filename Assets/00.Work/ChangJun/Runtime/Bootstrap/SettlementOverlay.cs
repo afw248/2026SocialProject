@@ -54,7 +54,7 @@ namespace ChangJun.Bootstrap
             _bodyText.fontSize = 22;
             _bodyText.color = new Color(0.15f, 0.12f, 0.1f);
             _bodyText.alignment = TextAlignmentOptions.TopLeft;
-            _bodyText.enableWordWrapping = true;
+            _bodyText.textWrappingMode = TextWrappingModes.Normal;
             KoreanUiFont.Apply(_bodyText);
 
             var fitter = content.gameObject.AddComponent<ContentSizeFitter>();

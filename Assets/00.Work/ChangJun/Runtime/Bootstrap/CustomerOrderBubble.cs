@@ -54,7 +54,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 18,
                 new Color(0.15f, 0.12f, 0.08f));
-            _orderText.enableWordWrapping = true;
+            _orderText.textWrappingMode = TextWrappingModes.Normal;
             _orderText.lineSpacing = 2f;
 
             var okBtnRt = UiFactory.CreatePanel(panel, "OkBtn",

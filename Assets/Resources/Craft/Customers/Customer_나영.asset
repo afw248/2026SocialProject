@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e35f15bdf7190948864b69c829097b4, type: 3}
-  m_Name: "Customer_\uB85C\uC0AC"
+  m_Name: "Customer_\uB098\uC601"
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.CraftCustomerSO
-  customerName: "\uB85C\uC0AC"
-  orderLine: "\uCF69\uB098\uBB3C\uC774\uB791 \uC57C\uCC44\uC694. \uB2F4\uBC31\uD55C
-    \uAC70."
-  diet: 2
-  requiredMenu: {fileID: 11400000, guid: 53cdca47862d7974c87cda4f7e1e55df, type: 2}
-  cultureGroup: 4
+  customerName: "\uB098\uC601"
+  orderLine: "\uB2ED\uACE0\uAE30\uC5D0 \uC57C\uCC44 \uC794\uB72D. \uAC00\uBCBC\uAC8C
+    \uD574\uC8FC\uC138\uC694."
+  diet: 0
+  requiredMenu: {fileID: 11400000, guid: f60718293a4b5c6d7e8f901234567890, type: 2}
+  cultureGroup: 1

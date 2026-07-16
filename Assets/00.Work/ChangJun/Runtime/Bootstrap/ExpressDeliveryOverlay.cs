@@ -28,7 +28,7 @@ namespace ChangJun.Bootstrap
         private readonly Image _hanjipBtnImg;
         private readonly Image _economyBtnImg;
         private readonly Dictionary<string, int> _cart = new();
-        private readonly Dictionary<string, TextMeshProUGUI> _qtyLabels = new();
+        private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
         private ExpressDeliveryTier _tier = ExpressDeliveryTier.Economy;
         private bool _visible;
@@ -72,6 +72,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = UiFactory.CreateStretchChild(scrollRt, "Viewport");
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -83,7 +84,7 @@ namespace ChangJun.Bootstrap
             _gridContent.anchorMax = new Vector2(1, 1);
 
             var grid = _gridContent.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(240, 120);
+            grid.cellSize = new Vector2(240, 150);
             grid.spacing = new Vector2(8, 8);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 2;
@@ -109,6 +110,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero);
             var pendingScroll = pendingScrollRt.gameObject.AddComponent<ScrollRect>();
             pendingScroll.horizontal = false;
+            UiFactory.ConfigureScroll(pendingScroll);
 
             var pendingViewport = UiFactory.CreateStretchChild(pendingScrollRt, "Viewport");
             pendingViewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -273,10 +275,11 @@ namespace ChangJun.Bootstrap
 
         private void RebuildGrid()
         {
-            _qtyLabels.Clear();
+            _qtySelectors.Clear();
             foreach (Transform child in _gridContent)
                 UnityEngine.Object.Destroy(child.gameObject);
 
+            IngredientVisualCatalog.EnsureLoaded();
             foreach (var ing in _ingredients)
             {
                 if (ing == null) continue;
@@ -288,7 +291,7 @@ namespace ChangJun.Bootstrap
         private void CreateCard(IngredientSO ing)
         {
             var card = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
-            card.gameObject.AddComponent<LayoutElement>().preferredHeight = 120;
+            card.gameObject.AddComponent<LayoutElement>().preferredHeight = 150;
             card.gameObject.AddComponent<Image>().color = Color.white;
 
             var config = DayLoopController.Instance.Config;
@@ -297,58 +300,46 @@ namespace ChangJun.Bootstrap
                 : 1f;
             int unitPrice = Mathf.RoundToInt(ing.purchasePrice * mult);
 
+            var iconRt = UiFactory.CreatePanel(card, "Icon",
+                new Vector2(0.04f, 0.58f), new Vector2(0.2f, 0.92f),
+                Vector2.zero, Vector2.zero);
+            var iconImg = iconRt.gameObject.AddComponent<Image>();
+            iconImg.sprite = IngredientVisualCatalog.GetButtonIcon(ing.code);
+            iconImg.preserveAspect = true;
+            iconImg.color = iconImg.sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
+
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원/개",
-                new Vector2(0.05f, 0.5f), new Vector2(0.95f, 0.95f),
+                new Vector2(0.22f, 0.58f), new Vector2(0.96f, 0.95f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 16,
                 new Color(0.1f, 0.12f, 0.2f));
 
             UiFactory.CreateText(card, "Stock", $"보유 {InventoryManager.Instance.GetStock(ing.code)}",
-                new Vector2(0.05f, 0.35f), new Vector2(0.95f, 0.5f),
+                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 14,
                 new Color(0.35f, 0.4f, 0.5f));
 
-            var qtyText = UiFactory.CreateText(card, "Qty", "0",
-                new Vector2(0.3f, 0.08f), new Vector2(0.5f, 0.32f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 20,
-                new Color(0.1f, 0.25f, 0.5f));
-            _qtyLabels[ing.code] = qtyText;
-
             string code = ing.code;
-            var minusRt = UiFactory.CreatePanel(card, "Minus",
-                new Vector2(0.05f, 0.08f), new Vector2(0.28f, 0.32f),
-                Vector2.zero, Vector2.zero);
-            var minusBtn = minusRt.gameObject.AddComponent<Button>();
-            minusBtn.targetGraphic = minusRt.gameObject.AddComponent<Image>();
-            minusBtn.targetGraphic.color = new Color(0.85f, 0.85f, 0.9f);
-            minusBtn.onClick.AddListener(() => AdjustCart(code, -1));
-            UiFactory.CreateText(minusRt, "T", "-", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 22);
+            int initial = _cart.TryGetValue(code, out var q) ? q : 0;
+            _qtySelectors[code] = new QuantitySelectorWidget(
+                card, new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.42f),
+                qty => SetCartQuantity(code, qty), initial);
+        }
 
-            var plusRt = UiFactory.CreatePanel(card, "Plus",
-                new Vector2(0.52f, 0.08f), new Vector2(0.75f, 0.34f),
-                Vector2.zero, Vector2.zero);
-            var plusBtn = plusRt.gameObject.AddComponent<Button>();
-            plusBtn.targetGraphic = plusRt.gameObject.AddComponent<Image>();
-            plusBtn.targetGraphic.color = new Color(0.85f, 0.9f, 0.85f);
-            plusBtn.onClick.AddListener(() => AdjustCart(code, 1));
-            UiFactory.CreateText(plusRt, "T", "+", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 22);
+        private void SetCartQuantity(string code, int qty)
+        {
+            if (qty <= 0) _cart.Remove(code);
+            else _cart[code] = qty;
+            RefreshCartTotal();
         }
 
         private void AdjustCart(string code, int delta)
         {
             int next = (_cart.TryGetValue(code, out var q) ? q : 0) + delta;
-            if (next < 0) next = 0;
-            if (next == 0) _cart.Remove(code);
-            else _cart[code] = next;
-
-            if (_qtyLabels.TryGetValue(code, out var label))
-                label.text = next.ToString();
-
-            RefreshCartTotal();
+            SetCartQuantity(code, next);
+            if (_qtySelectors.TryGetValue(code, out var selector))
+                selector.SetQuantity(next, notify: false);
         }
 
         private void RefreshCartTotal()
@@ -430,8 +421,8 @@ namespace ChangJun.Bootstrap
             }
 
             _cart.Clear();
-            foreach (var label in _qtyLabels.Values)
-                label.text = "0";
+            foreach (var selector in _qtySelectors.Values)
+                selector.SetQuantity(0, notify: false);
 
             RefreshCartTotal();
             RefreshPending();

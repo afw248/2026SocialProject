@@ -35,6 +35,7 @@ namespace ChangJun.Editor
             EnsureDirectory(CusDir);
             EnsureDirectory(ThresholdDir);
             EnsureDirectory(NewsDir);
+            EnsureDirectory($"{NewsDir}/Illustrations");
             EnsureDirectory(StockDir);
             EnsureDirectory(DeliveryDir);
 
@@ -306,6 +307,87 @@ namespace ChangJun.Editor
                 "음식은 문화를 가르치는 가장 부드러운 매개체입니다.",
                 "젊은 손님과 학부모의 관심이 높아질 수 있습니다.",
                 "KFOOD", 1f);
+
+            CreateNews("Muslim_Travel_Ban", CultureGroup.Muslim, NewsSentiment.Negative, 0.88f,
+                "국제", "입국 심사 강화 논란, 할랄 상권도 긴장",
+                "여행·체류 규제가 강화되며 무슬림 방문객·상권이 움츠러들고 있습니다.",
+                "일부 국가의 입국·체류 심사 강화 소식이 전해지며 현지 무슬림 커뮤니티와 할랄 외식업계가 긴장하고 있습니다. 관광·유학 수요가 줄어들면 할랄 식당·식재료 유통도 타격을 받을 수 있다는 전망이 나옵니다.\n\n" +
+                "시민단체는 \"정책과 무관한 이웃까지 편견으로 묶어선 안 된다\"고 경고했습니다. 상인들은 단골 손님과의 신뢰를 지키며 차분히 영업하겠다고 밝혔습니다.",
+                "정책 이슈가 식탁의 편견으로 번지지 않도록 주의가 필요합니다.",
+                "무슬림 손님 방문이 줄 수 있습니다. 재료 안내를 더 분명히 하면 도움이 됩니다.",
+                "HLAL", 0.95f);
+
+            CreateNews("Hindu_Temple_Dispute", CultureGroup.Hindu, NewsSentiment.Negative, 0.82f,
+                "사회", "사원 인근 상권 갈등, 채식 거리도 한산",
+                "지역 갈등 소식으로 힌두·남아시아 식문화 상권이 위축됐습니다.",
+                "사원 인근 개발·소음 문제를 둘러싼 갈등이 보도되며 인근 채식·커리 거리가 한산해졌습니다. 상인들은 \"종교 시설과 상권이 함께 성장해 온 동네\"라며 조속한 대화를 촉구했습니다.\n\n" +
+                "커뮤니티 리더는 \"갈등을 문화 차별로 몰아가면 안 된다\"고 강조했습니다. 일부 손님은 온라인으로만 주문하며 현장을 피하고 있습니다.",
+                "갈등의 본질과 문화를 분리해 읽는 눈이 필요합니다.",
+                "힌두·채식 메뉴 수요가 줄 수 있습니다. 소고기 메뉴는 특히 신중히 다루세요.",
+                "CURRY", 0.9f);
+
+            CreateNews("Vegan_Greenwash", CultureGroup.Vegan, NewsSentiment.Negative, 0.86f,
+                "소비", "비건 라벨 과장 광고 논란 확산",
+                "동물성 원료가 검출된 '비건' 제품 사례가 잇따르고 있습니다.",
+                "시중 일부 '비건' 표기 제품에서 동물성 성분이 검출됐다는 조사 결과가 발표되며 소비자 불신이 커지고 있습니다. SNS에서는 그린워싱 비판이 이어졌고, 비건 식당도 교차오염·성분 표기를 재점검하고 있습니다.\n\n" +
+                "업계 관계자는 \"라벨보다 조리 과정 투명성이 중요하다\"고 말했습니다. 완전 채식을 지키는 손님일수록 성분 확인을 더 까다롭게 요구할 전망입니다.",
+                "신념을 존중하는 식사는 표시보다 실천에서 드러납니다.",
+                "비건 손님이 신중해질 수 있습니다. 계란·유제품·육류 교차오염을 철저히 확인하세요.",
+                "VGND", 0.95f);
+
+            CreateNews("SEAsian_Labor_Strike", CultureGroup.SEAsian, NewsSentiment.Negative, 0.84f,
+                "노동", "식품 가공장 파업, 동남아 식재료 수급 불안",
+                "임금·처우 개선을 요구하는 파업으로 일부 향신료·해산물 공급이 지연되고 있습니다.",
+                "동남아 계열 식품 가공장에서 처우 개선을 요구하는 파업이 이어지며 향신료·해산물 가공품 출하가 늦어지고 있습니다. 소규모 식당들은 대체 거래처를 찾는 중입니다.\n\n" +
+                "이주민 노동자 단체는 \"식탁의 풍요 뒤에는 노동이 있다\"고 강조했습니다. 전문가들은 단기 가격 변동과 함께 장기적으로는 공정 공급망 논의가 필요하다고 지적합니다.",
+                "값싼 한 끼의 뒤에는 누군가의 노동이 있습니다.",
+                "동남아·해산물 메뉴 재료비가 흔들릴 수 있습니다. 재고를 점검하세요.",
+                "SEAFO", 0.9f);
+
+            CreateNews("SoulFood_Fest", CultureGroup.AfricanAmerican, NewsSentiment.Positive, 1.22f,
+                "문화", "소울푸드 페스티벌, 상생 상권 '활기'",
+                "흑인 디아스포라 식문화를 조명하는 축제가 도심을 달궜습니다.",
+                "시내 광장에서 열린 소울푸드 페스티벌에 시민과 관광객이 몰렸습니다. 프라이드 치킨·검보·콜라도 그린스 등 메뉴가 소개됐고, 참가자들은 음식과 음악·역사를 함께 경험했습니다.\n\n" +
+                "주최 측은 \"맛으로 만나는 연대\"를 내세웠으며, 인근 상권도 방문객 증가로 활기를 띠었습니다. 다문화 상생 지수에도 긍정적 신호가 관측됩니다.",
+                "축제는 차이를 무대로, 공존을 일상으로 만듭니다.",
+                "다양한 문화권 손님이 늘 수 있습니다. 따뜻하고 정확한 응대가 평판을 만듭니다.",
+                "UNITY", 1.2f);
+
+            CreateNews("Korean_Harvest_Fest", CultureGroup.Korean, NewsSentiment.Positive, 1.12f,
+                "생활", "추석 맞이 한식 나눔·급식 특식 확대",
+                "명절을 앞두고 송편·전·나물 등 한식 수요가 크게 늘었습니다.",
+                "추석을 앞두고 학교 급식과 지역 나눔 행사에서 한식 특식이 늘고 있습니다. 송편·잡채·나물 등 명절 메뉴에 대한 관심이 높아지며 전통 시장 거래량도 증가했습니다.\n\n" +
+                "영양사들은 \"명절 음식도 알레르기·종교 식이를 함께 고려해야 한다\"고 조언했습니다. 한식 재료 관련 지수에도 온기가 돌고 있습니다.",
+                "명절 밥상은 가족과 이웃을 잇는 다리입니다.",
+                "한식 메뉴 수요가 살아날 수 있습니다. 가성비와 정성을 함께 챙기세요.",
+                "KFOOD", 1.1f);
+
+            CreateNews("Halal_Kitchen_Edu", CultureGroup.Muslim, NewsSentiment.Positive, 1.14f,
+                "교육", "할랄 키친 교실, 식당 사장님도 수강",
+                "교차오염 방지·재료 구분을 배우는 실습 교육이 인기입니다.",
+                "지자체와 이슬람 문화센터가 함께하는 '할랄 키친' 교실에 식당 운영자와 조리 전공 학생이 몰리고 있습니다. 돼지고기·알코올 미사용뿐 아니라 도마·칼 분리, 보관 구역 표시까지 실습합니다.\n\n" +
+                "수강생들은 \"손님의 믿음을 지키는 기술\"이라고 평가했습니다. 할랄 외식 인증을 준비하는 매장도 늘어나는 추세입니다.",
+                "이해는 안내문보다 주방의 습관에서 완성됩니다.",
+                "할랄·무슬림 친화 메뉴에 관심이 몰릴 수 있습니다.",
+                "HLAL", 1.1f);
+
+            CreateNews("Seafood_Shortage", CultureGroup.SEAsian, NewsSentiment.Negative, 0.8f,
+                "경제", "해산물 어획량 감소, 가공·외식 업계 비상",
+                "수급 불안정으로 동남아 해산물 메뉴 원가가 요동치고 있습니다.",
+                "이상 기후와 조업 제한 여파로 일부 해산물 어획량이 줄며 가공·유통 가격이 상승했습니다. 동남아 퓨전 식당들은 메뉴 구성을 조정하거나 대체 식재료를 검토 중입니다.\n\n" +
+                "수산업 관계자는 \"단기 급등락보다 안정적 공급망이 과제\"라고 말했습니다. 소비자들은 가격 부담을 호소하며 내륙 식재료 메뉴로 이동하는 모습도 보입니다.",
+                "바다의 변화는 식탁의 가격표에도 나타납니다.",
+                "해산물 메뉴 원가 부담이 커질 수 있습니다. 대체 메뉴를 준비하세요.",
+                "SEAFO", 0.85f);
+
+            CreateNews("Unity_City_Campaign", CultureGroup.AfricanAmerican, NewsSentiment.Positive, 1.16f,
+                "사회", "도시 캠페인 '한 식탁의 이웃', 상생 소비 확산",
+                "편견 없는 외식·쇼핑을 독려하는 시민 캠페인이 확산되고 있습니다.",
+                "시민단체와 지자체가 함께하는 '한 식탁의 이웃' 캠페인이 도시 전역으로 퍼지고 있습니다. 참여 매장은 차별 없는 응대 서약과 다문화 메뉴 안내를 게시하며, 방문객에게 스탬프 투어를 제공합니다.\n\n" +
+                "초기 집계에 따르면 참여 상권의 주말 매출이 소폭 상승했으며, 다문화 상생 관련 지수에도 긍정 신호가 포착됐습니다.",
+                "캠페인은 구호가 아니라 손님 한 명을 대하는 태도에서 시작됩니다.",
+                "다양한 손님이 함께 찾아올 수 있는 날입니다. 정확한 주문이 신뢰를 쌓습니다.",
+                "UNITY", 1.15f);
         }
 
         private static void CreateNews(string id, CultureGroup culture, NewsSentiment sentiment,
@@ -327,27 +409,29 @@ namespace ChangJun.Editor
             so.primaryStockCode = stockCode;
             so.boycottWeight = boycott;
             so.spawnWeight = spawnWeight;
+            so.illustration = AssetDatabase.LoadAssetAtPath<Sprite>(
+                $"{NewsDir}/Illustrations/News_{id}.png");
             EditorUtility.SetDirty(so);
         }
 
         private static void CreateStocks()
         {
-            CreateStock("KFOOD", "한식푸드", CultureGroup.Korean, 12800,
+            CreateStock("KFOOD", "한식푸드", CultureGroup.Korean, 12800, 0.10f,
                 "김치·한식 재료·분식 체인 지수");
-            CreateStock("HLAL", "할랄그룹", CultureGroup.Muslim, 9200,
+            CreateStock("HLAL", "할랄그룹", CultureGroup.Muslim, 9200, 0.11f,
                 "할랄 인증 식품·외식 기업 지수");
-            CreateStock("CURRY", "인도식홀딩스", CultureGroup.Hindu, 10500,
+            CreateStock("CURRY", "인도식홀딩스", CultureGroup.Hindu, 10500, 0.09f,
                 "채식 커리·향신료 유통 지수");
-            CreateStock("VGND", "채식테크", CultureGroup.Vegan, 6800,
+            CreateStock("VGND", "채식테크", CultureGroup.Vegan, 6800, 0.12f,
                 "비건·플랜트 기반 식품 지수");
-            CreateStock("SEAFO", "동남아식품", CultureGroup.SEAsian, 7600,
+            CreateStock("SEAFO", "동남아식품", CultureGroup.SEAsian, 7600, 0.10f,
                 "동남아 향신료·해산물 가공 지수");
-            CreateStock("UNITY", "다문화상생", CultureGroup.AfricanAmerican, 11200,
+            CreateStock("UNITY", "다문화상생", CultureGroup.AfricanAmerican, 11200, 0.09f,
                 "다문화 상생·포용 경제 지수");
         }
 
         private static void CreateStock(string code, string displayName, CultureGroup culture,
-            int basePrice, string description)
+            int basePrice, float volatility, string description)
         {
             string path = $"{StockDir}/Stock_{code}.asset";
             var so = LoadOrCreate<StockTickerSO>(path);
@@ -355,23 +439,25 @@ namespace ChangJun.Editor
             so.displayName = displayName;
             so.cultureGroup = culture;
             so.basePrice = basePrice;
-            so.volatility = 0.035f;
+            so.volatility = volatility;
             so.description = description;
             EditorUtility.SetDirty(so);
         }
 
         private static void CreateDeliveryEvents()
         {
+            CreateDelivery("Normal", DeliveryEventType.None, 0, 0f,
+                "정상 배달", "재료가 무사히 도착했습니다.", 6f);
             CreateDelivery("Delay", DeliveryEventType.Delay, 15, 0f,
-                "배달 지연", "교통 체증으로 재료가 늦게 도착했습니다.");
+                "배달 지연", "교통 체증으로 재료가 늦게 도착했습니다.", 2f);
             CreateDelivery("Theft", DeliveryEventType.Theft, 0, 0.25f,
-                "도난 사건", "배달 중 일부 재료가 도난당했습니다.");
+                "도난 사건", "배달 중 일부 재료가 도난당했습니다.", 0.5f);
             CreateDelivery("Accident", DeliveryEventType.Accident, 25, 0.15f,
-                "배달 사고", "사고로 일부 상자가 파손되었습니다.");
+                "배달 사고", "사고로 일부 상자가 파손되었습니다.", 1.5f);
         }
 
         private static void CreateDelivery(string id, DeliveryEventType type, int freshnessPenalty,
-            float stockLoss, string headline, string body)
+            float stockLoss, string headline, string body, float spawnWeight = 1f)
         {
             string path = $"{DeliveryDir}/Delivery_{id}.asset";
             var so = LoadOrCreate<DeliveryEventSO>(path);
@@ -380,7 +466,7 @@ namespace ChangJun.Editor
             so.stockLossRatio = stockLoss;
             so.headline = headline;
             so.body = body;
-            so.spawnWeight = 1f;
+            so.spawnWeight = spawnWeight;
             EditorUtility.SetDirty(so);
         }
 

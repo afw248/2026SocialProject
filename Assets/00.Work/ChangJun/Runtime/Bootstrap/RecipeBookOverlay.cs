@@ -60,6 +60,7 @@ namespace ChangJun.Bootstrap
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical   = true;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = CreateChild(scrollRt, "Viewport", Vector2.zero, Vector2.one);
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;

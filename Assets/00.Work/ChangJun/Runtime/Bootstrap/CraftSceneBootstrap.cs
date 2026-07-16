@@ -56,6 +56,8 @@ namespace ChangJun.Bootstrap
 
         private StatusPanel _statusPanel;
 
+        private GameObject _recipePanelRoot;
+
         private SideTabBar _tabBar;
 
         private SettlementOverlay _settlement;
@@ -214,6 +216,12 @@ namespace ChangJun.Bootstrap
 
         {
 
+            var existingCanvas = GameObject.Find("UI_Canvas");
+
+            if (existingCanvas != null)
+
+                Destroy(existingCanvas);
+
             var canvasGo = new GameObject("UI_Canvas");
 
             var canvas = canvasGo.AddComponent<Canvas>();
@@ -267,22 +275,15 @@ namespace ChangJun.Bootstrap
 
 
             _memoPanel = new MemoPadPanel(_contentArea);
-
-            var recipePanel = new RecipeBookPanel(_contentArea, _menus, _ingredients);
-
+            _recipePanelRoot = new RecipeBookPanel(_contentArea, _menus, _ingredients).Root;
             _statusPanel = new StatusPanel(_contentArea);
 
-
-
             _tabBar = new SideTabBar(root, HandleTabSelected);
-
             _tabBar.RegisterPanel(MainTab.Craft, _hud.CraftRoot.gameObject);
-
             _tabBar.RegisterPanel(MainTab.Memo, _memoPanel.Root);
-
-            _tabBar.RegisterPanel(MainTab.Recipe, recipePanel.Root);
-
+            _tabBar.RegisterPanel(MainTab.Recipe, _recipePanelRoot);
             _tabBar.RegisterPanel(MainTab.Status, _statusPanel.Root);
+            ForceCraftTabOnly();
 
 
 
@@ -373,7 +374,7 @@ namespace ChangJun.Bootstrap
 
             _morningDelivery.OnReceived += OnMorningReceived;
 
-            _hud.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
+            _tabBar.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
 
             var express = ExpressDeliveryService.Instance;
 
@@ -401,6 +402,23 @@ namespace ChangJun.Bootstrap
 
 
 
+        private void ForceCraftTabOnly()
+        {
+            if (_memoPanel != null && _memoPanel.Root != null)
+                _memoPanel.Root.SetActive(false);
+            if (_recipePanelRoot != null)
+                _recipePanelRoot.SetActive(false);
+            if (_statusPanel != null && _statusPanel.Root != null)
+                _statusPanel.Root.SetActive(false);
+            if (_hud != null && _hud.CraftRoot != null)
+            {
+                _hud.CraftRoot.gameObject.SetActive(true);
+                _hud.CraftRoot.SetAsLastSibling();
+            }
+            if (_tabBar != null)
+                _tabBar.SelectTab(MainTab.Craft);
+        }
+
         private void SetGameplayHudVisible(bool visible)
 
         {
@@ -412,6 +430,10 @@ namespace ChangJun.Bootstrap
             _hud.HeaderRoot.SetActive(visible);
 
             _orderDockRoot.SetActive(visible);
+
+            if (visible)
+
+                ForceCraftTabOnly();
 
             if (!visible)
 

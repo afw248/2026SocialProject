@@ -26,7 +26,6 @@ namespace ChangJun.Bootstrap
         private readonly RectTransform _craftRoot;
         private readonly RectTransform _toppingLayer;
         private readonly TextMeshProUGUI _moneyText;
-        private readonly TextMeshProUGUI _slotText;
         private readonly TextMeshProUGUI _resultText;
         private readonly Dictionary<string, Button> _ingredientButtons = new();
         private readonly Dictionary<string, Image> _ingredientImages = new();
@@ -38,8 +37,6 @@ namespace ChangJun.Bootstrap
         public RectTransform CraftRoot => _craftRoot;
         public GameObject HeaderRoot { get; }
 
-        public event Action OnDeliveryRequested;
-
         public CraftHudPresenter(RectTransform root, RectTransform craftContent,
             CraftController controller, IReadOnlyList<IngredientSO> ingredients)
         {
@@ -48,41 +45,77 @@ namespace ChangJun.Bootstrap
             IngredientHoverTooltip.Ensure(root);
 
             var header = UiFactory.CreatePanel(root, "Header",
-                new Vector2(0.26f, 0.66f), new Vector2(0.9f, 0.9f), Vector2.zero, Vector2.zero);
+                new Vector2(0.26f, 0.68f), new Vector2(0.88f, 0.92f), Vector2.zero, Vector2.zero);
             HeaderRoot = header.gameObject;
-            header.gameObject.AddComponent<Image>().color = new Color(0.08f, 0.1f, 0.15f, 0.92f);
+            header.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.09f, 0.13f, 0.94f);
 
             var toolbar = UiFactory.CreateStretchChild(header, "Toolbar");
-            toolbar.gameObject.AddComponent<LayoutElement>().preferredHeight = 52;
             var toolbarLayout = toolbar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            toolbarLayout.spacing = 12;
+            toolbarLayout.spacing = 16;
+            toolbarLayout.padding = new RectOffset(18, 18, 10, 10);
             toolbarLayout.childControlWidth = true;
             toolbarLayout.childControlHeight = true;
             toolbarLayout.childForceExpandWidth = true;
-            toolbarLayout.childForceExpandHeight = false;
+            toolbarLayout.childForceExpandHeight = true;
+            toolbarLayout.childAlignment = TextAnchor.MiddleCenter;
 
             _moneyText = CreateLayoutText(toolbar, "MoneyText", "자산: 0원",
-                TextAlignmentOptions.MidlineLeft, 24, 1.1f);
+                TextAlignmentOptions.MidlineLeft, 26, 0.85f);
             _resultText = CreateLayoutText(toolbar, "ResultText", "",
-                TextAlignmentOptions.Center, 22, 2f);
+                TextAlignmentOptions.Center, 30, 2.2f);
+            _resultText.fontStyle = FontStyles.Bold;
             _resultText.textWrappingMode = TextWrappingModes.NoWrap;
             _resultText.overflowMode = TextOverflowModes.Ellipsis;
-            _slotText = CreateLayoutText(toolbar, "SlotText", "슬롯: [ ]",
-                TextAlignmentOptions.MidlineRight, 22, 0.9f);
-
-            CreateHeaderButton(toolbar, "배달", () => OnDeliveryRequested?.Invoke());
 
             _craftRoot = UiFactory.CreatePanel(craftContent, "CraftArea",
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+            // 다른 탭이 비쳐 보이지 않도록 불투명 배경
+            _craftRoot.gameObject.AddComponent<Image>().color =
+                new Color(0.07f, 0.08f, 0.11f, 1f);
 
-            // 위: 재료 그리드 (작게)
+            // 위: 가로 도마 배경 + 재료 그리드 (픽셀 비율 유지)
             var scrollPanel = UiFactory.CreatePanel(_craftRoot, "IngredientScroll",
-                new Vector2(0.04f, 0.52f), new Vector2(0.96f, 0.98f),
+                new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.99f),
                 Vector2.zero, Vector2.zero);
+
+            // 재료 영역 어두운 베이스
+            scrollPanel.gameObject.AddComponent<Image>().color =
+                new Color(0.04f, 0.03f, 0.02f, 0.92f);
+
+            var boardGo = new GameObject("CuttingBoard", typeof(RectTransform));
+            boardGo.transform.SetParent(scrollPanel, false);
+            var boardRt = boardGo.GetComponent<RectTransform>();
+            boardRt.anchorMin = Vector2.zero;
+            boardRt.anchorMax = Vector2.one;
+            boardRt.offsetMin = new Vector2(6f, 6f);
+            boardRt.offsetMax = new Vector2(-6f, -6f);
+            var boardImg = boardGo.AddComponent<Image>();
+            var boardSprites = Resources.LoadAll<Sprite>("Craft/Sprites/CuttingBoard");
+            boardImg.sprite = boardSprites != null && boardSprites.Length > 0
+                ? boardSprites[0]
+                : Resources.Load<Sprite>("Craft/Sprites/CuttingBoard");
+            boardImg.preserveAspect = true;
+            boardImg.raycastTarget = false;
+            boardImg.color = boardImg.sprite != null
+                ? Color.white
+                : new Color(0.72f, 0.58f, 0.38f, 0.95f);
+
+            // 스프라이트가 이미 재료칸 비율(~2.4:1)이라 FitInParent로도 픽셀이 안 늘어남
+            float boardAspect = 2.4f;
+            if (boardImg.sprite != null)
+            {
+                var rect = boardImg.sprite.rect;
+                if (rect.height > 0.01f)
+                    boardAspect = rect.width / rect.height;
+            }
+            var boardFitter = boardGo.AddComponent<AspectRatioFitter>();
+            boardFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            boardFitter.aspectRatio = boardAspect;
 
             var scroll = scrollPanel.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical = true;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = UiFactory.CreateStretchChild(scrollPanel, "Viewport");
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -94,9 +127,10 @@ namespace ChangJun.Bootstrap
             content.anchorMax = new Vector2(1, 1);
 
             var grid = content.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(108, 108);
-            grid.spacing = new Vector2(10, 10);
-            grid.padding = new RectOffset(6, 6, 6, 6);
+            // 5칸이 도마 안쪽에 들어가도록 셀/패딩 조정
+            grid.cellSize = new Vector2(92, 92);
+            grid.spacing = new Vector2(8, 8);
+            grid.padding = new RectOffset(28, 28, 18, 18);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = GridColumns;
             grid.childAlignment = TextAnchor.UpperCenter;
@@ -110,9 +144,9 @@ namespace ChangJun.Bootstrap
             foreach (var ing in ingredients)
                 CreateIngredientButton(content, ing);
 
-            // 가운데: Rice + 토핑
+            // 가운데: Rice + 토핑 프리뷰 (도마는 재료 영역에만)
             var bowlArea = UiFactory.CreatePanel(_craftRoot, "BowlArea",
-                new Vector2(0.28f, 0.16f), new Vector2(0.72f, 0.50f),
+                new Vector2(0.06f, 0.16f), new Vector2(0.94f, 0.50f),
                 Vector2.zero, Vector2.zero);
 
             var riceGo = new GameObject("Rice", typeof(RectTransform));
@@ -159,10 +193,6 @@ namespace ChangJun.Bootstrap
 
         public void UpdateSlot(IReadOnlyList<IngredientSO> list)
         {
-            var sb = new System.Text.StringBuilder("슬롯: [ ");
-            foreach (var ing in list) sb.Append(ing.code).Append(' ');
-            sb.Append(']');
-            _slotText.text = sb.ToString();
             RefreshBowlToppings(list);
         }
 
@@ -188,7 +218,7 @@ namespace ChangJun.Bootstrap
 
             _resultText.transform.DOKill();
             _resultText.transform.localScale = Vector3.one;
-            _resultText.transform.DOPunchScale(Vector3.one * 0.06f, 0.22f, 3, 0.5f);
+            _resultText.transform.DOPunchScale(Vector3.one * 0.08f, 0.25f, 4, 0.5f);
         }
 
         public void ShowDeliveryArrived(string ingredientName, int quantity)
@@ -196,7 +226,8 @@ namespace ChangJun.Bootstrap
             _resultText.text = $"[배달도착] {ingredientName} x{quantity}";
             _resultText.color = new Color(0.55f, 0.85f, 1f);
             _resultText.transform.DOKill();
-            _resultText.transform.DOPunchScale(Vector3.one * 0.06f, 0.22f, 3, 0.5f);
+            _resultText.transform.localScale = Vector3.one;
+            _resultText.transform.DOPunchScale(Vector3.one * 0.08f, 0.25f, 4, 0.5f);
         }
 
         public void SetInteractable(bool enabled)
@@ -280,13 +311,16 @@ namespace ChangJun.Bootstrap
                     bool hasIcon = IngredientVisualCatalog.GetButtonIcon(pair.Key) != null;
                     if (hasIcon)
                     {
-                        img.color = active ? Color.white : new Color(1f, 1f, 1f, 0.35f);
+                        // 보유 재료는 완전 불투명, 없는 재료만 살짝 어둡게
+                        img.color = active
+                            ? Color.white
+                            : new Color(0.55f, 0.55f, 0.55f, 0.55f);
                     }
                     else
                     {
                         img.color = active
-                            ? new Color(0.18f, 0.38f, 0.58f)
-                            : new Color(0.25f, 0.25f, 0.28f, 0.6f);
+                            ? new Color(0.18f, 0.38f, 0.58f, 1f)
+                            : new Color(0.25f, 0.25f, 0.28f, 0.7f);
                     }
                 }
             }
@@ -306,26 +340,40 @@ namespace ChangJun.Bootstrap
             var go = new GameObject($"Btn_{ing.code}", typeof(RectTransform));
             go.transform.SetParent(parent, false);
 
-            var icon = IngredientVisualCatalog.GetButtonIcon(ing.code);
-            var img = go.AddComponent<Image>();
-            _ingredientImages[ing.code] = img;
+            // 도마 위에서도 아이콘이 선명하도록 어두운 받침
+            var plate = go.AddComponent<Image>();
+            plate.color = new Color(0.08f, 0.07f, 0.05f, 0.82f);
 
+            var icon = IngredientVisualCatalog.GetButtonIcon(ing.code);
+            Image img;
             TextMeshProUGUI tmp;
+
             if (icon != null)
             {
+                var iconGo = new GameObject("Icon", typeof(RectTransform));
+                iconGo.transform.SetParent(go.transform, false);
+                var iconRt = iconGo.GetComponent<RectTransform>();
+                iconRt.anchorMin = new Vector2(0.08f, 0.22f);
+                iconRt.anchorMax = new Vector2(0.92f, 0.96f);
+                iconRt.offsetMin = Vector2.zero;
+                iconRt.offsetMax = Vector2.zero;
+
+                img = iconGo.AddComponent<Image>();
                 img.sprite = icon;
                 img.preserveAspect = true;
                 img.color = Color.white;
+                img.raycastTarget = false;
+                _ingredientImages[ing.code] = img;
 
                 var badgeGo = new GameObject("StockBadge", typeof(RectTransform));
                 badgeGo.transform.SetParent(go.transform, false);
                 var badgeRt = badgeGo.GetComponent<RectTransform>();
                 badgeRt.anchorMin = new Vector2(0f, 0f);
-                badgeRt.anchorMax = new Vector2(1f, 0.28f);
+                badgeRt.anchorMax = new Vector2(1f, 0.26f);
                 badgeRt.offsetMin = Vector2.zero;
                 badgeRt.offsetMax = Vector2.zero;
                 var badgeBg = badgeGo.AddComponent<Image>();
-                badgeBg.color = new Color(0f, 0f, 0f, 0.45f);
+                badgeBg.color = new Color(0f, 0f, 0f, 0.72f);
                 badgeBg.raycastTarget = false;
 
                 var labelGo = new GameObject("Stock", typeof(RectTransform));
@@ -341,7 +389,9 @@ namespace ChangJun.Bootstrap
             }
             else
             {
-                img.color = new Color(0.18f, 0.38f, 0.58f);
+                img = plate;
+                img.color = new Color(0.18f, 0.38f, 0.58f, 1f);
+                _ingredientImages[ing.code] = img;
 
                 var labelGo = new GameObject("Text", typeof(RectTransform));
                 labelGo.transform.SetParent(go.transform, false);
@@ -357,7 +407,8 @@ namespace ChangJun.Bootstrap
             }
 
             var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
+            btn.targetGraphic = plate;
+            btn.transition = Selectable.Transition.None;
             _ingredientButtons[ing.code] = btn;
 
             var hover = go.AddComponent<IngredientHoverTrigger>();
@@ -397,36 +448,6 @@ namespace ChangJun.Bootstrap
             tmp.raycastTarget = false;
             KoreanUiFont.Apply(tmp);
             return tmp;
-        }
-
-        private static void CreateHeaderButton(Transform parent, string label, Action onClick)
-        {
-            var go = new GameObject($"Btn_{label}", typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-
-            var le = go.AddComponent<LayoutElement>();
-            le.preferredWidth = 58f;
-            le.minWidth = 58f;
-            le.preferredHeight = 36f;
-            le.flexibleWidth = 0f;
-            le.flexibleHeight = 0f;
-
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.22f, 0.32f, 0.55f);
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => onClick());
-
-            var labelGo = new GameObject("Text", typeof(RectTransform));
-            labelGo.transform.SetParent(go.transform, false);
-            UiFactory.Stretch(labelGo.GetComponent<RectTransform>());
-            var tmp = labelGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = label;
-            tmp.fontSize = 17;
-            tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.raycastTarget = false;
-            KoreanUiFont.Apply(tmp);
         }
 
         private static Button CreateActionButton(Transform parent, string label, Action onClick)

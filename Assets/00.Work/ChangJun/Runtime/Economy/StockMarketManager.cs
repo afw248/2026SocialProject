@@ -58,7 +58,8 @@ namespace ChangJun.Economy
 
                 float drift = UnityEngine.Random.Range(-ticker.volatility, ticker.volatility);
                 float newsImpact = GetNewsImpact(ticker, news);
-                int next = Mathf.Max(100, Mathf.RoundToInt(prev * (1f + drift + newsImpact)));
+                float directShock = GetDirectStockShock(ticker, news);
+                int next = Mathf.Max(100, Mathf.RoundToInt(prev * (1f + drift + newsImpact + directShock)));
                 _prices[code] = next;
             }
 
@@ -155,10 +156,26 @@ namespace ChangJun.Economy
 
             return news.sentiment switch
             {
-                NewsSentiment.Positive => (news.priceMultiplier - 1f) * 0.6f,
-                NewsSentiment.Negative => (news.priceMultiplier - 1f) * 0.5f,
-                NewsSentiment.Discrimination => -0.04f,
+                NewsSentiment.Positive => (news.priceMultiplier - 1f) * 1.0f,
+                NewsSentiment.Negative => (news.priceMultiplier - 1f) * 0.8f,
+                NewsSentiment.Discrimination => -0.06f,
                 _ => 0f,
+            };
+        }
+
+        private static float GetDirectStockShock(StockTickerSO ticker, NewsSO news)
+        {
+            if (news == null || ticker == null) return 0f;
+            if (string.IsNullOrEmpty(news.primaryStockCode) || news.primaryStockCode != ticker.code)
+                return 0f;
+
+            float magnitude = UnityEngine.Random.Range(0.03f, 0.08f);
+            return news.sentiment switch
+            {
+                NewsSentiment.Positive => magnitude,
+                NewsSentiment.Negative => -magnitude,
+                NewsSentiment.Discrimination => -magnitude * 0.6f,
+                _ => UnityEngine.Random.value < 0.5f ? magnitude : -magnitude,
             };
         }
     }

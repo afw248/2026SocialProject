@@ -27,6 +27,7 @@ namespace ChangJun.Bootstrap
         private TextMeshProUGUI _subheadline;
         private TextMeshProUGUI _articleBody;
         private TextMeshProUGUI _sidebarText;
+        private Image _illustrationImage;
         private TextMeshProUGUI _tickerStrip;
         private TextMeshProUGUI _marketHeader;
         private TextMeshProUGUI _portfolioText;
@@ -205,17 +206,26 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero);
             sideBox.gameObject.AddComponent<Image>().color = new Color(0.93f, 0.9f, 0.82f);
 
+            var illustRt = UiFactory.CreatePanel(sideBox, "Illustration",
+                new Vector2(0.06f, 0.42f), new Vector2(0.94f, 0.96f),
+                Vector2.zero, Vector2.zero);
+            _illustrationImage = illustRt.gameObject.AddComponent<Image>();
+            _illustrationImage.color = new Color(0.88f, 0.84f, 0.76f);
+            _illustrationImage.preserveAspect = true;
+            _illustrationImage.raycastTarget = false;
+
             UiFactory.CreateText(sideBox, "SideTitle", "함께 읽기",
-                new Vector2(0.05f, 0.86f), new Vector2(0.95f, 0.98f),
+                new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.40f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 16,
                 new Color(0.35f, 0.25f, 0.18f)).fontStyle = FontStyles.Bold;
 
             var sideScrollRt = UiFactory.CreatePanel(sideBox, "SideScroll",
-                new Vector2(0.05f, 0.04f), new Vector2(0.95f, 0.85f),
+                new Vector2(0.05f, 0.04f), new Vector2(0.95f, 0.31f),
                 Vector2.zero, Vector2.zero);
             var sideScroll = sideScrollRt.gameObject.AddComponent<ScrollRect>();
             sideScroll.horizontal = false;
+            UiFactory.ConfigureScroll(sideScroll);
 
             var sideViewport = UiFactory.CreateStretchChild(sideScrollRt, "Viewport");
             sideViewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -288,16 +298,23 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.02f, 0.72f), new Vector2(0.98f, 0.76f),
                 Vector2.zero, Vector2.zero);
             headerRow.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.22f, 0.28f);
-            UiFactory.CreateText(headerRow, "H", "종목          현재가    등락      보유    거래",
-                new Vector2(0.02f, 0f), new Vector2(0.98f, 1f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 15, Color.white);
+            CreateMarketColumnText(headerRow, "H_Name", "종목",
+                0.00f, 0.34f, TextAlignmentOptions.MidlineLeft, 15, Color.white);
+            CreateMarketColumnText(headerRow, "H_Price", "현재가",
+                0.34f, 0.48f, TextAlignmentOptions.MidlineRight, 15, Color.white);
+            CreateMarketColumnText(headerRow, "H_Change", "등락",
+                0.48f, 0.58f, TextAlignmentOptions.Center, 15, Color.white);
+            CreateMarketColumnText(headerRow, "H_Hold", "보유",
+                0.58f, 0.68f, TextAlignmentOptions.Center, 15, Color.white);
+            CreateMarketColumnText(headerRow, "H_Trade", "거래",
+                0.70f, 0.99f, TextAlignmentOptions.Center, 15, Color.white);
 
             var scrollRt = UiFactory.CreatePanel(page.transform, "MarketScroll",
                 new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.71f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = UiFactory.CreateStretchChild(scrollRt, "Viewport");
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -372,6 +389,15 @@ namespace ChangJun.Bootstrap
             _articleBody.text = GetArticleText(news);
             _sidebarText.text = BuildSidebar(news);
             _tickerStrip.text = BuildTickerStrip();
+
+            if (_illustrationImage != null)
+            {
+                _illustrationImage.sprite = news.illustration;
+                _illustrationImage.color = news.illustration != null
+                    ? Color.white
+                    : new Color(0.88f, 0.84f, 0.76f);
+                _illustrationImage.enabled = true;
+            }
         }
 
         private void PopulateMarketPage()
@@ -427,8 +453,8 @@ namespace ChangJun.Bootstrap
             row.sizeDelta = new Vector2(0, 52);
 
             var le = row.gameObject.AddComponent<LayoutElement>();
-            le.minHeight = 52f;
-            le.preferredHeight = 52f;
+            le.minHeight = 58f;
+            le.preferredHeight = 58f;
 
             int price = StockMarketManager.Instance.GetPrice(ticker.code);
             float change = StockMarketManager.Instance.GetChangePercent(ticker.code);
@@ -436,27 +462,24 @@ namespace ChangJun.Bootstrap
             string changeStr = change >= 0 ? $"+{change:0.0}%" : $"{change:0.0}%";
             Color changeColor = change >= 0 ? new Color(0.75f, 0.15f, 0.12f) : new Color(0.12f, 0.3f, 0.65f);
 
-            var info = UiFactory.CreateText(row, "Info",
-                $"{ticker.code,-6} {ticker.displayName,-10} {price,7:N0}원",
-                new Vector2(0.02f, 0.1f), new Vector2(0.55f, 0.9f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 16,
+            CreateMarketColumnText(row, "Name", $"{ticker.code}\n{ticker.displayName}",
+                0.00f, 0.34f, TextAlignmentOptions.MidlineLeft, 14,
                 new Color(0.12f, 0.1f, 0.08f));
 
-            var changeText = UiFactory.CreateText(row, "Change", changeStr,
-                new Vector2(0.55f, 0.1f), new Vector2(0.66f, 0.9f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 16, changeColor);
+            CreateMarketColumnText(row, "Price", $"{price:N0}원",
+                0.34f, 0.48f, TextAlignmentOptions.MidlineRight, 16,
+                new Color(0.12f, 0.1f, 0.08f));
+
+            var changeText = CreateMarketColumnText(row, "Change", changeStr,
+                0.48f, 0.58f, TextAlignmentOptions.Center, 16, changeColor);
             changeText.fontStyle = FontStyles.Bold;
 
-            UiFactory.CreateText(row, "Hold", $"{holding}주",
-                new Vector2(0.67f, 0.1f), new Vector2(0.76f, 0.9f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15,
+            CreateMarketColumnText(row, "Hold", $"{holding}주",
+                0.58f, 0.68f, TextAlignmentOptions.Center, 15,
                 new Color(0.3f, 0.28f, 0.25f));
 
             var buyRt = UiFactory.CreatePanel(row, "Buy",
-                new Vector2(0.78f, 0.12f), new Vector2(0.88f, 0.88f),
+                new Vector2(0.70f, 0.12f), new Vector2(0.84f, 0.88f),
                 Vector2.zero, Vector2.zero);
             var buyBtn = buyRt.gameObject.AddComponent<Button>();
             buyBtn.targetGraphic = buyRt.gameObject.AddComponent<Image>();
@@ -468,7 +491,7 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.Center, 14, Color.white);
 
             var sellRt = UiFactory.CreatePanel(row, "Sell",
-                new Vector2(0.9f, 0.12f), new Vector2(0.99f, 0.88f),
+                new Vector2(0.85f, 0.12f), new Vector2(0.99f, 0.88f),
                 Vector2.zero, Vector2.zero);
             var sellBtn = sellRt.gameObject.AddComponent<Button>();
             sellBtn.targetGraphic = sellRt.gameObject.AddComponent<Image>();
@@ -479,6 +502,14 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.Center, 14, Color.white);
 
             return row.gameObject;
+        }
+
+        private static TextMeshProUGUI CreateMarketColumnText(Transform parent, string name,
+            string text, float xMin, float xMax, TextAlignmentOptions align, int fontSize, Color color)
+        {
+            return UiFactory.CreateText(parent, name, text,
+                new Vector2(xMin, 0.08f), new Vector2(xMax, 0.92f),
+                Vector2.zero, Vector2.zero, align, fontSize, color);
         }
 
         private void OnBuy(string code)

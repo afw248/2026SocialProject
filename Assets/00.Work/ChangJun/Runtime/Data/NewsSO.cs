@@ -26,6 +26,8 @@ namespace ChangJun.Data
         [TextArea(4, 10)] public string article;
         [TextArea(2, 4)] public string sidebarNote;
         [TextArea(2, 4)] public string summary;
+        [Tooltip("신문 1면 우측 삽화 (픽셀아트)")]
+        public Sprite illustration;
 
         [Header("주식 연동")]
         [Tooltip("이 뉴스가 직접 영향을 주는 증권 코드 (비우면 문화권 매칭)")]

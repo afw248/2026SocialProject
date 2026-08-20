@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93f2766bd19c85d478e43b4e1b5aafc5, type: 3}
+  m_Name: News_Local_Farm_Bonus
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.NewsSO
+  cultureGroup: 1
+  sentiment: 0
+  priceMultiplier: 1.1
+  spawnWeight: 1.12
+  boycottWeight: 0
+  sectionTag: "\uB85C\uCEEC"
+  headline: "\uB85C\uCEEC \uB18D\uAC00 \uC9C1\uAC70\uB798 \uD655\uB300, \uAE40\uCE58\xB7\uCC44\uC18C
+    \uAC12\uC2F8\uAC8C"
+  subheadline: "\uC9C0\uC5ED \uB18D\uAC00\uC640 \uC2DD\uB2F9\uC744 \uC787\uB294 \uC9C1\uAC70\uB798\uAC00
+    \uB298\uBA70 \uB85C\uCEEC \uC7AC\uB8CC \uAC00\uACA9\uC774 \uC548\uC815\uB410\uC2B5\uB2C8\uB2E4."
+  body: "\uC9C0\uC5ED \uB18D\uAC00\uC640 \uC2DD\uB2F9\uC744 \uC787\uB294 \uC9C1\uAC70\uB798\uAC00
+    \uB298\uBA70 \uB85C\uCEEC \uC7AC\uB8CC \uAC00\uACA9\uC774 \uC548\uC815\uB410\uC2B5\uB2C8\uB2E4."
+  article: "\uC2DC\xB7\uAD70 \uB18D\uD611\uC774 \uB85C\uCEEC \uC9C1\uAC70\uB798 \uD50C\uB7AB\uD3FC\uC744
+    \uD655\uB300\uD558\uBA74\uC11C \uAE40\uCE58\xB7\uCC44\uC18C\uB958 \uACF5\uAE09\uAC00\uAC00
+    \uC18C\uD3ED \uB0B4\uB838\uC2B5\uB2C8\uB2E4. \uC18C\uBE44\uC790\uB4E4\uC740 '\uB3D9\uB124\uC5D0\uC11C
+    \uB09C \uC7AC\uB8CC'\uC5D0 \uB300\uD55C \uAD00\uC2EC\uB3C4 \uB192\uC544\uC9C0\uACE0
+    \uC788\uC2B5\uB2C8\uB2E4.\n\n\uCC38\uC5EC \uB18D\uAC00\uB294 \"\uC9E7\uC740 \uC720\uD1B5\uC774
+    \uC2E0\uC120\uD568\uACFC \uAC00\uACA9 \uBAA8\uB450\uC5D0 \uC774\uB86D\uB2E4\"\uACE0
+    \uB9D0\uD588\uC2B5\uB2C8\uB2E4."
+  sidebarNote: "\uB85C\uCEEC \uC2DD\uC7AC\uB8CC\uB294 \uC9C0\uC18D\uAC00\uB2A5\uC131\uACFC
+    \uC9C0\uC5ED \uACBD\uC81C\uB97C \uB3D9\uC2DC\uC5D0 \uC0B4\uB9BD\uB2C8\uB2E4."
+  summary: "\uB85C\uCEEC \uD0DC\uADF8 \uC7AC\uB8CC \uAD6C\uB9E4 \uC2DC \uBE44\uC6A9
+    \uC774\uC810\uC774 \uC788\uC2B5\uB2C8\uB2E4."
+  illustration: {fileID: 0}
+  primaryStockCode: KFOOD

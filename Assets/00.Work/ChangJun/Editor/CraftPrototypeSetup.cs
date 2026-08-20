@@ -15,6 +15,8 @@ namespace ChangJun.Editor
         private const string NewsDir = "Assets/Resources/Craft/News";
         private const string StockDir = "Assets/Resources/Craft/Stocks";
         private const string DeliveryDir = "Assets/Resources/Craft/Delivery";
+        private const string NodeDir = "Assets/Resources/Craft/UnderstandingNodes";
+        private const string UpgradeDir = "Assets/Resources/Craft/Upgrades";
         private const string ConfigPath = "Assets/Resources/Craft/DayConfig.asset";
         private const string ScenePath = "Assets/Scenes/Craft.unity";
 
@@ -38,12 +40,16 @@ namespace ChangJun.Editor
             EnsureDirectory($"{NewsDir}/Illustrations");
             EnsureDirectory(StockDir);
             EnsureDirectory(DeliveryDir);
+            EnsureDirectory(NodeDir);
+            EnsureDirectory(UpgradeDir);
 
             CreateDayConfig();
             CreateIngredients();
             CreateMenus();
             CreateCustomers();
             CreateThresholds();
+            CreateUnderstandingNodes();
+            CreateUpgrades();
             CreateNews();
             CreateStocks();
             CreateDeliveryEvents();
@@ -72,6 +78,10 @@ namespace ChangJun.Editor
             so.expressDeliveryMinutes = 30;
             so.economyDeliveryMinutes = 60;
             so.expressDeliveryPriceMultiplier = 2f;
+            so.inflationIntervalDays = 7;
+            so.inflationRatePerTick = 0.015f;
+            so.dividendIntervalDays = 5;
+            so.dividendRate = 0.005f;
             EditorUtility.SetDirty(so);
         }
 
@@ -90,6 +100,11 @@ namespace ChangJun.Editor
             CreateIngredient("CHS", "치즈", Diet.Vegan, CultureGroup.Korean, 55, 90, false);
             CreateIngredient("SHR", "새우", Diet.Vegan, CultureGroup.SEAsian, 60, 110, false);
             CreateIngredient("PGD", "다진돼지고기", Diet.Halal | Diet.Vegan | Diet.Hindu, CultureGroup.Korean, 45, 75, false);
+
+            SetIngredientFlags("TFU", fairTrade: true);
+            SetIngredientFlags("KIM", localSourced: true);
+            SetIngredientFlags("VEG", localSourced: true);
+            SetIngredientFlags("BSP", fairTrade: true);
 
             // 제거된 재료 정리 (육수·마늘·계란고명)
             foreach (var code in new[] { "BRT", "GAR", "EGN" })
@@ -115,6 +130,15 @@ namespace ChangJun.Editor
             EditorUtility.SetDirty(so);
         }
 
+        private static void SetIngredientFlags(string code, bool fairTrade = false, bool localSourced = false)
+        {
+            var so = AssetDatabase.LoadAssetAtPath<IngredientSO>($"{IngDir}/Ingredient_{code}.asset");
+            if (so == null) return;
+            so.isFairTrade = fairTrade;
+            so.isLocalSourced = localSourced;
+            EditorUtility.SetDirty(so);
+        }
+
         private static void CreateMenus()
         {
             CreateMenu("M1", "할랄 불고기 컵밥", new[] { "HBF", "SPC" }, 300, CultureGroup.Muslim);
@@ -136,6 +160,13 @@ namespace ChangJun.Editor
             CreateMenu("M18", "다진돼지 김치 컵밥", new[] { "PGD", "KIM" }, 380, CultureGroup.Korean);
             CreateMenu("M19", "야채 치킨 컵밥", new[] { "CHK", "VEG" }, 300, CultureGroup.Korean);
 
+            CreateFusionMenu("M20", "할랄 김치 컵밥", new[] { "HBF", "KIM" }, 520, CultureGroup.Muslim);
+            CreateFusionMenu("M21", "비건 커리 컵밥", new[] { "TFU", "CUR", "VEG" }, 480, CultureGroup.Vegan);
+            CreateFusionMenu("M22", "매운 해산 컵밥", new[] { "SHR", "SPC", "VEG" }, 550, CultureGroup.SEAsian);
+            CreateFusionMenu("M23", "상생 퓨전 컵밥", new[] { "TFU", "CUR", "BSP" }, 620, CultureGroup.Korean);
+            CreateMenu("M24", "소울 두부 컵밥", new[] { "TFU", "VEG", "BSP" }, 360, CultureGroup.AfricanAmerican);
+            CreateMenu("M25", "흑미 채소 컵밥", new[] { "VEG", "BSP", "TFU" }, 340, CultureGroup.AfricanAmerican);
+
             foreach (var code in new[] { "M17" })
             {
                 string path = $"{MenuDir}/Menu_{code}.asset";
@@ -153,6 +184,19 @@ namespace ChangJun.Editor
             so.ingredientCodes = codes;
             so.price = price;
             so.cultureGroup = culture;
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void CreateFusionMenu(string code, string displayName, string[] codes, int price, CultureGroup culture)
+        {
+            string path = $"{MenuDir}/Menu_{code}.asset";
+            var so = LoadOrCreate<MenuRecipeSO>(path);
+            so.code = code;
+            so.displayName = displayName;
+            so.ingredientCodes = codes;
+            so.price = price;
+            so.cultureGroup = culture;
+            so.requiresFusionUnlock = true;
             EditorUtility.SetDirty(so);
         }
 
@@ -177,6 +221,18 @@ namespace ChangJun.Editor
             CreateCustomer("이수진", "다문화 상생 인증 매장이라 들었어요. 상생 컵밥 주세요.", Diet.None, CultureGroup.Korean, "M16");
             CreateCustomer("현우", "다진돼지에 김치! 그거 한 그릇요.", Diet.None, CultureGroup.Korean, "M18");
             CreateCustomer("나영", "닭고기에 야채 잔뜩. 가볍게 해주세요.", Diet.None, CultureGroup.Korean, "M19");
+
+            CreateCustomer("마커스", "소울푸드 페스티벌에서 왔어요. 두부 든든한 거요.", Diet.Vegan, CultureGroup.AfricanAmerican, "M24");
+            CreateCustomer("Jasmine", "흑미 채소밥… 건강한 거 좋아요.", Diet.Vegan, CultureGroup.AfricanAmerican, "M25");
+            CreateCustomer("Tyler", "퓨전 좋아해요. 할랄이면서 김치? 그거요.", Diet.Halal, CultureGroup.AfricanAmerican, "M20");
+            CreateCustomer("Keisha", "우리 동네 상생 캠페인 중이에요. 퓨전 컵밥 주세요.", Diet.None, CultureGroup.AfricanAmerican, "M23");
+
+            CreateCustomer("준호", "학교 급식 견학 왔어요. 비건 커리 있나요?", Diet.Vegan, CultureGroup.Korean, "M21");
+            CreateCustomer("Fatima", "할랄 김치밥… 신기하네요. 주문할게요.", Diet.Halal, CultureGroup.Muslim, "M20");
+            CreateCustomer("Priya", "채식 커리 퓨전? 한번 먹어볼게요.", Diet.Hindu, CultureGroup.Hindu, "M21");
+            CreateCustomer("Bao", "매운 해산물… 고향 같아요.", Diet.None, CultureGroup.SEAsian, "M22");
+            CreateCustomer("Leo", "로컬 채소 든든한 밥이요.", Diet.Vegan, CultureGroup.Vegan, "M15");
+            CreateCustomer("Darnell", "소울 두부밥, 따뜻하게요.", Diet.Vegan, CultureGroup.AfricanAmerican, "M24");
 
             foreach (var name in new[] { "지우" })
             {
@@ -220,6 +276,130 @@ namespace ChangJun.Editor
             so.cultureGroup = culture;
             so.threshold = threshold;
             so.ingredientToUnlock = ing;
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void CreateUnderstandingNodes()
+        {
+            CreateNode("KOR_1", CultureGroup.Korean, UnderstandingNodeType.Milestone, 0, null,
+                "한식 기본", "한국 손님의 식사 문화를 익히기 시작합니다.", 0, null);
+            CreateNode("KOR_2", CultureGroup.Korean, UnderstandingNodeType.Milestone, 20, new[] { "KOR_1" },
+                "가성비 이해", "저렴하지만 정성스러운 한 끼를 선호합니다.", 1, null);
+            CreateNode("KOR_3", CultureGroup.Korean, UnderstandingNodeType.IngredientUnlock, 40, new[] { "KOR_2" },
+                "제육·김치", "한식 핵심 재료를 다룰 수 있습니다.", 2, "PRK");
+            CreateNode("KOR_4", CultureGroup.Korean, UnderstandingNodeType.Certification, 60, new[] { "KOR_3" },
+                "다문화 상생", "다양한 손님을 함께 맞이할 준비가 됩니다.", 3, null);
+            CreateNode("KOR_5", CultureGroup.Korean, UnderstandingNodeType.EventUnlock, 80, new[] { "KOR_4" },
+                "문화 축제", "한식 문화 축제 이벤트 조건을 충족합니다.", 4, null);
+            CreateNode("KOR_6", CultureGroup.Korean, UnderstandingNodeType.Fusion, 100, new[] { "KOR_5" },
+                "완전 이해", "한식 메뉴 영구 +5% 보너스.", 5, null);
+
+            CreateNode("MUS_1", CultureGroup.Muslim, UnderstandingNodeType.Milestone, 0, null,
+                "할랄 기본", "무슬림 손님의 식습관을 배웁니다.", 0, null);
+            CreateNode("MUS_2", CultureGroup.Muslim, UnderstandingNodeType.Milestone, 20, new[] { "MUS_1" },
+                "금기 이해", "돼지·알코올 회피가 왜 중요한지 압니다.", 1, null);
+            CreateNode("MUS_3", CultureGroup.Muslim, UnderstandingNodeType.IngredientUnlock, 40, new[] { "MUS_2" },
+                "할랄 재료", "SPC·HBF 재료를 사용할 수 있습니다.", 2, "SPC");
+            CreateNode("MUS_4", CultureGroup.Muslim, UnderstandingNodeType.Certification, 60, new[] { "MUS_3" },
+                "할랄 키친", "교차오염 방지 인증 준비.", 3, null);
+            CreateNode("MUS_5", CultureGroup.Muslim, UnderstandingNodeType.EventUnlock, 80, new[] { "MUS_4" },
+                "문화 축제", "무슬림 문화 축제 조건.", 4, null);
+            CreateNode("MUS_6", CultureGroup.Muslim, UnderstandingNodeType.Fusion, 100, new[] { "MUS_5" },
+                "완전 이해", "할랄 메뉴 +5% 보너스.", 5, null);
+
+            CreateNode("HIN_1", CultureGroup.Hindu, UnderstandingNodeType.Milestone, 0, null,
+                "채식 문화", "힌두·남아시아 채식 문화를 배웁니다.", 0, null);
+            CreateNode("HIN_2", CultureGroup.Hindu, UnderstandingNodeType.Milestone, 20, new[] { "HIN_1" },
+                "소의 의미", "소고기 금기의 문화적 배경.", 1, null);
+            CreateNode("HIN_3", CultureGroup.Hindu, UnderstandingNodeType.IngredientUnlock, 40, new[] { "HIN_2" },
+                "커리 향신료", "CUR 재료 해금.", 2, "CUR");
+            CreateNode("HIN_4", CultureGroup.Hindu, UnderstandingNodeType.Certification, 60, new[] { "HIN_3" },
+                "채식 존중", "채식 손님을 위한 조리 습관.", 3, null);
+            CreateNode("HIN_5", CultureGroup.Hindu, UnderstandingNodeType.EventUnlock, 80, new[] { "HIN_4" },
+                "문화 축제", "힌두 문화 축제 조건.", 4, null);
+            CreateNode("HIN_6", CultureGroup.Hindu, UnderstandingNodeType.Fusion, 100, new[] { "HIN_5" },
+                "완전 이해", "채식·커리 메뉴 +5%.", 5, null);
+
+            CreateNode("VEG_1", CultureGroup.Vegan, UnderstandingNodeType.Milestone, 0, null,
+                "비건 기본", "완전 채식의 의미.", 0, null);
+            CreateNode("VEG_2", CultureGroup.Vegan, UnderstandingNodeType.Milestone, 20, new[] { "VEG_1" },
+                "동물성 회피", "계란·유제품·육류 성분 확인.", 1, null);
+            CreateNode("VEG_3", CultureGroup.Vegan, UnderstandingNodeType.IngredientUnlock, 40, new[] { "VEG_2" },
+                "콩나물·두부", "BSP 재료 해금.", 2, "BSP");
+            CreateNode("VEG_4", CultureGroup.Vegan, UnderstandingNodeType.Certification, 60, new[] { "VEG_3" },
+                "비건 존", "비건 전용 조리 구역.", 3, null);
+            CreateNode("VEG_5", CultureGroup.Vegan, UnderstandingNodeType.EventUnlock, 80, new[] { "VEG_4" },
+                "문화 축제", "비건 문화 축제.", 4, null);
+            CreateNode("VEG_6", CultureGroup.Vegan, UnderstandingNodeType.Fusion, 100, new[] { "VEG_5" },
+                "완전 이해", "비건 메뉴 +5%.", 5, null);
+
+            CreateNode("SEA_1", CultureGroup.SEAsian, UnderstandingNodeType.Milestone, 0, null,
+                "동남아 기본", "이주민·향신료 문화.", 0, null);
+            CreateNode("SEA_2", CultureGroup.SEAsian, UnderstandingNodeType.Milestone, 20, new[] { "SEA_1" },
+                "고향의 맛", "저렴하고 든든한 한 끼.", 1, null);
+            CreateNode("SEA_3", CultureGroup.SEAsian, UnderstandingNodeType.IngredientUnlock, 40, new[] { "SEA_2" },
+                "해산물", "SHR 재료 해금.", 2, "SHR");
+            CreateNode("SEA_4", CultureGroup.SEAsian, UnderstandingNodeType.Certification, 60, new[] { "SEA_3" },
+                "공정 공급", "노동·공급망 존중.", 3, null);
+            CreateNode("SEA_5", CultureGroup.SEAsian, UnderstandingNodeType.EventUnlock, 80, new[] { "SEA_4" },
+                "문화 축제", "동남아 축제.", 4, null);
+            CreateNode("SEA_6", CultureGroup.SEAsian, UnderstandingNodeType.Fusion, 100, new[] { "SEA_5" },
+                "완전 이해", "동남아 메뉴 +5%.", 5, null);
+
+            CreateNode("AA_1", CultureGroup.AfricanAmerican, UnderstandingNodeType.Milestone, 0, null,
+                "소울푸드", "흑인 디아스포라 식문화.", 0, null);
+            CreateNode("AA_2", CultureGroup.AfricanAmerican, UnderstandingNodeType.Milestone, 20, new[] { "AA_1" },
+                "연대의 식탁", "편견 없는 응대.", 1, null);
+            CreateNode("AA_3", CultureGroup.AfricanAmerican, UnderstandingNodeType.IngredientUnlock, 40, new[] { "AA_2" },
+                "퓨전 재료", "다문화 재료 조합.", 2, "TFU");
+            CreateNode("AA_4", CultureGroup.AfricanAmerican, UnderstandingNodeType.Certification, 60, new[] { "AA_3" },
+                "상생 배지", "다문화 상생 인증.", 3, null);
+            CreateNode("AA_5", CultureGroup.AfricanAmerican, UnderstandingNodeType.EventUnlock, 80, new[] { "AA_4" },
+                "문화 축제", "소울푸드·UNITY 축제.", 4, null);
+            CreateNode("AA_6", CultureGroup.AfricanAmerican, UnderstandingNodeType.Fusion, 100, new[] { "AA_5" },
+                "완전 이해", "소울·퓨전 메뉴 +5%.", 5, null);
+        }
+
+        private static void CreateNode(string id, CultureGroup culture, UnderstandingNodeType type,
+            int required, string[] prereqs, string title, string desc, int row, string ingCode)
+        {
+            string path = $"{NodeDir}/Node_{id}.asset";
+            var so = LoadOrCreate<UnderstandingNodeSO>(path);
+            so.nodeId = id;
+            so.cultureGroup = culture;
+            so.nodeType = type;
+            so.requiredUnderstanding = required;
+            so.prerequisiteNodeIds = prereqs ?? System.Array.Empty<string>();
+            so.displayName = title;
+            so.description = desc;
+            so.gridRow = row;
+            if (!string.IsNullOrEmpty(ingCode))
+                so.ingredientToUnlock = AssetDatabase.LoadAssetAtPath<IngredientSO>($"{IngDir}/Ingredient_{ingCode}.asset");
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void CreateUpgrades()
+        {
+            CreateUpgrade(ShopUpgradeType.HalalKitchen, "할랄 키친 인증", CultureGroup.Muslim,
+                600, 0.25f, 0.15f, "교차오염 위험 감소, 무슬림 손님 증가.");
+            CreateUpgrade(ShopUpgradeType.VeganZone, "비건 조리 존", CultureGroup.Vegan,
+                550, 0.2f, 0.12f, "금기 패널티 완화, 비건 손님 증가.");
+            CreateUpgrade(ShopUpgradeType.MulticultureBadge, "다문화 상생 배지", CultureGroup.Korean,
+                700, 0.15f, 0.08f, "전 문화권 손님 소폭 증가, 평판 상승.");
+        }
+
+        private static void CreateUpgrade(ShopUpgradeType type, string name, CultureGroup culture,
+            int cost, float tabooReduce, float spawnBoost, string desc)
+        {
+            string path = $"{UpgradeDir}/Upgrade_{type}.asset";
+            var so = LoadOrCreate<ShopUpgradeSO>(path);
+            so.upgradeType = type;
+            so.displayName = name;
+            so.description = desc;
+            so.purchaseCost = cost;
+            so.cultureGroup = culture;
+            so.tabooPenaltyReduction = tabooReduce;
+            so.spawnBoost = spawnBoost;
             EditorUtility.SetDirty(so);
         }
 
@@ -388,6 +568,60 @@ namespace ChangJun.Editor
                 "캠페인은 구호가 아니라 손님 한 명을 대하는 태도에서 시작됩니다.",
                 "다양한 손님이 함께 찾아올 수 있는 날입니다. 정확한 주문이 신뢰를 쌓습니다.",
                 "UNITY", 1.15f);
+
+            CreateNews("Health_Sugar_Warning", CultureGroup.Vegan, NewsSentiment.Negative, 0.92f,
+                "건강", "고당도 간식 규제 논의, '가볍게' 메뉴 선호",
+                "학교·보건 당국이 고당도 간식 섭취를 줄이자는 캠페인을 벌이고 있습니다.",
+                "전국 학교와 보건소가 '가벼운 한 끼'를 권장하는 캠페인을 펼치고 있습니다. 채소·두부·콩 위주의 메뉴가 급식·외식 모두에서 주목받고 있습니다.\n\n" +
+                "영양 교사들은 \"건강은 개인 선택이지만 공공 정책과도 연결된다\"고 설명했습니다.",
+                "건강한 식습관은 사회적 약속이기도 합니다.",
+                "담백·채식 메뉴 수요가 늘 수 있습니다.",
+                "VGND", 1.05f);
+
+            CreateNews("Local_Farm_Bonus", CultureGroup.Korean, NewsSentiment.Positive, 1.1f,
+                "로컬", "로컬 농가 직거래 확대, 김치·채소 값싸게",
+                "지역 농가와 식당을 잇는 직거래가 늘며 로컬 재료 가격이 안정됐습니다.",
+                "시·군 농협이 로컬 직거래 플랫폼을 확대하면서 김치·채소류 공급가가 소폭 내렸습니다. 소비자들은 '동네에서 난 재료'에 대한 관심도 높아지고 있습니다.\n\n" +
+                "참여 농가는 \"짧은 유통이 신선함과 가격 모두에 이롭다\"고 말했습니다.",
+                "로컬 식재료는 지속가능성과 지역 경제를 동시에 살립니다.",
+                "로컬 태그 재료 구매 시 비용 이점이 있습니다.",
+                "KFOOD", 1.12f);
+
+            CreateNews("Community_Meal_Day", CultureGroup.Korean, NewsSentiment.Positive, 1.08f,
+                "나눔", "커뮤니티 밥상의 날, 창고 나눔 캠페인",
+                "식당·시민이 남는 재료를 이웃과 나누는 '커뮤니티 밥상' 행사가 확산됩니다.",
+                "지역 복지관과 연계한 '커뮤니티 밥상' 캠페인이 주말을 앞두고 화제입니다. 식당은 창고에 남은 재료를 기부하고, 이웃 식당과 연대하는 사례도 늘고 있습니다.\n\n" +
+                "사회복지사는 \"나눔은 불평등을 줄이는 작은 실천\"이라고 말했습니다.",
+                "음식 나눔은 통합사회의 따뜻한 실험입니다.",
+                "정산 시 커뮤니티 밥상을 선택하면 상생 지수가 오릅니다.",
+                "UNITY", 1.1f);
+
+            CreateNews("Halal_Cert_Boon", CultureGroup.Muslim, NewsSentiment.Positive, 1.18f,
+                "인증", "할랄 인증 매장, 소비자 신뢰 '최고'",
+                "정부 인증 할랄 매장에 대한 소비자 신뢰 조사 결과가 발표됐습니다.",
+                "할랄 인증을 받은 매장이 비인증 대비 재방문율이 높다는 조사가 공개됐습니다. 무슬림뿐 아니라 일반 소비자도 '투명한 주방'을 중요하게 여긴다고 답했습니다.\n\n" +
+                "업계는 인증 교육 수요도 함께 늘고 있다고 전했습니다.",
+                "인증은 차별이 아니라 신뢰의 언어입니다.",
+                "할랄 키친 업그레이드와 궁합이 좋은 날입니다.",
+                "HLAL", 1.2f);
+
+            CreateNews("Fair_Trade_Supply", CultureGroup.Vegan, NewsSentiment.Positive, 1.12f,
+                "윤리", "공정무역 두부·콩나물, MZ세대 선택",
+                "공정무역 표시 재료를 쓰는 메뉴가 '윤리적 소비' 대표 사례로 소개됐습니다.",
+                "공정무역 두부·콩나물을 사용하는 식당이 SNS에서 주목받고 있습니다. 소비자들은 \"값이 조금 더 들어도 생산자의 노동을 존중하고 싶다\"고 답했습니다.\n\n" +
+                "NGO는 \"윤리적 재료는 프리미엄 팁으로도 이어질 수 있다\"고 설명했습니다.",
+                "공정무역은 멀리 있는 농부와의 연결입니다.",
+                "공정무역 재료 메뉴에 프리미엄이 붙을 수 있습니다.",
+                "VGND", 1.08f);
+
+            CreateNews("Fusion_Food_Trend", CultureGroup.Korean, NewsSentiment.Positive, 1.2f,
+                "퓨전", "퓨전 워크숍 열풍, '두 문화의 밥' 인기",
+                "두 문화 이상의 재료를 조합한 퓨전 메뉴가 외식 트렌드로 떠오르고 있습니다.",
+                "대학·지역센터에서 열린 '퓨전 워크숍'에 시민 참여가 폭발적으로 늘었습니다. 할랄·비건·한식 재료를 섞은 실험 메뉴가 소개됐고, 참가자들은 \"차이를 섞는 것이 편견을 줄인다\"고 말했습니다.\n\n" +
+                "일부 식당은 워크숍 이후 한정 메뉴를 영업에 도입하기도 했습니다.",
+                "융합은 문화 상대주의의 맛있는 실습입니다.",
+                "퓨전 워크숍 이벤트 시 M20~M23 메뉴를 활용하세요.",
+                "UNITY", 1.25f);
         }
 
         private static void CreateNews(string id, CultureGroup culture, NewsSentiment sentiment,
@@ -454,16 +688,21 @@ namespace ChangJun.Editor
                 "도난 사건", "배달 중 일부 재료가 도난당했습니다.", 0.5f);
             CreateDelivery("Accident", DeliveryEventType.Accident, 25, 0.15f,
                 "배달 사고", "사고로 일부 상자가 파손되었습니다.", 1.5f);
+            CreateDelivery("LocalFarm", DeliveryEventType.None, 0, 0f,
+                "로컬 농가 보너스", "직거래 농가에서 신선한 채소가 추가로 도착했습니다.", 2f, bonusUnits: 3);
+            CreateDelivery("EthicalDelay", DeliveryEventType.Delay, 10, 0f,
+                "공정무역 배송 지연", "공정무역 공급망 점검으로 배송이 늦어졌습니다.", 1f);
         }
 
         private static void CreateDelivery(string id, DeliveryEventType type, int freshnessPenalty,
-            float stockLoss, string headline, string body, float spawnWeight = 1f)
+            float stockLoss, string headline, string body, float spawnWeight = 1f, int bonusUnits = 0)
         {
             string path = $"{DeliveryDir}/Delivery_{id}.asset";
             var so = LoadOrCreate<DeliveryEventSO>(path);
             so.eventType = type;
             so.freshnessPenalty = freshnessPenalty;
             so.stockLossRatio = stockLoss;
+            so.bonusWarehouseUnitsPerIngredient = bonusUnits;
             so.headline = headline;
             so.body = body;
             so.spawnWeight = spawnWeight;

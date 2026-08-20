@@ -66,6 +66,27 @@ namespace ChangJun.Economy
             OnMarketUpdated?.Invoke();
         }
 
+        /// <summary>보유 주식 가치의 일부를 배당으로 지급.</summary>
+        public int PayDividends(float rate)
+        {
+            int total = 0;
+            foreach (var kv in _holdings)
+            {
+                int value = kv.Value * GetPrice(kv.Key);
+                int payout = Mathf.Max(0, Mathf.RoundToInt(value * rate));
+                if (payout <= 0) continue;
+                total += payout;
+            }
+
+            if (total > 0)
+            {
+                MoneyManager.Instance.AddMoney(total);
+                DayLoopController.Instance?.Ledger.AddDividend(total, "주식 배당");
+            }
+
+            return total;
+        }
+
         public int GetPrice(string code) =>
             _prices.TryGetValue(code, out var p) ? p : 0;
 

@@ -48,7 +48,20 @@ namespace ChangJun.Delivery
                 ApplyStockLoss(_lastEvent.stockLossRatio);
 
             InventoryManager.Instance.ReceiveDeliveries(out _);
+
+            if (_lastEvent != null && _lastEvent.bonusWarehouseUnitsPerIngredient > 0)
+                ApplyLocalBonus(_lastEvent.bonusWarehouseUnitsPerIngredient);
+
             OnDeliveryProcessed?.Invoke(_freshness, _lastEvent);
+        }
+
+        private static void ApplyLocalBonus(int units)
+        {
+            foreach (var ing in InventoryManager.Instance.GetAllIngredients())
+            {
+                if (ing == null || !ing.isLocalSourced) continue;
+                InventoryManager.Instance.AddStock(ing.code, units);
+            }
         }
 
         [System.Obsolete("Use RollMorningEvent + CompleteDelivery")]

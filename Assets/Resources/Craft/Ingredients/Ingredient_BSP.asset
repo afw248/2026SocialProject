@@ -19,3 +19,5 @@ MonoBehaviour:
   unlockThreshold: 20
   purchasePrice: 25
   isStarterUnlocked: 1
+  isFairTrade: 1
+  isLocalSourced: 0

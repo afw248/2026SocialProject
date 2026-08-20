@@ -4,6 +4,7 @@ using ChangJun.Data;
 using ChangJun.Economy;
 using ChangJun.Inventory;
 using ChangJun.Progression;
+using ChangJun.Social;
 using ChangJun.Time;
 using TMPro;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace ChangJun.Bootstrap
         private readonly TextMeshProUGUI _balanceText;
         private readonly Button _actionButton;
         private readonly TextMeshProUGUI _actionButtonLabel;
+        private readonly RectTransform _upgradeContent;
         private readonly Dictionary<string, int> _cart = new();
         private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
@@ -48,8 +50,20 @@ namespace ChangJun.Bootstrap
                 new Color(0.1f, 0.2f, 0.4f));
 
             // ── 왼쪽: 재료 목록 ──
+            var upgradeScroll = UiFactory.CreatePanel(panel, "UpgradeScroll",
+                new Vector2(0.03f, 0.82f), new Vector2(0.58f, 0.9f),
+                Vector2.zero, Vector2.zero);
+            upgradeScroll.gameObject.AddComponent<Image>().color = new Color(0.9f, 0.93f, 0.98f);
+            var upgradeHlg = upgradeScroll.gameObject.AddComponent<HorizontalLayoutGroup>();
+            upgradeHlg.spacing = 6;
+            upgradeHlg.padding = new RectOffset(6, 6, 4, 4);
+            upgradeHlg.childControlWidth = true;
+            upgradeHlg.childControlHeight = true;
+            upgradeHlg.childForceExpandWidth = true;
+            _upgradeContent = upgradeScroll;
+
             var scrollRt = UiFactory.CreatePanel(panel, "Scroll",
-                new Vector2(0.03f, 0.14f), new Vector2(0.58f, 0.9f),
+                new Vector2(0.03f, 0.14f), new Vector2(0.58f, 0.81f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -182,12 +196,56 @@ namespace ChangJun.Bootstrap
             _receiptBanner.gameObject.SetActive(false);
             _actionButtonLabel.text = "구매 완료";
             _actionButton.interactable = true;
+            RebuildUpgrades();
             RebuildGrid();
             RefreshCart();
             _root.SetActive(true);
         }
 
         public void Hide() => _root.SetActive(false);
+
+        private void RebuildUpgrades()
+        {
+            foreach (Transform child in _upgradeContent)
+                UnityEngine.Object.Destroy(child.gameObject);
+
+            if (ShopUpgradeManager.Instance == null) return;
+
+            foreach (var upgrade in ShopUpgradeManager.Instance.Catalog)
+            {
+                if (upgrade == null) continue;
+                bool owned = ShopUpgradeManager.Instance.Owns(upgrade.upgradeType);
+                var cap = upgrade;
+                var btnGo = new GameObject($"Up_{upgrade.upgradeType}", typeof(RectTransform));
+                btnGo.transform.SetParent(_upgradeContent, false);
+                btnGo.AddComponent<LayoutElement>().preferredHeight = 36;
+                var img = btnGo.AddComponent<Image>();
+                img.color = owned ? new Color(0.55f, 0.75f, 0.55f) : new Color(0.55f, 0.65f, 0.85f);
+                if (!owned)
+                {
+                    var btn = btnGo.AddComponent<Button>();
+                    btn.targetGraphic = img;
+                    btn.onClick.AddListener(() =>
+                    {
+                        if (ShopUpgradeManager.Instance.TryPurchase(cap))
+                            RebuildUpgrades();
+                    });
+                }
+
+                var label = new GameObject("L", typeof(RectTransform));
+                label.transform.SetParent(btnGo.transform, false);
+                UiFactory.Stretch(label.GetComponent<RectTransform>());
+                var tmp = label.AddComponent<TextMeshProUGUI>();
+                tmp.text = owned
+                    ? $"✓ {upgrade.displayName}"
+                    : $"{upgrade.displayName} ({upgrade.purchaseCost:N0}원)";
+                tmp.fontSize = 13;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.color = Color.white;
+                tmp.raycastTarget = false;
+                KoreanUiFont.Apply(tmp);
+            }
+        }
 
         private void RebuildGrid()
         {
@@ -223,7 +281,9 @@ namespace ChangJun.Bootstrap
             int stock = InventoryManager.Instance.GetStock(ing.code);
             int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);
 
-            UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{ing.purchasePrice:N0}원",
+            int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
+
+            UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원",
                 new Vector2(0.24f, 0.58f), new Vector2(0.96f, 0.92f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 17,
@@ -270,6 +330,8 @@ namespace ChangJun.Bootstrap
                 UnityEngine.Object.Destroy(child.gameObject);
 
             int total = 0;
+            int unitCount = 0;
+            float bulk = GetBulkDiscountMultiplier(_cart, out unitCount);
             bool hasItems = _cart.Count > 0;
             _cartEmptyText.gameObject.SetActive(!hasItems && !_showingReceipt);
 
@@ -281,12 +343,13 @@ namespace ChangJun.Bootstrap
                 var ing = ResolveIngredient(pair.Key);
                 if (ing == null) continue;
 
-                int lineTotal = ing.purchasePrice * pair.Value;
+                int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
+                int lineTotal = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
                 total += lineTotal;
                 ReceiptUiHelper.CreateReceiptLine(_cartListContent, ing.displayName, pair.Value, lineTotal, false);
             }
 
-            UpdateTotals(total);
+            UpdateTotals(total, bulk, unitCount);
             RefreshActionButtonLabel();
         }
 
@@ -302,15 +365,40 @@ namespace ChangJun.Bootstrap
             _actionButtonLabel.text = _cart.Count > 0 ? "구매 완료" : "구매 없이 넘어가기";
         }
 
-        private void UpdateTotals(int total)
+        private void UpdateTotals(int total, float bulk = 1f, int unitCount = 0)
         {
+            string bulkNote = unitCount >= 20 ? " (대량 −10%)" : unitCount >= 10 ? " (대량 −5%)" : "";
             string totalLine = _showingReceipt
                 ? "구매한 재료는 아침에 도착합니다"
-                : $"합계  {total:N0}원";
+                : $"합계  {total:N0}원{bulkNote}";
 
             _cartTotalText.text = totalLine;
-            _totalText.text = $"합계: {total:N0}원";
+            _totalText.text = $"합계: {total:N0}원{bulkNote}";
             _balanceText.text = $"잔액: {MoneyManager.Instance.Money:N0}원";
+        }
+
+        private static float GetBulkDiscountMultiplier(Dictionary<string, int> cart, out int unitCount)
+        {
+            unitCount = 0;
+            foreach (var pair in cart)
+                unitCount += pair.Value;
+            if (unitCount >= 20) return 0.9f;
+            if (unitCount >= 10) return 0.95f;
+            return 1f;
+        }
+
+        private int CalculateCartTotal()
+        {
+            float bulk = GetBulkDiscountMultiplier(_cart, out _);
+            int total = 0;
+            foreach (var pair in _cart)
+            {
+                var ing = ResolveIngredient(pair.Key);
+                if (ing == null) continue;
+                int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
+                total += Mathf.RoundToInt(unitPrice * pair.Value * bulk);
+            }
+            return total;
         }
 
         private IngredientSO ResolveIngredient(string code)
@@ -421,12 +509,7 @@ namespace ChangJun.Bootstrap
                 return;
             }
 
-            int total = 0;
-            foreach (var pair in _cart)
-            {
-                var ing = ResolveIngredient(pair.Key);
-                if (ing != null) total += ing.purchasePrice * pair.Value;
-            }
+            int total = CalculateCartTotal();
 
             if (total > MoneyManager.Instance.Money)
             {
@@ -436,23 +519,29 @@ namespace ChangJun.Bootstrap
 
             var purchased = new Dictionary<string, int>(_cart);
 
+            float bulk = GetBulkDiscountMultiplier(purchased, out _);
+
             foreach (var pair in purchased)
             {
                 InventoryManager.Instance.PurchaseToWarehouse(pair.Key, pair.Value);
                 var ing = ResolveIngredient(pair.Key);
                 if (ing != null)
+                {
+                    int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
+                    int lineCost = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
                     DayLoopController.Instance.Ledger.AddPurchase(
-                        ing.purchasePrice * pair.Value,
+                        lineCost,
                         $"{ing.displayName} x{pair.Value}");
+                }
             }
 
             if (total > 0)
                 MoneyManager.Instance.SpendMoney(total);
 
-            ShowPurchaseReceipt(purchased);
+            ShowPurchaseReceipt(purchased, bulk);
         }
 
-        private void ShowPurchaseReceipt(Dictionary<string, int> purchased)
+        private void ShowPurchaseReceipt(Dictionary<string, int> purchased, float bulk)
         {
             _showingReceipt = true;
             _cart.Clear();
@@ -475,7 +564,8 @@ namespace ChangJun.Bootstrap
                 var ing = ResolveIngredient(pair.Key);
                 if (ing == null) continue;
 
-                int lineTotal = ing.purchasePrice * pair.Value;
+                int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
+                int lineTotal = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
                 total += lineTotal;
 
                 int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);

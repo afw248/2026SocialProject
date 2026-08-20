@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5ac3ef6344e9584086b48ba85c99db5, type: 3}
+  m_Name: Delivery_EthicalDelay
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.DeliveryEventSO
+  eventType: 1
+  spawnWeight: 1
+  freshnessPenalty: 10
+  stockLossRatio: 0
+  bonusWarehouseUnitsPerIngredient: 0
+  headline: "\uACF5\uC815\uBB34\uC5ED \uBC30\uC1A1 \uC9C0\uC5F0"
+  body: "\uACF5\uC815\uBB34\uC5ED \uACF5\uAE09\uB9DD \uC810\uAC80\uC73C\uB85C \uBC30\uC1A1\uC774
+    \uB2A6\uC5B4\uC84C\uC2B5\uB2C8\uB2E4."

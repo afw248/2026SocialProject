@@ -19,3 +19,4 @@ MonoBehaviour:
   - TFU
   price: 320
   cultureGroup: 4
+  requiresFusionUnlock: 0

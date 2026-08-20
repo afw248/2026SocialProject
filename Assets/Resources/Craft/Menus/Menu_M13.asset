@@ -20,3 +20,4 @@ MonoBehaviour:
   - BSP
   price: 550
   cultureGroup: 3
+  requiresFusionUnlock: 0

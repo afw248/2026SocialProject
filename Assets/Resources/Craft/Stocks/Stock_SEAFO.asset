@@ -16,6 +16,6 @@ MonoBehaviour:
   displayName: "\uB3D9\uB0A8\uC544\uC2DD\uD488"
   cultureGroup: 5
   basePrice: 7600
-  volatility: 0.035
+  volatility: 0.1
   description: "\uB3D9\uB0A8\uC544 \uD5A5\uC2E0\uB8CC\xB7\uD574\uC0B0\uBB3C \uAC00\uACF5
     \uC9C0\uC218"

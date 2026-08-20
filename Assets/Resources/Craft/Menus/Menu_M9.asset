@@ -19,3 +19,4 @@ MonoBehaviour:
   - KIM
   price: 350
   cultureGroup: 1
+  requiresFusionUnlock: 0

@@ -20,6 +20,8 @@ using ChangJun.News;
 
 using ChangJun.Progression;
 
+using ChangJun.Social;
+
 using ChangJun.Time;
 
 using UnityEngine;
@@ -185,6 +187,22 @@ namespace ChangJun.Bootstrap
             if (ExpressDeliveryService.Instance == null)
 
                 new GameObject("ExpressDelivery").AddComponent<ExpressDeliveryService>();
+
+            if (StoreReputationService.Instance == null)
+
+                new GameObject("StoreReputation").AddComponent<StoreReputationService>();
+
+            if (CulturalEventManager.Instance == null)
+
+                new GameObject("CulturalEvents").AddComponent<CulturalEventManager>();
+
+            if (SchoolLunchContractService.Instance == null)
+
+                new GameObject("SchoolLunch").AddComponent<SchoolLunchContractService>();
+
+            if (ShopUpgradeManager.Instance == null)
+
+                new GameObject("ShopUpgrades").AddComponent<ShopUpgradeManager>();
 
 
 
@@ -352,7 +370,7 @@ namespace ChangJun.Bootstrap
 
             if (tab == MainTab.Status)
 
-                _statusPanel.RefreshGauges();
+                _statusPanel.RefreshTree();
 
         }
 
@@ -393,6 +411,10 @@ namespace ChangJun.Bootstrap
             DayLoopController.Instance.OnDayChanged += HandleDayChanged;
 
             DayLoopController.Instance.OnPhaseChanged += HandlePhaseChanged;
+
+            if (UnderstandingManager.Instance != null)
+
+                UnderstandingManager.Instance.OnNodeUnlocked += HandleNodeUnlocked;
 
 
 
@@ -519,6 +541,22 @@ namespace ChangJun.Bootstrap
 
             ExpressDeliveryService.Instance?.ResetForNewDay();
 
+            StoreReputationService.Instance?.ResetDailyStats();
+
+            SchoolLunchContractService.Instance?.AdvanceDay();
+
+            SchoolLunchContractService.Instance?.TryStartContract(day);
+
+            var config = DayLoopController.Instance.Config;
+
+            if (config.inflationIntervalDays > 0 && day > 1 && day % config.inflationIntervalDays == 0)
+
+                InventoryManager.Instance?.ApplyInflation(config.inflationRatePerTick);
+
+            if (config.dividendIntervalDays > 0 && day > 1 && day % config.dividendIntervalDays == 0)
+
+                StockMarketManager.Instance?.PayDividends(config.dividendRate);
+
             _memoPanel?.ClearOrderHistory();
 
         }
@@ -530,6 +568,8 @@ namespace ChangJun.Bootstrap
         {
 
             NewsManager.Instance.RollDailyNews();
+
+            CulturalEventManager.Instance?.RollDailyEvents();
 
             StockMarketManager.Instance?.RollDailyMarket(NewsManager.Instance.TodayNews);
 
@@ -711,6 +751,18 @@ namespace ChangJun.Bootstrap
 
 
 
+        private void HandleNodeUnlocked(UnderstandingNodeSO node)
+
+        {
+
+            if (node == null) return;
+
+            _hud?.ShowBanner($"[해금] {node.displayName}");
+
+        }
+
+
+
         private void OnDestroy()
 
         {
@@ -736,6 +788,10 @@ namespace ChangJun.Bootstrap
                 DayLoopController.Instance.OnPhaseChanged -= HandlePhaseChanged;
 
             }
+
+            if (UnderstandingManager.Instance != null)
+
+                UnderstandingManager.Instance.OnNodeUnlocked -= HandleNodeUnlocked;
 
         }
 

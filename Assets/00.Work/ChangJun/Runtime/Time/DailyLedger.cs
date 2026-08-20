@@ -17,7 +17,10 @@ namespace ChangJun.Time
         public int CustomersServed { get; private set; }
 
         public int NetProfit => Revenue - IngredientCost - PenaltyLoss - PurchaseCost
-            - StockPurchaseCost + StockSaleRevenue;
+            - StockPurchaseCost + StockSaleRevenue + SubsidyIncome + DividendIncome;
+
+        public int SubsidyIncome { get; private set; }
+        public int DividendIncome { get; private set; }
 
         private readonly List<string> _lines = new();
 
@@ -31,6 +34,8 @@ namespace ChangJun.Time
             PurchaseCost = 0;
             StockPurchaseCost = 0;
             StockSaleRevenue = 0;
+            SubsidyIncome = 0;
+            DividendIncome = 0;
             CustomersServed = 0;
             _lines.Clear();
         }
@@ -71,6 +76,18 @@ namespace ChangJun.Time
         {
             StockSaleRevenue += amount;
             _lines.Add($"+ 주식 매도 {label}: {amount:N0}원");
+        }
+
+        public void AddSubsidy(int amount, string label)
+        {
+            SubsidyIncome += amount;
+            _lines.Add($"+ {label}: {amount:N0}원");
+        }
+
+        public void AddDividend(int amount, string label)
+        {
+            DividendIncome += amount;
+            _lines.Add($"+ {label}: {amount:N0}원");
         }
     }
 }

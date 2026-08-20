@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93e8f8384110e3e488df0d6b2ed0a63a, type: 3}
+  m_Name: Upgrade_VeganZone
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.ShopUpgradeSO
+  upgradeType: 1
+  displayName: "\uBE44\uAC74 \uC870\uB9AC \uC874"
+  description: "\uAE08\uAE30 \uD328\uB110\uD2F0 \uC644\uD654, \uBE44\uAC74 \uC190\uB2D8
+    \uC99D\uAC00."
+  purchaseCost: 550
+  cultureGroup: 4
+  tabooPenaltyReduction: 0.2
+  spawnBoost: 0.12

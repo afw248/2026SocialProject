@@ -4,6 +4,7 @@ using System.Text;
 using ChangJun.Data;
 using ChangJun.Economy;
 using ChangJun.News;
+using ChangJun.Social;
 using ChangJun.Time;
 using TMPro;
 using UnityEngine;
@@ -34,6 +35,7 @@ namespace ChangJun.Bootstrap
         private RectTransform _marketListRoot;
         private TextMeshProUGUI _briefingHeadline;
         private TextMeshProUGUI _briefingBody;
+        private TextMeshProUGUI _eventBanner;
         private readonly TextMeshProUGUI _actionLabel;
         private readonly Button _actionButton;
 
@@ -56,6 +58,14 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.Center, 16,
                 new Color(0.38f, 0.34f, 0.3f));
+
+            _eventBanner = UiFactory.CreateText(paper, "EventBanner", "",
+                new Vector2(0.05f, 0.865f), new Vector2(0.95f, 0.902f),
+                Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 18,
+                new Color(0.55f, 0.22f, 0.12f));
+            _eventBanner.fontStyle = FontStyles.Bold;
+            _eventBanner.gameObject.SetActive(false);
 
             _pages[PageFront] = BuildFrontPage(paper);
             _pages[PageMarket] = BuildMarketPage(paper);
@@ -94,6 +104,7 @@ namespace ChangJun.Bootstrap
             PopulateFrontPage(news);
             PopulateMarketPage();
             PopulateBriefingPage(news);
+            PopulateEventBanner();
 
             _root.SetActive(true);
             return true;
@@ -415,6 +426,26 @@ namespace ChangJun.Bootstrap
         {
             _briefingHeadline.text = $"오늘의 영업 포인트 — {news.headline}";
             _briefingBody.text = BuildBriefing(news);
+        }
+
+        private void PopulateEventBanner()
+        {
+            var events = CulturalEventManager.Instance;
+            if (events == null || events.TodayEvent == ActiveCulturalEvent.None)
+            {
+                _eventBanner.gameObject.SetActive(false);
+                return;
+            }
+
+            _eventBanner.gameObject.SetActive(true);
+            _eventBanner.text = events.TodayEvent switch
+            {
+                ActiveCulturalEvent.CultureFestival =>
+                    $"★ 문화 축제 ★  {CultureLabel(events.FestivalCulture)} 손님 ×2 · 메뉴 +10%",
+                ActiveCulturalEvent.FusionWorkshop =>
+                    "★ 퓨전 워크숍 ★  M20~M23 퓨전 메뉴 주문 가능",
+                _ => "",
+            };
         }
 
         private void RefreshPortfolioLine()

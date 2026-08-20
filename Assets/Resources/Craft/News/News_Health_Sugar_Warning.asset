@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93f2766bd19c85d478e43b4e1b5aafc5, type: 3}
+  m_Name: News_Health_Sugar_Warning
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.NewsSO
+  cultureGroup: 4
+  sentiment: 1
+  priceMultiplier: 0.92
+  spawnWeight: 1.05
+  boycottWeight: 0
+  sectionTag: "\uAC74\uAC15"
+  headline: "\uACE0\uB2F9\uB3C4 \uAC04\uC2DD \uADDC\uC81C \uB17C\uC758, '\uAC00\uBCCD\uAC8C'
+    \uBA54\uB274 \uC120\uD638"
+  subheadline: "\uD559\uAD50\xB7\uBCF4\uAC74 \uB2F9\uAD6D\uC774 \uACE0\uB2F9\uB3C4
+    \uAC04\uC2DD \uC12D\uCDE8\uB97C \uC904\uC774\uC790\uB294 \uCEA0\uD398\uC778\uC744
+    \uBC8C\uC774\uACE0 \uC788\uC2B5\uB2C8\uB2E4."
+  body: "\uD559\uAD50\xB7\uBCF4\uAC74 \uB2F9\uAD6D\uC774 \uACE0\uB2F9\uB3C4 \uAC04\uC2DD
+    \uC12D\uCDE8\uB97C \uC904\uC774\uC790\uB294 \uCEA0\uD398\uC778\uC744 \uBC8C\uC774\uACE0
+    \uC788\uC2B5\uB2C8\uB2E4."
+  article: "\uC804\uAD6D \uD559\uAD50\uC640 \uBCF4\uAC74\uC18C\uAC00 '\uAC00\uBCBC\uC6B4
+    \uD55C \uB07C'\uB97C \uAD8C\uC7A5\uD558\uB294 \uCEA0\uD398\uC778\uC744 \uD3BC\uCE58\uACE0
+    \uC788\uC2B5\uB2C8\uB2E4. \uCC44\uC18C\xB7\uB450\uBD80\xB7\uCF69 \uC704\uC8FC\uC758
+    \uBA54\uB274\uAC00 \uAE09\uC2DD\xB7\uC678\uC2DD \uBAA8\uB450\uC5D0\uC11C \uC8FC\uBAA9\uBC1B\uACE0
+    \uC788\uC2B5\uB2C8\uB2E4.\n\n\uC601\uC591 \uAD50\uC0AC\uB4E4\uC740 \"\uAC74\uAC15\uC740
+    \uAC1C\uC778 \uC120\uD0DD\uC774\uC9C0\uB9CC \uACF5\uACF5 \uC815\uCC45\uACFC\uB3C4
+    \uC5F0\uACB0\uB41C\uB2E4\"\uACE0 \uC124\uBA85\uD588\uC2B5\uB2C8\uB2E4."
+  sidebarNote: "\uAC74\uAC15\uD55C \uC2DD\uC2B5\uAD00\uC740 \uC0AC\uD68C\uC801 \uC57D\uC18D\uC774\uAE30\uB3C4
+    \uD569\uB2C8\uB2E4."
+  summary: "\uB2F4\uBC31\xB7\uCC44\uC2DD \uBA54\uB274 \uC218\uC694\uAC00 \uB298 \uC218
+    \uC788\uC2B5\uB2C8\uB2E4."
+  illustration: {fileID: 0}
+  primaryStockCode: VGND

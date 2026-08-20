@@ -13,10 +13,9 @@ MonoBehaviour:
   m_Name: Menu_M15
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.MenuRecipeSO
   code: M15
-  displayName: "\uCC44\uC18C \uAD6D\uBC25 \uCEF5\uBC25"
+  displayName: "\uCF69\uB098\uBB3C \uCC44\uC18C \uCEF5\uBC25"
   ingredientCodes:
-  - BRT
-  - VEG
   - BSP
-  price: 420
+  - VEG
+  price: 280
   cultureGroup: 4

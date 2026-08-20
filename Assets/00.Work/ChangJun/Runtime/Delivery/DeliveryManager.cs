@@ -70,8 +70,7 @@ namespace ChangJun.Delivery
 
             float total = 0f;
             foreach (var e in _events)
-                if (e != null && e.eventType != DeliveryEventType.None)
-                    total += e.spawnWeight;
+                if (e != null) total += e.spawnWeight;
 
             if (total <= 0f) return null;
 
@@ -79,7 +78,7 @@ namespace ChangJun.Delivery
             float acc = 0f;
             foreach (var e in _events)
             {
-                if (e == null || e.eventType == DeliveryEventType.None) continue;
+                if (e == null) continue;
                 acc += e.spawnWeight;
                 if (roll <= acc) return e;
             }

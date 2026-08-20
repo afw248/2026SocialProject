@@ -26,11 +26,12 @@ namespace ChangJun.Bootstrap
         private MainTab _current = MainTab.Craft;
 
         public event Action<MainTab> OnTabChanged;
+        public event Action OnDeliveryRequested;
 
         public SideTabBar(RectTransform parent, Action<MainTab> onTabSelected)
         {
             var bar = UiFactory.CreatePanel(parent, "SideTabBar",
-                new Vector2(0.9f, 0.12f), new Vector2(1f, 0.64f),
+                new Vector2(0.9f, 0.08f), new Vector2(1f, 0.70f),
                 new Vector2(-8, 0), new Vector2(-4, 0));
             _barRoot = bar.gameObject;
 
@@ -47,19 +48,23 @@ namespace ChangJun.Bootstrap
             CreateTabButton(bar, MainTab.Memo, "메모", new Color(0.95f, 0.85f, 0.45f), onTabSelected);
             CreateTabButton(bar, MainTab.Recipe, "도감", new Color(0.25f, 0.4f, 0.7f), onTabSelected);
             CreateTabButton(bar, MainTab.Status, "정보", new Color(0.45f, 0.35f, 0.65f), onTabSelected);
+            CreateDeliveryButton(bar);
 
             RefreshTabVisuals();
         }
 
         public void RegisterPanel(MainTab tab, GameObject panel)
         {
+            if (panel == null) return;
             _panels[tab] = panel;
-            panel.SetActive(tab == _current);
+            ApplyVisibility();
         }
+
+        /// <summary>등록된 패널 중 현재 탭만 표시. 부모 재활성화 후에도 호출.</summary>
+        public void RefreshVisibility() => ApplyVisibility();
 
         public void SelectTab(MainTab tab)
         {
-            if (_current == tab) return;
             _current = tab;
             ApplyVisibility();
             RefreshTabVisuals();
@@ -69,7 +74,13 @@ namespace ChangJun.Bootstrap
         private void ApplyVisibility()
         {
             foreach (var pair in _panels)
-                pair.Value.SetActive(pair.Key == _current);
+            {
+                if (pair.Value == null) continue;
+                bool show = pair.Key == _current;
+                pair.Value.SetActive(show);
+                if (show)
+                    pair.Value.transform.SetAsLastSibling();
+            }
         }
 
         private void RefreshTabVisuals()
@@ -105,12 +116,42 @@ namespace ChangJun.Bootstrap
             var captured = tab;
             btn.onClick.AddListener(() =>
             {
+                if (captured == _current && captured != MainTab.Craft)
+                {
+                    SelectTab(MainTab.Craft);
+                    onTabSelected?.Invoke(MainTab.Craft);
+                    return;
+                }
+
                 SelectTab(captured);
                 onTabSelected?.Invoke(captured);
             });
 
+            AddButtonLabel(go.transform, label);
+        }
+
+        private void CreateDeliveryButton(RectTransform bar)
+        {
+            var go = new GameObject("Tab_Delivery", typeof(RectTransform));
+            go.transform.SetParent(bar, false);
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = 72;
+            le.preferredWidth = 72;
+
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.22f, 0.38f, 0.62f);
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => OnDeliveryRequested?.Invoke());
+
+            AddButtonLabel(go.transform, "배달");
+        }
+
+        private static void AddButtonLabel(Transform parent, string label)
+        {
             var labelGo = new GameObject("Label", typeof(RectTransform));
-            labelGo.transform.SetParent(go.transform, false);
+            labelGo.transform.SetParent(parent, false);
             UiFactory.Stretch(labelGo.GetComponent<RectTransform>());
             var tmp = labelGo.AddComponent<TextMeshProUGUI>();
             tmp.text = label;

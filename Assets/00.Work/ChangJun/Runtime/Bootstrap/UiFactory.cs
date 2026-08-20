@@ -106,5 +106,17 @@ namespace ChangJun.Bootstrap
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
         }
+
+        /// <summary>슬라이딩 패널 공통 휠 감도. Unity 기본값(1)은 너무 미세함.</summary>
+        public const float DefaultScrollSensitivity = 90f;
+
+        public static void ConfigureScroll(ScrollRect scroll, float sensitivity = DefaultScrollSensitivity)
+        {
+            if (scroll == null) return;
+            scroll.scrollSensitivity = sensitivity;
+            scroll.inertia = true;
+            scroll.decelerationRate = 0.135f;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+        }
     }
 }

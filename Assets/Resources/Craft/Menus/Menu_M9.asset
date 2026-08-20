@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Menu_M9
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.MenuRecipeSO
   code: M9
-  displayName: "\uB3FC\uC9C0\uAD6D\uBC25\uD48D \uCEF5\uBC25"
+  displayName: "\uC81C\uC721 \uAE40\uCE58 \uCEF5\uBC25"
   ingredientCodes:
   - PRK
-  - BRT
+  - KIM
   price: 350
   cultureGroup: 1

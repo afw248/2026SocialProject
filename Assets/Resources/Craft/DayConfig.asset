@@ -23,7 +23,7 @@ MonoBehaviour:
   understandingLossOnWrongOrder: 5
   understandingLossOnTaboo: 5
   understandingLossOnWrongRecipe: 2
-  starterStockPerIngredient: 5
+  starterStockPerIngredient: 20
   expressDeliveryMinutes: 30
   economyDeliveryMinutes: 60
   expressDeliveryPriceMultiplier: 2

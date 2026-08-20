@@ -25,7 +25,7 @@ namespace ChangJun.Data
         public int understandingLossOnWrongRecipe = 2;
 
         [Header("시작 재고 (1일차)")]
-        public int starterStockPerIngredient = 5;
+        public int starterStockPerIngredient = 20;
 
         [Header("영업 중 배달")]
         public int expressDeliveryMinutes = 30;

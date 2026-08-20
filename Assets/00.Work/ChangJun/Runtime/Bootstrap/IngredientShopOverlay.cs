@@ -25,7 +25,7 @@ namespace ChangJun.Bootstrap
         private readonly Button _actionButton;
         private readonly TextMeshProUGUI _actionButtonLabel;
         private readonly Dictionary<string, int> _cart = new();
-        private readonly Dictionary<string, TextMeshProUGUI> _cardQtyLabels = new();
+        private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
         private bool _showingReceipt;
 
@@ -53,6 +53,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = UiFactory.CreateStretchChild(scrollRt, "Viewport");
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -64,7 +65,7 @@ namespace ChangJun.Bootstrap
             _gridContent.anchorMax = new Vector2(1, 1);
 
             var grid = _gridContent.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(260, 130);
+            grid.cellSize = new Vector2(260, 160);
             grid.spacing = new Vector2(10, 10);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 2;
@@ -94,6 +95,7 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.zero);
             var cartScroll = cartScrollRt.gameObject.AddComponent<ScrollRect>();
             cartScroll.horizontal = false;
+            UiFactory.ConfigureScroll(cartScroll);
 
             var cartViewport = UiFactory.CreateStretchChild(cartScrollRt, "Viewport");
             cartViewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -189,10 +191,11 @@ namespace ChangJun.Bootstrap
 
         private void RebuildGrid()
         {
-            _cardQtyLabels.Clear();
+            _qtySelectors.Clear();
             foreach (Transform child in _gridContent)
                 UnityEngine.Object.Destroy(child.gameObject);
 
+            IngredientVisualCatalog.EnsureLoaded();
             foreach (var ing in _ingredients)
             {
                 if (ing == null) continue;
@@ -205,53 +208,49 @@ namespace ChangJun.Bootstrap
         {
             var card = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
             var le = card.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 130;
+            le.preferredHeight = 160;
             le.preferredWidth = 260;
             card.gameObject.AddComponent<Image>().color = Color.white;
+
+            var iconRt = UiFactory.CreatePanel(card, "Icon",
+                new Vector2(0.04f, 0.58f), new Vector2(0.22f, 0.92f),
+                Vector2.zero, Vector2.zero);
+            var iconImg = iconRt.gameObject.AddComponent<Image>();
+            iconImg.sprite = IngredientVisualCatalog.GetButtonIcon(ing.code);
+            iconImg.preserveAspect = true;
+            iconImg.color = iconImg.sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
 
             int stock = InventoryManager.Instance.GetStock(ing.code);
             int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);
 
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{ing.purchasePrice:N0}원",
-                new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.95f),
+                new Vector2(0.24f, 0.58f), new Vector2(0.96f, 0.92f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 17,
                 new Color(0.1f, 0.12f, 0.2f));
 
             UiFactory.CreateText(card, "Stock",
                 $"보유 {stock}  ·  배달대기 {warehouse}",
-                new Vector2(0.05f, 0.38f), new Vector2(0.95f, 0.52f),
+                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 14,
                 new Color(0.35f, 0.4f, 0.5f));
 
-            var qtyText = UiFactory.CreateText(card, "Qty", "0",
-                new Vector2(0.3f, 0.08f), new Vector2(0.5f, 0.34f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 22,
-                new Color(0.1f, 0.25f, 0.5f));
-            _cardQtyLabels[ing.code] = qtyText;
-
-            var minusRt = UiFactory.CreatePanel(card, "Minus",
-                new Vector2(0.05f, 0.08f), new Vector2(0.28f, 0.34f),
-                Vector2.zero, Vector2.zero);
-            var minusBtn = minusRt.gameObject.AddComponent<Button>();
-            minusBtn.targetGraphic = minusRt.gameObject.AddComponent<Image>();
-            minusBtn.targetGraphic.color = new Color(0.85f, 0.85f, 0.9f);
             string code = ing.code;
-            minusBtn.onClick.AddListener(() => AdjustCart(code, -1));
-            UiFactory.CreateText(minusRt, "T", "-", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 24);
+            int initial = _cart.TryGetValue(code, out var q) ? q : 0;
+            _qtySelectors[code] = new QuantitySelectorWidget(
+                card, new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.42f),
+                qty => SetCartQuantity(code, qty), initial);
+        }
 
-            var plusRt = UiFactory.CreatePanel(card, "Plus",
-                new Vector2(0.52f, 0.08f), new Vector2(0.75f, 0.34f),
-                Vector2.zero, Vector2.zero);
-            var plusBtn = plusRt.gameObject.AddComponent<Button>();
-            plusBtn.targetGraphic = plusRt.gameObject.AddComponent<Image>();
-            plusBtn.targetGraphic.color = new Color(0.85f, 0.9f, 0.85f);
-            plusBtn.onClick.AddListener(() => AdjustCart(code, 1));
-            UiFactory.CreateText(plusRt, "T", "+", Vector2.zero, Vector2.one,
-                Vector2.zero, Vector2.zero, TextAlignmentOptions.Center, 24);
+        private void SetCartQuantity(string code, int qty)
+        {
+            if (_showingReceipt) return;
+
+            if (qty <= 0) _cart.Remove(code);
+            else _cart[code] = qty;
+
+            RefreshCart();
         }
 
         private void AdjustCart(string code, int delta)
@@ -259,14 +258,10 @@ namespace ChangJun.Bootstrap
             if (_showingReceipt) return;
 
             int next = (_cart.TryGetValue(code, out var q) ? q : 0) + delta;
-            if (next < 0) next = 0;
-            if (next == 0) _cart.Remove(code);
-            else _cart[code] = next;
+            SetCartQuantity(code, next);
 
-            if (_cardQtyLabels.TryGetValue(code, out var label))
-                label.text = next.ToString();
-
-            RefreshCart();
+            if (_qtySelectors.TryGetValue(code, out var selector))
+                selector.SetQuantity(next, notify: false);
         }
 
         private void RefreshCart()
@@ -288,10 +283,23 @@ namespace ChangJun.Bootstrap
 
                 int lineTotal = ing.purchasePrice * pair.Value;
                 total += lineTotal;
-                CreateReceiptLine(_cartListContent, ing.displayName, pair.Value, lineTotal, false);
+                ReceiptUiHelper.CreateReceiptLine(_cartListContent, ing.displayName, pair.Value, lineTotal, false);
             }
 
             UpdateTotals(total);
+            RefreshActionButtonLabel();
+        }
+
+        private void RefreshActionButtonLabel()
+        {
+            if (_showingReceipt)
+            {
+                _actionButtonLabel.text = "계속 구매";
+                return;
+            }
+
+            // 장바구니가 비어 있어도 하루를 넘길 수 있음
+            _actionButtonLabel.text = _cart.Count > 0 ? "구매 완료" : "구매 없이 넘어가기";
         }
 
         private void UpdateTotals(int total)
@@ -368,79 +376,16 @@ namespace ChangJun.Bootstrap
             KoreanUiFont.Apply(tmp);
         }
 
-        private static void CreateReceiptLine(Transform parent, string name, int qty, int lineTotal,
-            bool isPurchaseResult)
-        {
-            var row = new GameObject($"Line_{name}", typeof(RectTransform));
-            row.transform.SetParent(parent, false);
-
-            var le = row.AddComponent<LayoutElement>();
-            le.preferredHeight = isPurchaseResult ? 50f : 34f;
-            le.minHeight = le.preferredHeight;
-
-            var bg = row.AddComponent<Image>();
-            bg.color = isPurchaseResult
-                ? new Color(0.85f, 0.95f, 0.88f, 0.95f)
-                : new Color(1f, 1f, 1f, 0.92f);
-
-            var hlg = row.AddComponent<HorizontalLayoutGroup>();
-            hlg.padding = new RectOffset(8, 8, 4, 4);
-            hlg.spacing = 4;
-            hlg.childAlignment = TextAnchor.MiddleLeft;
-            hlg.childControlWidth = true;
-            hlg.childControlHeight = true;
-            hlg.childForceExpandWidth = false;
-            hlg.childForceExpandHeight = true;
-
-            var nameCell = CreateLineCell(row.transform, 1f, 80f);
-            var nameTmp = nameCell.AddComponent<TextMeshProUGUI>();
-            nameTmp.text = name;
-            nameTmp.fontSize = isPurchaseResult ? 15 : 17;
-            nameTmp.color = new Color(0.1f, 0.12f, 0.2f);
-            nameTmp.alignment = TextAlignmentOptions.MidlineLeft;
-            nameTmp.raycastTarget = false;
-            KoreanUiFont.Apply(nameTmp);
-
-            var qtyCell = CreateLineCell(row.transform, 56f, 56f);
-            var qtyTmp = qtyCell.AddComponent<TextMeshProUGUI>();
-            qtyTmp.text = isPurchaseResult ? $"+{qty}개" : $"×{qty}";
-            qtyTmp.fontSize = isPurchaseResult ? 16 : 17;
-            qtyTmp.color = new Color(0.15f, 0.25f, 0.45f);
-            qtyTmp.alignment = TextAlignmentOptions.Center;
-            qtyTmp.raycastTarget = false;
-            KoreanUiFont.Apply(qtyTmp);
-
-            var priceCell = CreateLineCell(row.transform, 72f, 72f);
-            var priceTmp = priceCell.AddComponent<TextMeshProUGUI>();
-            priceTmp.text = isPurchaseResult ? $"{lineTotal:N0}원" : $"{lineTotal:N0}원";
-            priceTmp.fontSize = 17;
-            priceTmp.color = new Color(0.1f, 0.15f, 0.25f);
-            priceTmp.alignment = TextAlignmentOptions.MidlineRight;
-            priceTmp.raycastTarget = false;
-            KoreanUiFont.Apply(priceTmp);
-        }
-
-        private static GameObject CreateLineCell(Transform parent, float flexOrWidth, float minWidth)
-        {
-            var cell = new GameObject("Cell", typeof(RectTransform));
-            cell.transform.SetParent(parent, false);
-            var le = cell.AddComponent<LayoutElement>();
-            if (flexOrWidth <= 1f)
-            {
-                le.flexibleWidth = 1f;
-                le.minWidth = minWidth;
-            }
-            else
-            {
-                le.preferredWidth = flexOrWidth;
-                le.minWidth = minWidth;
-            }
-            return cell;
-        }
-
         private void OnActionButton()
         {
             if (_showingReceipt)
+            {
+                ResumeShoppingAfterReceipt();
+                return;
+            }
+
+            // 아무것도 안 사도 다음날로 진행 가능
+            if (_cart.Count == 0)
             {
                 Hide();
                 OnShoppingComplete?.Invoke();
@@ -450,9 +395,31 @@ namespace ChangJun.Bootstrap
             ConfirmPurchase();
         }
 
+        private void ResumeShoppingAfterReceipt()
+        {
+            _showingReceipt = false;
+            _cart.Clear();
+            _cartHeader.SetActive(true);
+            _receiptBanner.gameObject.SetActive(false);
+
+            foreach (Transform child in _cartListContent)
+                UnityEngine.Object.Destroy(child.gameObject);
+
+            foreach (var selector in _qtySelectors.Values)
+                selector.SetQuantity(0, notify: false);
+
+            RebuildGrid();
+            RefreshCart();
+        }
+
         private void ConfirmPurchase()
         {
-            if (_cart.Count == 0) return;
+            if (_cart.Count == 0)
+            {
+                Hide();
+                OnShoppingComplete?.Invoke();
+                return;
+            }
 
             int total = 0;
             foreach (var pair in _cart)
@@ -489,10 +456,10 @@ namespace ChangJun.Bootstrap
         {
             _showingReceipt = true;
             _cart.Clear();
-            _actionButtonLabel.text = "확인";
+            _actionButtonLabel.text = "계속 구매";
             _cartHeader.SetActive(false);
             _receiptBanner.gameObject.SetActive(true);
-            _receiptBanner.text = "구매 완료! 내일 아침 배달됩니다.";
+            _receiptBanner.text = "구매 완료! 내일 아침 배달됩니다. 더 살 수도 있어요.";
 
             foreach (Transform child in _cartListContent)
                 UnityEngine.Object.Destroy(child.gameObject);
@@ -513,7 +480,7 @@ namespace ChangJun.Bootstrap
 
                 int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);
                 int stock = InventoryManager.Instance.GetStock(ing.code);
-                CreateReceiptLine(
+                ReceiptUiHelper.CreateReceiptLine(
                     _cartListContent,
                     $"{ing.displayName}\n배달대기 {warehouse} · 보유 {stock}",
                     pair.Value,

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: "Customer_\uB85C\uC0AC"
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.CraftCustomerSO
   customerName: "\uB85C\uC0AC"
-  orderLine: "\uCC44\uC18C \uAD6D\uBC25 \uB530\uB73B\uD55C \uAC70\uC694. \uC624\uB298
-    \uCD94\uC6CC\uC11C."
+  orderLine: "\uCF69\uB098\uBB3C\uC774\uB791 \uC57C\uCC44\uC694. \uB2F4\uBC31\uD55C
+    \uAC70."
   diet: 2
   requiredMenu: {fileID: 11400000, guid: 53cdca47862d7974c87cda4f7e1e55df, type: 2}
   cultureGroup: 4

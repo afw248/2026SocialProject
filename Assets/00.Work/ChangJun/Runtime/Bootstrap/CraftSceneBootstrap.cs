@@ -50,9 +50,13 @@ namespace ChangJun.Bootstrap
 
         private CraftHudPresenter _hud;
 
+        private MemoPadPanel _memoPanel;
+
         private CustomerOrderBubble _orderBubble;
 
         private StatusPanel _statusPanel;
+
+        private GameObject _recipePanelRoot;
 
         private SideTabBar _tabBar;
 
@@ -170,6 +174,10 @@ namespace ChangJun.Bootstrap
 
                 new GameObject("News").AddComponent<NewsManager>();
 
+            if (StockMarketManager.Instance == null)
+
+                new GameObject("StockMarket").AddComponent<StockMarketManager>();
+
             if (Delivery.DeliveryManager.Instance == null)
 
                 new GameObject("Delivery").AddComponent<Delivery.DeliveryManager>();
@@ -208,11 +216,21 @@ namespace ChangJun.Bootstrap
 
         {
 
+            var existingCanvas = GameObject.Find("UI_Canvas");
+
+            if (existingCanvas != null)
+
+                Destroy(existingCanvas);
+
             var canvasGo = new GameObject("UI_Canvas");
 
             var canvas = canvasGo.AddComponent<Canvas>();
 
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+            canvas.sortingOrder = 0;
+
+            canvas.overrideSorting = true;
 
 
 
@@ -229,6 +247,10 @@ namespace ChangJun.Bootstrap
 
 
             var root = canvasGo.transform as RectTransform;
+
+
+
+            CreateBackground();
 
 
 
@@ -252,23 +274,16 @@ namespace ChangJun.Bootstrap
 
 
 
-            var memoPanel = new MemoPadPanel(_contentArea);
-
-            var recipePanel = new RecipeBookPanel(_contentArea, _menus, _ingredients);
-
+            _memoPanel = new MemoPadPanel(_contentArea);
+            _recipePanelRoot = new RecipeBookPanel(_contentArea, _menus, _ingredients).Root;
             _statusPanel = new StatusPanel(_contentArea);
 
-
-
             _tabBar = new SideTabBar(root, HandleTabSelected);
-
             _tabBar.RegisterPanel(MainTab.Craft, _hud.CraftRoot.gameObject);
-
-            _tabBar.RegisterPanel(MainTab.Memo, memoPanel.Root);
-
-            _tabBar.RegisterPanel(MainTab.Recipe, recipePanel.Root);
-
+            _tabBar.RegisterPanel(MainTab.Memo, _memoPanel.Root);
+            _tabBar.RegisterPanel(MainTab.Recipe, _recipePanelRoot);
             _tabBar.RegisterPanel(MainTab.Status, _statusPanel.Root);
+            ForceCraftTabOnly();
 
 
 
@@ -295,6 +310,41 @@ namespace ChangJun.Bootstrap
         }
 
 
+
+        private static void CreateBackground()
+        {
+            var canvasGo = new GameObject("BackgroundCanvas");
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = -100;
+            canvas.overrideSorting = true;
+
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+
+            var root = canvasGo.GetComponent<RectTransform>();
+            UiFactory.Stretch(root);
+
+            var bg = UiFactory.CreateStretchChild(root, "Background");
+            var img = bg.gameObject.AddComponent<Image>();
+            img.raycastTarget = false;
+            img.preserveAspect = false;
+            img.color = Color.white;
+
+            var sprite = Resources.Load<Sprite>("Craft/Sprites/CraftBackground");
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.type = Image.Type.Simple;
+            }
+            else
+            {
+                img.color = new Color(0.08f, 0.08f, 0.12f, 1f);
+                Debug.LogWarning("[Bootstrap] CraftBackground 스프라이트를 찾지 못했습니다.");
+            }
+        }
 
         private void HandleTabSelected(MainTab tab)
 
@@ -324,7 +374,7 @@ namespace ChangJun.Bootstrap
 
             _morningDelivery.OnReceived += OnMorningReceived;
 
-            _hud.OnDeliveryRequested += () => _expressDelivery.Show(_ingredients);
+            _tabBar.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
 
             var express = ExpressDeliveryService.Instance;
 
@@ -352,6 +402,23 @@ namespace ChangJun.Bootstrap
 
 
 
+        private void ForceCraftTabOnly()
+        {
+            if (_memoPanel != null && _memoPanel.Root != null)
+                _memoPanel.Root.SetActive(false);
+            if (_recipePanelRoot != null)
+                _recipePanelRoot.SetActive(false);
+            if (_statusPanel != null && _statusPanel.Root != null)
+                _statusPanel.Root.SetActive(false);
+            if (_hud != null && _hud.CraftRoot != null)
+            {
+                _hud.CraftRoot.gameObject.SetActive(true);
+                _hud.CraftRoot.SetAsLastSibling();
+            }
+            if (_tabBar != null)
+                _tabBar.SelectTab(MainTab.Craft);
+        }
+
         private void SetGameplayHudVisible(bool visible)
 
         {
@@ -363,6 +430,10 @@ namespace ChangJun.Bootstrap
             _hud.HeaderRoot.SetActive(visible);
 
             _orderDockRoot.SetActive(visible);
+
+            if (visible)
+
+                ForceCraftTabOnly();
 
             if (!visible)
 
@@ -448,6 +519,8 @@ namespace ChangJun.Bootstrap
 
             ExpressDeliveryService.Instance?.ResetForNewDay();
 
+            _memoPanel?.ClearOrderHistory();
+
         }
 
 
@@ -457,6 +530,8 @@ namespace ChangJun.Bootstrap
         {
 
             NewsManager.Instance.RollDailyNews();
+
+            StockMarketManager.Instance?.RollDailyMarket(NewsManager.Instance.TodayNews);
 
             if (!_newsOverlay.TryShow(BeginBusinessAfterMorning))
 
@@ -519,6 +594,8 @@ namespace ChangJun.Bootstrap
         {
 
             _orderAccepted = true;
+
+            _memoPanel?.RecordCustomerOrder(_controller.CurrentCustomer);
 
             if (DayLoopController.Instance.Phase == DayPhase.Open)
 

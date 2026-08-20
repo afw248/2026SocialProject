@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bc3cdd532b2796a47ab241c6755e9658, type: 3}
-  m_Name: Ingredient_BRT
+  m_Name: Ingredient_PGD
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.IngredientSO
-  code: BRT
-  displayName: "\uC721\uC218(\uCC44\uC218)"
-  forbiddenIn: 0
+  code: PGD
+  displayName: "\uB2E4\uC9C4\uB3FC\uC9C0\uACE0\uAE30"
+  forbiddenIn: 7
   cultureGroup: 1
-  unlockThreshold: 25
-  purchasePrice: 40
-  isStarterUnlocked: 1
+  unlockThreshold: 45
+  purchasePrice: 75
+  isStarterUnlocked: 0

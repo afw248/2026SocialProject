@@ -1,0 +1,559 @@
+fileFormatVersion: 2
+guid: 353c8226658b47dea9d8dc9b63b84638
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -8992401314374496673
+    second: Q11vv-Photoroom_0
+  - first:
+      213: -8344682897290452528
+    second: Q11vv-Photoroom_1
+  - first:
+      213: 4247171341270077264
+    second: Q11vv-Photoroom_2
+  - first:
+      213: 4553350362322137836
+    second: Q11vv-Photoroom_3
+  - first:
+      213: -8644643432868244957
+    second: Q11vv-Photoroom_4
+  - first:
+      213: 4059163116242203313
+    second: Q11vv-Photoroom_5
+  - first:
+      213: -5158931980413282793
+    second: Q11vv-Photoroom_6
+  - first:
+      213: -7107163730182556245
+    second: Q11vv-Photoroom_7
+  - first:
+      213: 9088216880442415049
+    second: Q11vv-Photoroom_8
+  - first:
+      213: -8976593325996783231
+    second: Q11vv-Photoroom_9
+  - first:
+      213: 570779488301347041
+    second: Q11vv-Photoroom_10
+  - first:
+      213: 4860897075723519501
+    second: Q11vv-Photoroom_11
+  - first:
+      213: 549943512729879915
+    second: Q11vv-Photoroom_12
+  - first:
+      213: 7791341672351757186
+    second: Q11vv-Photoroom_13
+  - first:
+      213: 2419784691822612434
+    second: Q11vv-Photoroom_14
+  - first:
+      213: -1289343753780244356
+    second: Q11vv-Photoroom_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 817
+        width: 228
+        height: 207
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5ec3faf5a2943380800000000000000
+      internalID: -8992401314374496673
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_1
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 817
+        width: 197
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0d1a9bfed1bb13c80800000000000000
+      internalID: -8344682897290452528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_2
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 817
+        width: 198
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05f4f9815dbf0fa30800000000000000
+      internalID: 4247171341270077264
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_3
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 817
+        width: 228
+        height: 207
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce27b14a700c03f30800000000000000
+      internalID: 4553350362322137836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_4
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 561
+        width: 199
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32299fd599e080880800000000000000
+      internalID: -8644643432868244957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_5
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 561
+        width: 200
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1b2fbfc095b055830800000000000000
+      internalID: 4059163116242203313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_6
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 561
+        width: 200
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 716501f62bac768b0800000000000000
+      internalID: -5158931980413282793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_7
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 561
+        width: 200
+        height: 190
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba5bde52e384e5d90800000000000000
+      internalID: -7107163730182556245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_8
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 304
+        width: 200
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c79a70f915df1e70800000000000000
+      internalID: 9088216880442415049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_9
+      rect:
+        serializedVersion: 2
+        x: 285
+        y: 304
+        width: 199
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 189c1d61eebbc6380800000000000000
+      internalID: -8976593325996783231
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_10
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 304
+        width: 200
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e0f745abe0dbe700800000000000000
+      internalID: 570779488301347041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_11
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 304
+        width: 200
+        height: 191
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d064c30e220657340800000000000000
+      internalID: 4860897075723519501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 229
+        height: 244
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b658bca06bac1a700800000000000000
+      internalID: 549943512729879915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_13
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 49
+        width: 200
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 283793088f7602c60800000000000000
+      internalID: 7791341672351757186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_14
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 49
+        width: 200
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2dfc30d4b5dc49120800000000000000
+      internalID: 2419784691822612434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Q11vv-Photoroom_15
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 49
+        width: 200
+        height: 194
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c705f8aefa45b1ee0800000000000000
+      internalID: -1289343753780244356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Q11vv-Photoroom_0: -8992401314374496673
+      Q11vv-Photoroom_1: -8344682897290452528
+      Q11vv-Photoroom_10: 570779488301347041
+      Q11vv-Photoroom_11: 4860897075723519501
+      Q11vv-Photoroom_12: 549943512729879915
+      Q11vv-Photoroom_13: 7791341672351757186
+      Q11vv-Photoroom_14: 2419784691822612434
+      Q11vv-Photoroom_15: -1289343753780244356
+      Q11vv-Photoroom_2: 4247171341270077264
+      Q11vv-Photoroom_3: 4553350362322137836
+      Q11vv-Photoroom_4: -8644643432868244957
+      Q11vv-Photoroom_5: 4059163116242203313
+      Q11vv-Photoroom_6: -5158931980413282793
+      Q11vv-Photoroom_7: -7107163730182556245
+      Q11vv-Photoroom_8: 9088216880442415049
+      Q11vv-Photoroom_9: -8976593325996783231
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

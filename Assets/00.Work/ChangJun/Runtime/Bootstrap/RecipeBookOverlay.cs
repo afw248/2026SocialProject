@@ -60,6 +60,7 @@ namespace ChangJun.Bootstrap
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             scroll.vertical   = true;
+            UiFactory.ConfigureScroll(scroll);
 
             var viewport = CreateChild(scrollRt, "Viewport", Vector2.zero, Vector2.one);
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
@@ -77,7 +78,7 @@ namespace ChangJun.Bootstrap
             bodyText.fontSize = 22;
             bodyText.color = new Color(0.92f, 0.94f, 1f);
             bodyText.alignment = TextAlignmentOptions.TopLeft;
-            bodyText.enableWordWrapping = true;
+            bodyText.textWrappingMode = TextWrappingModes.Normal;
             bodyText.raycastTarget = false;
             KoreanUiFont.Apply(bodyText);
 

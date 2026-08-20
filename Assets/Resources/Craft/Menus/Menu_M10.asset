@@ -20,3 +20,4 @@ MonoBehaviour:
   - VEG
   price: 450
   cultureGroup: 1
+  requiresFusionUnlock: 0

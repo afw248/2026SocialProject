@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Delivery_Theft
   m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.DeliveryEventSO
   eventType: 2
-  spawnWeight: 1
+  spawnWeight: 0.5
   freshnessPenalty: 0
   stockLossRatio: 0.25
+  bonusWarehouseUnitsPerIngredient: 0
   headline: "\uB3C4\uB09C \uC0AC\uAC74"
   body: "\uBC30\uB2EC \uC911 \uC77C\uBD80 \uC7AC\uB8CC\uAC00 \uB3C4\uB09C\uB2F9\uD588\uC2B5\uB2C8\uB2E4."

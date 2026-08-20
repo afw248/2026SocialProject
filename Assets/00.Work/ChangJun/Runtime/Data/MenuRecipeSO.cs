@@ -24,5 +24,8 @@ namespace ChangJun.Data
 
         [Tooltip("주문·뉴스 대상 문화")]
         public CultureGroup cultureGroup;
+
+        [Tooltip("퓨전 워크숍 이벤트 후에만 주문 가능")]
+        public bool requiresFusionUnlock;
     }
 }

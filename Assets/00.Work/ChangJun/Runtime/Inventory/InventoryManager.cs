@@ -110,7 +110,42 @@ namespace ChangJun.Inventory
         }
 
         public int GetIngredientCost(string code) =>
-            _ingredientMap.TryGetValue(code, out var ing) ? ing.purchasePrice : 0;
+            _ingredientMap.TryGetValue(code, out var ing) ? GetEffectivePurchasePrice(ing) : 0;
+
+        public int EstimateMenuIngredientCost(MenuRecipeSO menu)
+        {
+            if (menu?.ingredientCodes == null) return 0;
+            int total = 0;
+            foreach (var code in menu.ingredientCodes)
+                total += GetIngredientCost(code);
+            return total;
+        }
+
+        public float IngredientPriceIndex { get; private set; } = 1f;
+
+        public void ApplyInflation(float rate)
+        {
+            IngredientPriceIndex *= 1f + rate;
+        }
+
+        public int GetEffectivePurchasePrice(IngredientSO ing)
+        {
+            if (ing == null) return 0;
+            float price = ing.purchasePrice * IngredientPriceIndex;
+            if (ing.isLocalSourced) price *= 0.9f;
+            if (ing.isFairTrade) price *= 1.2f;
+            return Mathf.Max(1, Mathf.RoundToInt(price));
+        }
+
+        public int DonateAllWarehouse(out int units)
+        {
+            units = 0;
+            foreach (var pair in _warehouse)
+                units += pair.Value;
+            _warehouse.Clear();
+            OnStockChanged?.Invoke();
+            return units;
+        }
 
         public IngredientSO GetIngredient(string code) =>
             _ingredientMap.TryGetValue(code, out var ing) ? ing : null;

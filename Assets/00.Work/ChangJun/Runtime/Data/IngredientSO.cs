@@ -23,5 +23,9 @@ namespace ChangJun.Data
         [Range(0, 100)] public int unlockThreshold;
         public int purchasePrice = 50;
         public bool isStarterUnlocked;
+
+        [Header("사회·경제 태그")]
+        public bool isFairTrade;
+        public bool isLocalSourced;
     }
 }

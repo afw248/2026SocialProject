@@ -40,8 +40,33 @@ namespace ChangJun.Customer
 
             if (candidates.Count == 0) return false;
 
-            picked = candidates[Random.Range(0, candidates.Count)];
-            return true;
+            picked = PickWeighted(candidates);
+            return picked != null;
+        }
+
+        private static CraftCustomerSO PickWeighted(List<CraftCustomerSO> candidates)
+        {
+            float total = 0f;
+            var weights = new float[candidates.Count];
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                weights[i] = CustomerSpawnWeightService.GetWeight(candidates[i]);
+                total += weights[i];
+            }
+
+            if (total <= 0f)
+                return candidates[Random.Range(0, candidates.Count)];
+
+            float roll = Random.Range(0f, total);
+            float acc = 0f;
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                acc += weights[i];
+                if (roll <= acc)
+                    return candidates[i];
+            }
+
+            return candidates[candidates.Count - 1];
         }
 
         private static bool IsSpawnable(CraftCustomerSO customer)

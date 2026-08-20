@@ -5,6 +5,7 @@ using ChangJun.Economy;
 using ChangJun.Inventory;
 using ChangJun.Judge;
 using ChangJun.Progression;
+using ChangJun.Social;
 using ChangJun.Time;
 using UnityEngine;
 
@@ -108,16 +109,34 @@ namespace ChangJun.Craft
                         price = News.NewsManager.Instance.ApplyPriceMultiplier(matched, price);
                     if (Delivery.DeliveryManager.Instance != null)
                         price = Delivery.DeliveryManager.Instance.ApplyFreshnessMultiplier(price);
+                    if (CulturalEventManager.Instance != null)
+                    {
+                        if (CulturalEventManager.Instance.TodayEvent == ActiveCulturalEvent.CultureFestival
+                            && matched.cultureGroup == CulturalEventManager.Instance.FestivalCulture)
+                            price = Mathf.RoundToInt(price * CulturalEventManager.Instance.FestivalPriceMultiplier);
+                        price = Mathf.RoundToInt(price * CulturalEventManager.Instance.GetCulturePriceBuff(matched.cultureGroup));
+                    }
+                    if (HasFairTradeIngredient(matched))
+                        price = Mathf.RoundToInt(price * 1.08f);
 
                     money.AddMoney(price);
                     ledger.AddRevenue(price, matched.displayName);
+
+                    int cogs = InventoryManager.Instance.EstimateMenuIngredientCost(matched);
+                    if (cogs > 0)
+                        ledger.AddIngredientCost(cogs, $"{matched.displayName} 재료원가");
+
                     InventoryManager.Instance.TryConsume(matched);
                     break;
                 }
                 case CraftResult.TabooViolation:
-                    money.SpendMoney(_tabooPenalty);
-                    ledger.AddPenalty(_tabooPenalty, "금기위반 환불");
+                {
+                    int penalty = Mathf.RoundToInt(_tabooPenalty *
+                        (ShopUpgradeManager.Instance?.GetTabooPenaltyMultiplier() ?? 1f));
+                    money.SpendMoney(penalty);
+                    ledger.AddPenalty(penalty, "금기위반 환불");
                     break;
+                }
                 case CraftResult.WrongOrder:
                     ledger.AddPenalty(0, "오주문 (수익 없음)");
                     break;
@@ -133,6 +152,17 @@ namespace ChangJun.Craft
 
             UnderstandingManager.Instance.HandleCraftResult(result, _currentCustomer);
             DayLoopController.Instance.AdvanceAfterCustomer();
+        }
+
+        private static bool HasFairTradeIngredient(MenuRecipeSO menu)
+        {
+            if (menu?.ingredientCodes == null) return false;
+            foreach (var code in menu.ingredientCodes)
+            {
+                var ing = InventoryManager.Instance.GetIngredient(code);
+                if (ing != null && ing.isFairTrade) return true;
+            }
+            return false;
         }
 
         private int EstimateWasteCost()

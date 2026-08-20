@@ -27,3 +27,7 @@ MonoBehaviour:
   expressDeliveryMinutes: 30
   economyDeliveryMinutes: 60
   expressDeliveryPriceMultiplier: 2
+  inflationIntervalDays: 7
+  inflationRatePerTick: 0.015
+  dividendIntervalDays: 5
+  dividendRate: 0.005

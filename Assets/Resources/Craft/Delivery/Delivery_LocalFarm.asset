@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5ac3ef6344e9584086b48ba85c99db5, type: 3}
+  m_Name: Delivery_LocalFarm
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.DeliveryEventSO
+  eventType: 0
+  spawnWeight: 2
+  freshnessPenalty: 0
+  stockLossRatio: 0
+  bonusWarehouseUnitsPerIngredient: 3
+  headline: "\uB85C\uCEEC \uB18D\uAC00 \uBCF4\uB108\uC2A4"
+  body: "\uC9C1\uAC70\uB798 \uB18D\uAC00\uC5D0\uC11C \uC2E0\uC120\uD55C \uCC44\uC18C\uAC00
+    \uCD94\uAC00\uB85C \uB3C4\uCC29\uD588\uC2B5\uB2C8\uB2E4."

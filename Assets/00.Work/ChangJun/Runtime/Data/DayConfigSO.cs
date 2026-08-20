@@ -31,5 +31,13 @@ namespace ChangJun.Data
         public int expressDeliveryMinutes = 30;
         public int economyDeliveryMinutes = 60;
         public float expressDeliveryPriceMultiplier = 2f;
+
+        [Header("경제·사회")]
+        [Tooltip("N일마다 재료 가격 +1~2%")]
+        public int inflationIntervalDays = 7;
+        public float inflationRatePerTick = 0.015f;
+        [Tooltip("N일마다 보유 주식 배당")]
+        public int dividendIntervalDays = 5;
+        public float dividendRate = 0.005f;
     }
 }

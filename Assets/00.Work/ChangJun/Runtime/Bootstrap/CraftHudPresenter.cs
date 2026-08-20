@@ -223,7 +223,12 @@ namespace ChangJun.Bootstrap
 
         public void ShowDeliveryArrived(string ingredientName, int quantity)
         {
-            _resultText.text = $"[배달도착] {ingredientName} x{quantity}";
+            ShowBanner($"[배달도착] {ingredientName} x{quantity}");
+        }
+
+        public void ShowBanner(string message)
+        {
+            _resultText.text = message;
             _resultText.color = new Color(0.55f, 0.85f, 1f);
             _resultText.transform.DOKill();
             _resultText.transform.localScale = Vector3.one;

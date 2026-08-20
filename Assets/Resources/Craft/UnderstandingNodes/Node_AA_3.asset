@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7957fad32280bb74394128774b777c09, type: 3}
+  m_Name: Node_AA_3
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.UnderstandingNodeSO
+  nodeId: AA_3
+  cultureGroup: 6
+  nodeType: 1
+  requiredUnderstanding: 40
+  prerequisiteNodeIds:
+  - AA_2
+  gridRow: 2
+  displayName: "\uD4E8\uC804 \uC7AC\uB8CC"
+  description: "\uB2E4\uBB38\uD654 \uC7AC\uB8CC \uC870\uD569."
+  ingredientToUnlock: {fileID: 11400000, guid: 7ec2fffaf967c13438dc2ddf075dfba2, type: 2}
+  icon: {fileID: 0}

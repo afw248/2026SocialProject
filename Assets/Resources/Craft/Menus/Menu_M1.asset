@@ -19,3 +19,4 @@ MonoBehaviour:
   - SPC
   price: 300
   cultureGroup: 2
+  requiresFusionUnlock: 0

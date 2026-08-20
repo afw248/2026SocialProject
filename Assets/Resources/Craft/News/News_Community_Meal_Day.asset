@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93f2766bd19c85d478e43b4e1b5aafc5, type: 3}
+  m_Name: News_Community_Meal_Day
+  m_EditorClassIdentifier: Assembly-CSharp::ChangJun.Data.NewsSO
+  cultureGroup: 1
+  sentiment: 0
+  priceMultiplier: 1.08
+  spawnWeight: 1.1
+  boycottWeight: 0
+  sectionTag: "\uB098\uB214"
+  headline: "\uCEE4\uBBA4\uB2C8\uD2F0 \uBC25\uC0C1\uC758 \uB0A0, \uCC3D\uACE0 \uB098\uB214
+    \uCEA0\uD398\uC778"
+  subheadline: "\uC2DD\uB2F9\xB7\uC2DC\uBBFC\uC774 \uB0A8\uB294 \uC7AC\uB8CC\uB97C
+    \uC774\uC6C3\uACFC \uB098\uB204\uB294 '\uCEE4\uBBA4\uB2C8\uD2F0 \uBC25\uC0C1'
+    \uD589\uC0AC\uAC00 \uD655\uC0B0\uB429\uB2C8\uB2E4."
+  body: "\uC2DD\uB2F9\xB7\uC2DC\uBBFC\uC774 \uB0A8\uB294 \uC7AC\uB8CC\uB97C \uC774\uC6C3\uACFC
+    \uB098\uB204\uB294 '\uCEE4\uBBA4\uB2C8\uD2F0 \uBC25\uC0C1' \uD589\uC0AC\uAC00
+    \uD655\uC0B0\uB429\uB2C8\uB2E4."
+  article: "\uC9C0\uC5ED \uBCF5\uC9C0\uAD00\uACFC \uC5F0\uACC4\uD55C '\uCEE4\uBBA4\uB2C8\uD2F0
+    \uBC25\uC0C1' \uCEA0\uD398\uC778\uC774 \uC8FC\uB9D0\uC744 \uC55E\uB450\uACE0
+    \uD654\uC81C\uC785\uB2C8\uB2E4. \uC2DD\uB2F9\uC740 \uCC3D\uACE0\uC5D0 \uB0A8\uC740
+    \uC7AC\uB8CC\uB97C \uAE30\uBD80\uD558\uACE0, \uC774\uC6C3 \uC2DD\uB2F9\uACFC
+    \uC5F0\uB300\uD558\uB294 \uC0AC\uB840\uB3C4 \uB298\uACE0 \uC788\uC2B5\uB2C8\uB2E4.\n\n\uC0AC\uD68C\uBCF5\uC9C0\uC0AC\uB294
+    \"\uB098\uB214\uC740 \uBD88\uD3C9\uB4F1\uC744 \uC904\uC774\uB294 \uC791\uC740
+    \uC2E4\uCC9C\"\uC774\uB77C\uACE0 \uB9D0\uD588\uC2B5\uB2C8\uB2E4."
+  sidebarNote: "\uC74C\uC2DD \uB098\uB214\uC740 \uD1B5\uD569\uC0AC\uD68C\uC758 \uB530\uB73B\uD55C
+    \uC2E4\uD5D8\uC785\uB2C8\uB2E4."
+  summary: "\uC815\uC0B0 \uC2DC \uCEE4\uBBA4\uB2C8\uD2F0 \uBC25\uC0C1\uC744 \uC120\uD0DD\uD558\uBA74
+    \uC0C1\uC0DD \uC9C0\uC218\uAC00 \uC624\uB985\uB2C8\uB2E4."
+  illustration: {fileID: 0}
+  primaryStockCode: UNITY

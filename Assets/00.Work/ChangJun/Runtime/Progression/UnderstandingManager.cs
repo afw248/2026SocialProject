@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using ChangJun.Data;
 using ChangJun.Judge;
+using ChangJun.Social;
 using ChangJun.Time;
 using UnityEngine;
 
 namespace ChangJun.Progression
 {
     /// <summary>
-    /// 문화별 이해도와 재료 해금을 관리한다.
+    /// 문화별 이해도, 스킬트리 노드, 재료 해금을 관리한다.
     /// </summary>
     public sealed class UnderstandingManager : MonoBehaviour
     {
@@ -16,11 +17,14 @@ namespace ChangJun.Progression
 
         private readonly Dictionary<CultureGroup, int> _values = new();
         private readonly HashSet<string> _unlockedCodes = new();
+        private readonly HashSet<string> _unlockedNodeIds = new();
         private List<UnderstandingThresholdSO> _thresholds = new();
+        private List<UnderstandingNodeSO> _nodes = new();
         private DayConfigSO _config;
 
         public event Action<CultureGroup, int> OnUnderstandingChanged;
         public event Action<IngredientSO> OnIngredientUnlocked;
+        public event Action<UnderstandingNodeSO> OnNodeUnlocked;
 
         private void Awake()
         {
@@ -38,14 +42,18 @@ namespace ChangJun.Progression
             DayConfigSO config)
         {
             _thresholds = new List<UnderstandingThresholdSO>(thresholds);
+            _nodes = new List<UnderstandingNodeSO>(
+                Resources.LoadAll<UnderstandingNodeSO>("Craft/UnderstandingNodes"));
             _config = config ?? ScriptableObject.CreateInstance<DayConfigSO>();
             _values.Clear();
             _unlockedCodes.Clear();
+            _unlockedNodeIds.Clear();
 
             foreach (CultureGroup culture in Enum.GetValues(typeof(CultureGroup)))
             {
                 _values[culture] = 0;
                 TryUnlockIngredients(culture, 0);
+                TryUnlockNodes(culture, 0);
             }
 
             foreach (var ing in ingredients)
@@ -61,11 +69,45 @@ namespace ChangJun.Progression
         public int GetUnderstanding(CultureGroup culture) =>
             _values.TryGetValue(culture, out var v) ? v : 0;
 
+        public IReadOnlyList<UnderstandingNodeSO> GetNodesForCulture(CultureGroup culture)
+        {
+            var list = new List<UnderstandingNodeSO>();
+            foreach (var n in _nodes)
+            {
+                if (n != null && n.cultureGroup == culture)
+                    list.Add(n);
+            }
+            return list;
+        }
+
+        public UnderstandingNodeState GetNodeState(UnderstandingNodeSO node)
+        {
+            if (node == null) return UnderstandingNodeState.Locked;
+            if (_unlockedNodeIds.Contains(node.nodeId))
+                return UnderstandingNodeState.Unlocked;
+
+            if (!ArePrerequisitesMet(node))
+                return UnderstandingNodeState.Locked;
+
+            int current = GetUnderstanding(node.cultureGroup);
+            if (current >= node.requiredUnderstanding)
+                return UnderstandingNodeState.Unlocked;
+            if (current > 0)
+                return UnderstandingNodeState.InProgress;
+            return UnderstandingNodeState.Locked;
+        }
+
         public void HandleCraftResult(CraftResult result, CraftCustomerSO customer)
         {
             if (customer == null) return;
             var culture = customer.cultureGroup;
             if (culture == CultureGroup.None) return;
+
+            bool success = result == CraftResult.Success;
+            bool taboo = result == CraftResult.TabooViolation;
+            StoreReputationService.Instance?.RecordOrder(success, taboo);
+            if (success)
+                SchoolLunchContractService.Instance?.RecordSuccess();
 
             int delta = result switch
             {
@@ -82,6 +124,12 @@ namespace ChangJun.Progression
 
         public bool AreMenuIngredientsUnlocked(MenuRecipeSO menu)
         {
+            if (menu == null) return false;
+            if (menu.requiresFusionUnlock
+                && CulturalEventManager.Instance != null
+                && !CulturalEventManager.Instance.IsFusionMenuUnlocked(menu.code))
+                return false;
+
             if (menu?.ingredientCodes == null) return false;
             foreach (var code in menu.ingredientCodes)
             {
@@ -99,6 +147,21 @@ namespace ChangJun.Progression
             _values[culture] = next;
             OnUnderstandingChanged?.Invoke(culture, next);
             TryUnlockIngredients(culture, next);
+            TryUnlockNodes(culture, next);
+            CulturalEventManager.Instance?.CheckMilestones(culture, next);
+        }
+
+        private bool ArePrerequisitesMet(UnderstandingNodeSO node)
+        {
+            if (node.prerequisiteNodeIds == null || node.prerequisiteNodeIds.Length == 0)
+                return true;
+            foreach (var id in node.prerequisiteNodeIds)
+            {
+                if (string.IsNullOrEmpty(id)) continue;
+                if (!_unlockedNodeIds.Contains(id))
+                    return false;
+            }
+            return true;
         }
 
         private void TryUnlockIngredients(CultureGroup culture, int value)
@@ -112,6 +175,26 @@ namespace ChangJun.Progression
                 string code = threshold.ingredientToUnlock.code;
                 if (_unlockedCodes.Add(code))
                     OnIngredientUnlocked?.Invoke(threshold.ingredientToUnlock);
+            }
+        }
+
+        private void TryUnlockNodes(CultureGroup culture, int value)
+        {
+            foreach (var node in _nodes)
+            {
+                if (node == null || node.cultureGroup != culture) continue;
+                if (_unlockedNodeIds.Contains(node.nodeId)) continue;
+                if (value < node.requiredUnderstanding) continue;
+                if (!ArePrerequisitesMet(node)) continue;
+
+                _unlockedNodeIds.Add(node.nodeId);
+                if (node.ingredientToUnlock != null)
+                {
+                    string code = node.ingredientToUnlock.code;
+                    if (_unlockedCodes.Add(code))
+                        OnIngredientUnlocked?.Invoke(node.ingredientToUnlock);
+                }
+                OnNodeUnlocked?.Invoke(node);
             }
         }
     }

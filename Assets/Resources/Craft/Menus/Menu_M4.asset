@@ -19,3 +19,4 @@ MonoBehaviour:
   - EGG
   price: 300
   cultureGroup: 1
+  requiresFusionUnlock: 0

@@ -58,7 +58,7 @@ namespace ChangJun.Bootstrap
 
         private StatusPanel _statusPanel;
 
-        private GameObject _recipePanelRoot;
+        private RecipeBookPanel _recipePanel;
 
         private SideTabBar _tabBar;
 
@@ -70,6 +70,10 @@ namespace ChangJun.Bootstrap
 
         private NewsOverlay _newsOverlay;
 
+        private StockMarketOverlay _stockMarket;
+
+        private BusinessTransitionOverlay _businessTransition;
+
         private ExpressDeliveryOverlay _expressDelivery;
 
         private ScreenFadeController _fade;
@@ -78,7 +82,13 @@ namespace ChangJun.Bootstrap
 
         private RectTransform _contentArea;
 
+        private GameObject _topBar;
+
         private GameObject _orderDockRoot;
+
+        private bool _phaseHudVisible;
+
+        private bool _subScreenActive;
 
         private List<IngredientSO> _ingredients;
 
@@ -270,44 +280,56 @@ namespace ChangJun.Bootstrap
 
             CreateBackground();
 
+            // 예전 배경 스프라이트가 주문받기/조리 UI 여백 사이로 비쳐 보이지 않도록,
+            // UI_Canvas 전체를 덮는 단일 크림색 배경을 가장 먼저 깐다.
+            var rootBg = UiFactory.CreateStretchChild(root, "RootBg");
+            var rootBgImg = rootBg.gameObject.AddComponent<Image>();
+            rootBgImg.color = UiTheme.Background;
+            rootBgImg.raycastTarget = false;
+
 
 
             _fade = new ScreenFadeController(this);
 
-            _ = new DayClockHud(root);
+            var topBar = UiTheme.CreateHeaderBar(root, string.Empty, 72f);
+            _topBar = topBar.gameObject;
+            _ = new DayClockHud(topBar);
 
 
 
             _contentArea = UiFactory.CreatePanel(root, "TabContent",
 
-                new Vector2(0.26f, 0.12f), new Vector2(0.88f, 0.64f),
+                new Vector2(0.02f, 0.03f), new Vector2(0.9f, 0.9f),
 
                 Vector2.zero, Vector2.zero);
 
 
 
-            _hud = new CraftHudPresenter(root, _contentArea, _controller, _ingredients);
+            _hud = new CraftHudPresenter(root, _contentArea, _controller, _ingredients, topBar);
 
             _hud.BindMoney(MoneyManager.Instance);
 
 
 
-            _memoPanel = new MemoPadPanel(_contentArea);
-            _recipePanelRoot = new RecipeBookPanel(_contentArea, _menus, _ingredients).Root;
-            _statusPanel = new StatusPanel(_contentArea);
+            // 메모/도감/정보는 탭박스 안에서 스와핑되는 게 아니라, 목업처럼 각자 헤더·뒤로가기를
+            // 가진 독립 풀스크린 화면으로 뜬다.
+            _memoPanel = new MemoPadPanel();
+            _recipePanel = new RecipeBookPanel(_menus, _ingredients);
+            _statusPanel = new StatusPanel();
 
-            _tabBar = new SideTabBar(root, HandleTabSelected);
-            _tabBar.RegisterPanel(MainTab.Craft, _hud.CraftRoot.gameObject);
-            _tabBar.RegisterPanel(MainTab.Memo, _memoPanel.Root);
-            _tabBar.RegisterPanel(MainTab.Recipe, _recipePanelRoot);
-            _tabBar.RegisterPanel(MainTab.Status, _statusPanel.Root);
-            ForceCraftTabOnly();
+            _memoPanel.OnBack += ReturnToCraftHome;
+            _recipePanel.OnBack += ReturnToCraftHome;
+            _statusPanel.OnBack += ReturnToCraftHome;
+
+            _tabBar = new SideTabBar(root);
+            _tabBar.OnTabSelected += HandleTabSelected;
 
 
 
+            // 주문받기 화면 — 조리 콘텐츠와 같은 자리를 차지하는 전면 화면 (토글로 전환)
             _orderDockRoot = UiFactory.CreatePanel(root, "OrderDock",
 
-                new Vector2(0.02f, 0.38f), new Vector2(0.24f, 0.64f),
+                new Vector2(0.02f, 0.03f), new Vector2(0.9f, 0.9f),
 
                 Vector2.zero, Vector2.zero).gameObject;
 
@@ -323,7 +345,16 @@ namespace ChangJun.Bootstrap
 
             _newsOverlay = new NewsOverlay();
 
+            _stockMarket = new StockMarketOverlay();
+            _stockMarket.OnBack += () =>
+            {
+                _stockMarket.Hide();
+                _newsOverlay.TryShow(ShowStockMarketFromNews);
+            };
+
             _expressDelivery = new ExpressDeliveryOverlay();
+
+            _businessTransition = new BusinessTransitionOverlay();
 
         }
 
@@ -365,13 +396,32 @@ namespace ChangJun.Bootstrap
         }
 
         private void HandleTabSelected(MainTab tab)
-
         {
+            _subScreenActive = true;
+            RefreshHomeVisibility();
 
-            if (tab == MainTab.Status)
+            switch (tab)
+            {
+                case MainTab.Memo:
+                    _memoPanel.Show();
+                    break;
+                case MainTab.Recipe:
+                    _recipePanel.Show();
+                    break;
+                case MainTab.Status:
+                    _statusPanel.RefreshTree();
+                    _statusPanel.Show();
+                    break;
+            }
+        }
 
-                _statusPanel.RefreshTree();
-
+        private void ReturnToCraftHome()
+        {
+            _memoPanel.Hide();
+            _recipePanel.Hide();
+            _statusPanel.Hide();
+            _subScreenActive = false;
+            RefreshHomeVisibility();
         }
 
 
@@ -424,43 +474,29 @@ namespace ChangJun.Bootstrap
 
 
 
-        private void ForceCraftTabOnly()
+        /// <summary>제작 홈 화면(탭콘텐츠·상단바·사이드내비·주문 도크)의 실제 표시 여부를 갱신한다.
+        /// 영업(Open) 페이즈이면서 동시에 메모/도감/정보 같은 서브 화면이 떠있지 않을 때만 보인다.</summary>
+        private void RefreshHomeVisibility()
         {
-            if (_memoPanel != null && _memoPanel.Root != null)
-                _memoPanel.Root.SetActive(false);
-            if (_recipePanelRoot != null)
-                _recipePanelRoot.SetActive(false);
-            if (_statusPanel != null && _statusPanel.Root != null)
-                _statusPanel.Root.SetActive(false);
-            if (_hud != null && _hud.CraftRoot != null)
-            {
-                _hud.CraftRoot.gameObject.SetActive(true);
-                _hud.CraftRoot.SetAsLastSibling();
-            }
-            if (_tabBar != null)
-                _tabBar.SelectTab(MainTab.Craft);
+            bool showHome = _phaseHudVisible && !_subScreenActive;
+            _contentArea.gameObject.SetActive(showHome);
+            _tabBar.SetVisible(showHome);
+            _topBar.SetActive(showHome);
+            _orderDockRoot.SetActive(showHome);
         }
 
         private void SetGameplayHudVisible(bool visible)
-
         {
-
-            _contentArea.gameObject.SetActive(visible);
-
-            _tabBar.SetVisible(visible);
-
-            _hud.HeaderRoot.SetActive(visible);
-
-            _orderDockRoot.SetActive(visible);
-
-            if (visible)
-
-                ForceCraftTabOnly();
+            _phaseHudVisible = visible;
+            _subScreenActive = false;
+            _memoPanel.Hide();
+            _recipePanel.Hide();
+            _statusPanel.Hide();
 
             if (!visible)
-
                 _expressDelivery.Hide();
 
+            RefreshHomeVisibility();
         }
 
 
@@ -489,13 +525,14 @@ namespace ChangJun.Bootstrap
 
                     ExpressDeliveryService.Instance?.BeginBusinessTracking();
 
-                    SetGameplayHudVisible(true);
-
-                    _hud.SetInteractable(_orderAccepted);
-
-                    _controller.SetCraftEnabled(_orderAccepted);
-
-                    SpawnNextCustomer();
+                    _businessTransition.ShowOpen(() =>
+                    {
+                        _businessTransition.Hide();
+                        SetGameplayHudVisible(true);
+                        _hud.SetInteractable(_orderAccepted);
+                        _controller.SetCraftEnabled(_orderAccepted);
+                        SpawnNextCustomer();
+                    });
 
                     break;
 
@@ -507,7 +544,11 @@ namespace ChangJun.Bootstrap
 
                     SetGameplayHudVisible(false);
 
-                    _settlement.Show();
+                    _businessTransition.ShowClosing(() =>
+                    {
+                        _businessTransition.Hide();
+                        _settlement.Show();
+                    });
 
                     break;
 
@@ -573,10 +614,18 @@ namespace ChangJun.Bootstrap
 
             StockMarketManager.Instance?.RollDailyMarket(NewsManager.Instance.TodayNews);
 
-            if (!_newsOverlay.TryShow(BeginBusinessAfterMorning))
+            if (!_newsOverlay.TryShow(ShowStockMarketFromNews))
 
                 BeginBusinessAfterMorning();
 
+        }
+
+
+
+        private void ShowStockMarketFromNews()
+        {
+            _newsOverlay.Hide();
+            _stockMarket.Show(BeginBusinessAfterMorning);
         }
 
 
@@ -621,6 +670,8 @@ namespace ChangJun.Bootstrap
 
             _hud.SetInteractable(false);
 
+            _hud.SetCookViewVisible(false);
+
             _controller.Initialize(new RecipeBook(_menus), next, _ingredients);
 
             _orderBubble.Show(next);
@@ -644,6 +695,8 @@ namespace ChangJun.Bootstrap
                 _controller.SetCraftEnabled(true);
 
                 _hud.SetInteractable(true);
+
+                _hud.SetCookViewVisible(true);
 
             }
 

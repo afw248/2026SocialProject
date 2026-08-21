@@ -39,36 +39,33 @@ namespace ChangJun.Bootstrap
             _root = UiFactory.CreateOverlayRoot("ExpressDelivery", 72);
             _root.SetActive(false);
 
-            var panel = UiFactory.CreatePanel(_root.transform, "Panel",
+            var panel = UiTheme.CreateBorderedPanel(_root.transform, "Panel",
                 new Vector2(0.08f, 0.1f), new Vector2(0.92f, 0.9f),
-                Vector2.zero, Vector2.zero);
-            panel.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.96f, 0.98f);
+                Vector2.zero, Vector2.zero, UiTheme.Background);
 
             UiFactory.CreateText(panel, "Title", "영업 중 배달",
                 new Vector2(0.03f, 0.92f), new Vector2(0.5f, 0.99f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 28,
-                new Color(0.1f, 0.2f, 0.4f));
+                TextAlignmentOptions.MidlineLeft, 28, UiTheme.TextDark);
 
             var tierBar = UiFactory.CreatePanel(panel, "TierBar",
                 new Vector2(0.52f, 0.92f), new Vector2(0.97f, 0.99f),
                 Vector2.zero, Vector2.zero);
 
             _economyBtn = CreateTierButton(tierBar, "알뜰 60분", new Vector2(0f, 0f),
-                new Vector2(0.48f, 1f), new Color(0.35f, 0.55f, 0.35f), SelectEconomy);
+                new Vector2(0.48f, 1f), UiTheme.Success, SelectEconomy);
             _hanjipBtn = CreateTierButton(tierBar, "한집 30분", new Vector2(0.52f, 0f),
-                new Vector2(1f, 1f), new Color(0.75f, 0.45f, 0.2f), SelectHanjip);
+                new Vector2(1f, 1f), UiTheme.Accent, SelectHanjip);
             _economyBtnImg = _economyBtn.targetGraphic as Image;
             _hanjipBtnImg = _hanjipBtn.targetGraphic as Image;
 
             _tierInfoText = UiFactory.CreateText(panel, "TierInfo", "",
                 new Vector2(0.03f, 0.86f), new Vector2(0.97f, 0.91f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 18,
-                new Color(0.3f, 0.35f, 0.45f));
+                TextAlignmentOptions.MidlineLeft, 18, UiTheme.TextMuted);
 
             var scrollRt = UiFactory.CreatePanel(panel, "Scroll",
-                new Vector2(0.03f, 0.28f), new Vector2(0.58f, 0.85f),
+                new Vector2(0.03f, 0.28f), new Vector2(0.7f, 0.85f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -94,16 +91,14 @@ namespace ChangJun.Bootstrap
             scroll.viewport = viewport;
             scroll.content = _gridContent;
 
-            var pendingPanel = UiFactory.CreatePanel(panel, "Pending",
+            var pendingPanel = UiTheme.CreateBorderedPanel(panel, "Pending",
                 new Vector2(0.6f, 0.28f), new Vector2(0.97f, 0.85f),
-                Vector2.zero, Vector2.zero);
-            pendingPanel.gameObject.AddComponent<Image>().color = new Color(0.88f, 0.91f, 0.96f);
+                Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             UiFactory.CreateText(pendingPanel, "PendingTitle", "배달 예정",
                 new Vector2(0.05f, 0.9f), new Vector2(0.95f, 0.98f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 20,
-                new Color(0.15f, 0.2f, 0.35f));
+                TextAlignmentOptions.MidlineLeft, 20, UiTheme.TextDark);
 
             var pendingScrollRt = UiFactory.CreatePanel(pendingPanel, "PendingScroll",
                 new Vector2(0.05f, 0.05f), new Vector2(0.95f, 0.88f),
@@ -136,36 +131,24 @@ namespace ChangJun.Bootstrap
             _totalText = UiFactory.CreateText(panel, "Total", "합계: 0원",
                 new Vector2(0.03f, 0.18f), new Vector2(0.4f, 0.25f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 22,
-                new Color(0.1f, 0.15f, 0.25f));
+                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextDark);
 
             _balanceText = UiFactory.CreateText(panel, "Balance", "",
                 new Vector2(0.4f, 0.18f), new Vector2(0.62f, 0.25f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 20,
-                new Color(0.2f, 0.35f, 0.2f));
+                TextAlignmentOptions.MidlineRight, 20, UiTheme.TextMuted);
 
-            var closeRt = UiFactory.CreatePanel(panel, "Close",
-                new Vector2(0.64f, 0.16f), new Vector2(0.8f, 0.26f),
-                Vector2.zero, Vector2.zero);
-            var closeBtn = closeRt.gameObject.AddComponent<Button>();
-            closeBtn.targetGraphic = closeRt.gameObject.AddComponent<Image>();
-            closeBtn.targetGraphic.color = new Color(0.5f, 0.52f, 0.58f);
-            closeBtn.onClick.AddListener(Hide);
-            UiFactory.CreateText(closeRt, "T", "닫기",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 22);
+            UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(panel, "Close",
+                    new Vector2(0.64f, 0.16f), new Vector2(0.8f, 0.26f),
+                    Vector2.zero, Vector2.zero),
+                "닫기", UiTheme.CardWhite, Hide, 22, UiTheme.TextDark);
 
-            var orderRt = UiFactory.CreatePanel(panel, "Order",
-                new Vector2(0.82f, 0.16f), new Vector2(0.97f, 0.26f),
-                Vector2.zero, Vector2.zero);
-            var orderBtn = orderRt.gameObject.AddComponent<Button>();
-            orderBtn.targetGraphic = orderRt.gameObject.AddComponent<Image>();
-            orderBtn.targetGraphic.color = new Color(0.15f, 0.4f, 0.7f);
-            orderBtn.onClick.AddListener(PlaceOrder);
-            UiFactory.CreateText(orderRt, "T", "주문",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 22, Color.white);
+            UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(panel, "Order",
+                    new Vector2(0.82f, 0.16f), new Vector2(0.97f, 0.26f),
+                    Vector2.zero, Vector2.zero),
+                "주문", UiTheme.Accent, PlaceOrder, 22);
         }
 
         public void Bind(ExpressDeliveryService service)
@@ -241,16 +224,14 @@ namespace ChangJun.Bootstrap
 
             if (_economyBtnImg != null)
             {
-                _economyBtnImg.color = hanjip
-                    ? new Color(0.35f, 0.55f, 0.35f, 0.45f)
-                    : new Color(0.35f, 0.55f, 0.35f);
+                var c = UiTheme.Success;
+                _economyBtnImg.color = hanjip ? new Color(c.r, c.g, c.b, 0.45f) : c;
             }
 
             if (_hanjipBtnImg != null)
             {
-                _hanjipBtnImg.color = hanjip
-                    ? new Color(0.75f, 0.45f, 0.2f)
-                    : new Color(0.75f, 0.45f, 0.2f, 0.45f);
+                var c = UiTheme.Accent;
+                _hanjipBtnImg.color = hanjip ? c : new Color(c.r, c.g, c.b, 0.45f);
             }
 
             if (_tierInfoText == null) return;
@@ -290,9 +271,10 @@ namespace ChangJun.Bootstrap
 
         private void CreateCard(IngredientSO ing)
         {
-            var card = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
-            card.gameObject.AddComponent<LayoutElement>().preferredHeight = 150;
-            card.gameObject.AddComponent<Image>().color = Color.white;
+            var cardWrap = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
+            cardWrap.gameObject.AddComponent<LayoutElement>().preferredHeight = 150;
+            var card = UiTheme.CreateBorderedPanel(cardWrap, "Fill",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             var config = DayLoopController.Instance.Config;
             float mult = _tier == ExpressDeliveryTier.Hanjip
@@ -311,14 +293,12 @@ namespace ChangJun.Bootstrap
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원/개",
                 new Vector2(0.22f, 0.58f), new Vector2(0.96f, 0.95f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 16,
-                new Color(0.1f, 0.12f, 0.2f));
+                TextAlignmentOptions.TopLeft, 16, UiTheme.TextDark);
 
             UiFactory.CreateText(card, "Stock", $"보유 {InventoryManager.Instance.GetStock(ing.code)}",
                 new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 14,
-                new Color(0.35f, 0.4f, 0.5f));
+                TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextMuted);
 
             string code = ing.code;
             int initial = _cart.TryGetValue(code, out var q) ? q : 0;
@@ -378,7 +358,7 @@ namespace ChangJun.Bootstrap
                 var tmp = empty.AddComponent<TextMeshProUGUI>();
                 tmp.text = "예정된 배달 없음";
                 tmp.fontSize = 16;
-                tmp.color = new Color(0.45f, 0.48f, 0.55f);
+                tmp.color = UiTheme.TextFaint;
                 tmp.alignment = TextAlignmentOptions.Center;
                 KoreanUiFont.Apply(tmp);
                 return;
@@ -392,7 +372,7 @@ namespace ChangJun.Bootstrap
                 var row = new GameObject("PendingRow", typeof(RectTransform));
                 row.transform.SetParent(_pendingContent, false);
                 row.AddComponent<LayoutElement>().preferredHeight = 40;
-                row.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.85f);
+                row.AddComponent<Image>().color = UiTheme.TanRow;
 
                 var textGo = new GameObject("Text", typeof(RectTransform));
                 textGo.transform.SetParent(row.transform, false);
@@ -403,7 +383,7 @@ namespace ChangJun.Bootstrap
                     $"{ing.displayName} x{order.Quantity}  [{tier}]\n" +
                     FormatRemaining(order.ArrivalMinutes);
                 tmp.fontSize = 15;
-                tmp.color = new Color(0.12f, 0.15f, 0.22f);
+                tmp.color = UiTheme.TextDark;
                 tmp.alignment = TextAlignmentOptions.MidlineLeft;
                 tmp.margin = new Vector4(8f, 4f, 4f, 4f);
                 KoreanUiFont.Apply(tmp);

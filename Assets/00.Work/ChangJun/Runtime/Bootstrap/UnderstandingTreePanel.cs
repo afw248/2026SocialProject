@@ -14,12 +14,15 @@ namespace ChangJun.Bootstrap
     /// </summary>
     public sealed class UnderstandingTreePanel
     {
-        private static readonly Color PanelBg = new(0.07f, 0.09f, 0.14f, 0.94f);
-        private static readonly Color CardBg = new(0.12f, 0.14f, 0.22f, 0.98f);
-        private static readonly Color CardBgLocked = new(0.09f, 0.10f, 0.15f, 0.85f);
-        private static readonly Color TrackBg = new(0.06f, 0.07f, 0.11f, 1f);
-        private static readonly Color TooltipBg = new(0.10f, 0.12f, 0.18f, 0.96f);
-        private static readonly Color GoldAccent = new(0.95f, 0.78f, 0.28f);
+        private static readonly Color PanelBg = UiTheme.Background;
+        private static readonly Color CardBg = UiTheme.CardWhite;
+        private static readonly Color CardBgLocked = UiTheme.TanRow;
+        private static readonly Color TrackBg = new(0.88f, 0.82f, 0.70f, 1f);
+        private static readonly Color TooltipBg = UiTheme.CardWhite;
+        private static readonly Color GoldAccent = UiTheme.Gold;
+        private static readonly Color TextOnCard = UiTheme.TextDark;
+        private static readonly Color TextOnCardMuted = UiTheme.TextMuted;
+        private static readonly Color TextOnCardLocked = new(0.68f, 0.62f, 0.52f, 1f);
 
         private readonly RectTransform _root;
         private readonly RectTransform _treeContent;
@@ -65,22 +68,20 @@ namespace ChangJun.Bootstrap
             _cultureTitle = UiFactory.CreateText(_root, "CultureTitle", "",
                 new Vector2(0.04f, 0.735f), new Vector2(0.62f, 0.775f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 18,
-                new Color(0.95f, 0.96f, 1f));
+                TextAlignmentOptions.MidlineLeft, 18, TextOnCard);
             _cultureTitle.fontStyle = FontStyles.Bold;
 
             _cultureProgress = UiFactory.CreateText(_root, "CulturePct", "0%",
                 new Vector2(0.62f, 0.735f), new Vector2(0.96f, 0.775f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 17,
-                new Color(0.75f, 0.85f, 1f));
+                TextAlignmentOptions.MidlineRight, 17, TextOnCardMuted);
 
             var scrollRt = UiFactory.CreatePanel(_root, "TreeScroll",
                 new Vector2(0.04f, 0.26f), new Vector2(0.96f, 0.725f),
                 Vector2.zero, Vector2.zero);
             var scrollFrame = scrollRt.gameObject.AddComponent<Image>();
-            scrollFrame.color = new Color(0.04f, 0.05f, 0.09f, 0.75f);
-            AddOutline(scrollRt.gameObject, new Color(1f, 1f, 1f, 0.08f));
+            scrollFrame.color = UiTheme.TanRow;
+            AddOutline(scrollRt.gameObject, UiTheme.Border);
 
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -127,14 +128,13 @@ namespace ChangJun.Bootstrap
             var header = UiFactory.CreatePanel(parent, "Header",
                 new Vector2(0.04f, 0.855f), new Vector2(0.96f, 0.97f),
                 Vector2.zero, Vector2.zero);
-            header.gameObject.AddComponent<Image>().color = new Color(0.14f, 0.17f, 0.26f, 0.9f);
-            AddOutline(header.gameObject, new Color(0.45f, 0.55f, 0.85f, 0.25f));
+            header.gameObject.AddComponent<Image>().color = UiTheme.Accent;
+            AddOutline(header.gameObject, UiTheme.Border);
 
             UiFactory.CreateText(header, "HeaderTitle", "문화 이해도",
                 new Vector2(0.04f, 0.08f), new Vector2(0.55f, 0.92f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 17,
-                new Color(0.8f, 0.85f, 0.95f));
+                TextAlignmentOptions.MidlineLeft, 17, UiTheme.CardWhite);
 
             _reputationLabel = UiFactory.CreateText(header, "Reputation", "상생 0%",
                 new Vector2(0.55f, 0.08f), new Vector2(0.96f, 0.92f),
@@ -208,21 +208,19 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.04f, 0.03f), new Vector2(0.96f, 0.22f),
                 Vector2.zero, Vector2.zero);
             card.gameObject.AddComponent<Image>().color = TooltipBg;
-            AddOutline(card.gameObject, new Color(1f, 1f, 1f, 0.1f));
+            AddOutline(card.gameObject, UiTheme.Border);
 
             _tooltipTitle = UiFactory.CreateText(card, "TooltipTitle", "노드를 선택하세요",
                 new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.92f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 16,
-                new Color(0.92f, 0.94f, 1f));
+                TextAlignmentOptions.MidlineLeft, 16, TextOnCard);
             _tooltipTitle.fontStyle = FontStyles.Bold;
 
             _tooltipBody = UiFactory.CreateText(card, "TooltipBody",
                 "아래 노드를 누르면 통합사회 설명과 게임 효과를 볼 수 있습니다.",
                 new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.52f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 14,
-                new Color(0.72f, 0.76f, 0.86f));
+                TextAlignmentOptions.TopLeft, 14, TextOnCardMuted);
             _tooltipBody.textWrappingMode = TextWrappingModes.Normal;
         }
 
@@ -255,7 +253,7 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.5f, 0f), new Vector2(0.5f, 1f),
                 new Vector2(-1f, 0f), new Vector2(1f, 0f));
             line.sizeDelta = new Vector2(3f, 0f);
-            line.gameObject.AddComponent<Image>().color = new Color(0.85f, 0.72f, 0.35f, 0.55f);
+            line.gameObject.AddComponent<Image>().color = UiTheme.TextMuted;
         }
 
         private void CreateNodeWidget(UnderstandingNodeSO node)
@@ -303,8 +301,7 @@ namespace ChangJun.Bootstrap
             var nameTmp = UiFactory.CreateText(row.transform, "Name", node.displayName,
                 new Vector2(0.18f, 0.28f), new Vector2(0.72f, 0.62f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 17,
-                new Color(0.94f, 0.95f, 0.98f));
+                TextAlignmentOptions.MidlineLeft, 17, TextOnCard);
             nameTmp.fontStyle = FontStyles.Bold;
 
             var track = UiFactory.CreatePanel(row.transform, "Track",
@@ -324,14 +321,12 @@ namespace ChangJun.Bootstrap
             var counter = UiFactory.CreateText(row.transform, "Counter", "0/20",
                 new Vector2(0.74f, 0.12f), new Vector2(0.96f, 0.88f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 15,
-                new Color(0.82f, 0.88f, 0.98f));
+                TextAlignmentOptions.MidlineRight, 15, TextOnCardMuted);
 
             var checkGo = UiFactory.CreateText(row.transform, "Check", "완료",
                 new Vector2(0.74f, 0.12f), new Vector2(0.96f, 0.88f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 14,
-                new Color(0.45f, 0.95f, 0.55f));
+                TextAlignmentOptions.MidlineRight, 14, UiTheme.Success);
             checkGo.fontStyle = FontStyles.Bold;
             checkGo.gameObject.SetActive(false);
 
@@ -415,12 +410,10 @@ namespace ChangJun.Bootstrap
             }
 
             view.CardBg.color = locked ? CardBgLocked : CardBg;
-            view.Accent.color = locked ? new Color(0.35f, 0.38f, 0.45f) : cultureColor;
-            view.Icon.color = locked ? new Color(0.4f, 0.42f, 0.5f) : cultureColor;
-            view.Name.color = locked
-                ? new Color(0.55f, 0.58f, 0.65f)
-                : new Color(0.94f, 0.95f, 0.98f);
-            view.Badge.color = locked ? new Color(0.45f, 0.48f, 0.55f) : cultureColor;
+            view.Accent.color = locked ? TextOnCardLocked : cultureColor;
+            view.Icon.color = locked ? TextOnCardLocked : cultureColor;
+            view.Name.color = locked ? TextOnCardLocked : TextOnCard;
+            view.Badge.color = locked ? TextOnCardLocked : cultureColor;
             view.Group.alpha = locked ? 0.72f : 1f;
         }
 

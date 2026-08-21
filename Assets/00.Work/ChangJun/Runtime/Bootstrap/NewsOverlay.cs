@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ChangJun.Data;
-using ChangJun.Economy;
-using ChangJun.News;
 using ChangJun.Social;
 using ChangJun.Time;
 using TMPro;
@@ -13,419 +10,240 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// 전체 화면 신문 UI — 1면(헤드라인) → 증권면(주식) → 영업 브리핑.
+    /// 뉴스 — 독립 풀스크린 화면. 좌측 소식 목록 · 우측 선택한 뉴스 상세.
+    /// "다음으로"를 누르면 주식 시장 화면으로 넘어간다(콜백으로 위임).
     /// </summary>
     public sealed class NewsOverlay
     {
-        private const int PageFront = 0;
-        private const int PageMarket = 1;
-        private const int PageBriefing = 2;
-
         private readonly GameObject _root;
-        private readonly GameObject[] _pages = new GameObject[3];
-        private TextMeshProUGUI _dateText;
-        private TextMeshProUGUI _headline;
-        private TextMeshProUGUI _subheadline;
-        private TextMeshProUGUI _articleBody;
-        private TextMeshProUGUI _sidebarText;
-        private Image _illustrationImage;
-        private TextMeshProUGUI _tickerStrip;
-        private TextMeshProUGUI _marketHeader;
-        private TextMeshProUGUI _portfolioText;
-        private RectTransform _marketListRoot;
-        private TextMeshProUGUI _briefingHeadline;
-        private TextMeshProUGUI _briefingBody;
-        private TextMeshProUGUI _eventBanner;
-        private readonly TextMeshProUGUI _actionLabel;
-        private readonly Button _actionButton;
+        private readonly RectTransform _listContent;
+        private readonly TextMeshProUGUI _dateChip;
+        private readonly Image _illustrationImage;
+        private readonly TextMeshProUGUI _headlineText;
+        private readonly TextMeshProUGUI _bodyText;
+        private readonly TextMeshProUGUI _economyImpactText;
+        private readonly TextMeshProUGUI _reputationImpactText;
+        private readonly TextMeshProUGUI _eventBanner;
+        private readonly List<GameObject> _listRows = new();
 
-        private readonly List<GameObject> _marketRows = new();
-        private NewsSO _current;
-        private int _page;
-        private Action _onDismissed;
+        private NewsSO _selected;
+        private Action _onContinue;
 
         public NewsOverlay()
         {
             _root = UiFactory.CreateOverlayRoot("NewsOverlay", 200);
             _root.SetActive(false);
 
-            var paper = UiFactory.CreateStretchChild(_root.transform, "Paper");
-            paper.gameObject.AddComponent<Image>().color = new Color(0.97f, 0.95f, 0.89f);
+            var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
+            bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
-            BuildMasthead(paper);
-            _dateText = UiFactory.CreateText(paper, "Date", "",
-                new Vector2(0.05f, 0.905f), new Vector2(0.95f, 0.935f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 16,
-                new Color(0.38f, 0.34f, 0.3f));
+            var header = UiTheme.CreateHeaderBar(_root.transform, "뉴스", 72f);
+            _dateChip = CreateHeaderChip(header, "");
 
-            _eventBanner = UiFactory.CreateText(paper, "EventBanner", "",
-                new Vector2(0.05f, 0.865f), new Vector2(0.95f, 0.902f),
+            _eventBanner = UiFactory.CreateText(_root.transform, "EventBanner", "",
+                new Vector2(0.06f, 0.86f), new Vector2(0.94f, 0.895f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 18,
-                new Color(0.55f, 0.22f, 0.12f));
+                TextAlignmentOptions.MidlineLeft, 16, UiTheme.Danger);
             _eventBanner.fontStyle = FontStyles.Bold;
             _eventBanner.gameObject.SetActive(false);
 
-            _pages[PageFront] = BuildFrontPage(paper);
-            _pages[PageMarket] = BuildMarketPage(paper);
-            _pages[PageBriefing] = BuildBriefingPage(paper);
+            var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
-            var btnRt = UiFactory.CreatePanel(paper, "Action",
-                new Vector2(0.38f, 0.02f), new Vector2(0.62f, 0.08f),
+            // ── 좌측: 소식 목록 ──
+            var listPanel = UiFactory.CreatePanel(body, "List",
+                new Vector2(0f, 0f), new Vector2(0.27f, 1f),
                 Vector2.zero, Vector2.zero);
-            _actionButton = btnRt.gameObject.AddComponent<Button>();
-            _actionButton.targetGraphic = btnRt.gameObject.AddComponent<Image>();
-            _actionButton.targetGraphic.color = new Color(0.14f, 0.16f, 0.22f);
-            _actionButton.onClick.AddListener(OnAction);
 
-            _actionLabel = UiFactory.CreateText(btnRt, "Label", "다음",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 24, Color.white);
-        }
+            UiTheme.CreateSectionLabel(listPanel, "ListLabel", "최근 소식",
+                new Vector2(0f, 0.95f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero, 16);
 
-        public bool TryShow(Action onDismissed)
-        {
-            var news = NewsManager.Instance.TodayNews;
-            if (news == null)
-            {
-                onDismissed?.Invoke();
-                return false;
-            }
-
-            _current = news;
-            _onDismissed = onDismissed;
-            _page = PageFront;
-            ShowPage(_page);
-
-            int day = DayLoopController.Instance.Day;
-            _dateText.text = $"{day}일차  ·  {DateTime.Now:yyyy년 M월 d일}  ·  제{day}호  ·  가격 0원";
-
-            PopulateFrontPage(news);
-            PopulateMarketPage();
-            PopulateBriefingPage(news);
-            PopulateEventBanner();
-
-            _root.SetActive(true);
-            return true;
-        }
-
-        public void Hide()
-        {
-            _root.SetActive(false);
-            _current = null;
-        }
-
-        private void OnAction()
-        {
-            if (_page < PageBriefing)
-            {
-                _page++;
-                ShowPage(_page);
-                return;
-            }
-
-            Hide();
-            _onDismissed?.Invoke();
-            _onDismissed = null;
-        }
-
-        private void ShowPage(int page)
-        {
-            for (int i = 0; i < _pages.Length; i++)
-                _pages[i].SetActive(i == page);
-
-            _actionLabel.text = page switch
-            {
-                PageFront => "증권면 →",
-                PageMarket => "영업 브리핑 →",
-                _ => "영업 시작",
-            };
-        }
-
-        private void BuildMasthead(RectTransform paper)
-        {
-            var ruleTop = UiFactory.CreatePanel(paper, "RuleTop",
-                new Vector2(0.04f, 0.94f), new Vector2(0.96f, 0.942f),
-                Vector2.zero, Vector2.zero);
-            ruleTop.gameObject.AddComponent<Image>().color = new Color(0.1f, 0.08f, 0.06f);
-
-            var masthead = UiFactory.CreateText(paper, "Masthead", "CUP RICE TIMES",
-                new Vector2(0.04f, 0.855f), new Vector2(0.96f, 0.94f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 52,
-                new Color(0.06f, 0.05f, 0.04f));
-            masthead.fontStyle = FontStyles.Bold | FontStyles.SmallCaps;
-
-            UiFactory.CreateText(paper, "Tagline", "다양한 문화를 이해하는 식탁  ·  통합사회 특집",
-                new Vector2(0.04f, 0.83f), new Vector2(0.96f, 0.855f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15,
-                new Color(0.42f, 0.36f, 0.3f));
-
-            var ruleMid = UiFactory.CreatePanel(paper, "RuleMid",
-                new Vector2(0.04f, 0.825f), new Vector2(0.96f, 0.828f),
-                Vector2.zero, Vector2.zero);
-            ruleMid.gameObject.AddComponent<Image>().color = new Color(0.1f, 0.08f, 0.06f);
-        }
-
-        private GameObject BuildFrontPage(RectTransform paper)
-        {
-            var page = UiFactory.CreatePanel(paper, "FrontPage",
-                new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.82f),
-                Vector2.zero, Vector2.zero).gameObject;
-
-            var section = UiFactory.CreateText(page.transform, "Section", "1면  특집",
-                new Vector2(0.02f, 0.94f), new Vector2(0.3f, 0.99f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.BottomLeft, 14,
-                new Color(0.5f, 0.2f, 0.15f));
-            section.fontStyle = FontStyles.Bold;
-
-            _headline = UiFactory.CreateText(page.transform, "Headline", "",
-                new Vector2(0.02f, 0.78f), new Vector2(0.98f, 0.94f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 40,
-                new Color(0.07f, 0.05f, 0.04f));
-            _headline.fontStyle = FontStyles.Bold;
-            _headline.textWrappingMode = TextWrappingModes.Normal;
-            _headline.lineSpacing = -6f;
-
-            _subheadline = UiFactory.CreateText(page.transform, "Subhead", "",
-                new Vector2(0.02f, 0.7f), new Vector2(0.98f, 0.78f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 20,
-                new Color(0.28f, 0.24f, 0.2f));
-            _subheadline.fontStyle = FontStyles.Italic;
-            _subheadline.textWrappingMode = TextWrappingModes.Normal;
-
-            var colRule = UiFactory.CreatePanel(page.transform, "ColRule",
-                new Vector2(0.66f, 0.04f), new Vector2(0.662f, 0.68f),
-                Vector2.zero, Vector2.zero);
-            colRule.gameObject.AddComponent<Image>().color = new Color(0.75f, 0.7f, 0.62f);
-
-            _articleBody = UiFactory.CreateText(page.transform, "Article", "",
-                new Vector2(0.02f, 0.04f), new Vector2(0.64f, 0.68f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 19,
-                new Color(0.16f, 0.14f, 0.12f));
-            _articleBody.textWrappingMode = TextWrappingModes.Normal;
-            _articleBody.lineSpacing = 4f;
-
-            var sideBox = UiFactory.CreatePanel(page.transform, "SideBox",
-                new Vector2(0.68f, 0.18f), new Vector2(0.98f, 0.68f),
-                Vector2.zero, Vector2.zero);
-            sideBox.gameObject.AddComponent<Image>().color = new Color(0.93f, 0.9f, 0.82f);
-
-            var illustRt = UiFactory.CreatePanel(sideBox, "Illustration",
-                new Vector2(0.06f, 0.42f), new Vector2(0.94f, 0.96f),
-                Vector2.zero, Vector2.zero);
-            _illustrationImage = illustRt.gameObject.AddComponent<Image>();
-            _illustrationImage.color = new Color(0.88f, 0.84f, 0.76f);
-            _illustrationImage.preserveAspect = true;
-            _illustrationImage.raycastTarget = false;
-
-            UiFactory.CreateText(sideBox, "SideTitle", "함께 읽기",
-                new Vector2(0.05f, 0.32f), new Vector2(0.95f, 0.40f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 16,
-                new Color(0.35f, 0.25f, 0.18f)).fontStyle = FontStyles.Bold;
-
-            var sideScrollRt = UiFactory.CreatePanel(sideBox, "SideScroll",
-                new Vector2(0.05f, 0.04f), new Vector2(0.95f, 0.31f),
-                Vector2.zero, Vector2.zero);
-            var sideScroll = sideScrollRt.gameObject.AddComponent<ScrollRect>();
-            sideScroll.horizontal = false;
-            UiFactory.ConfigureScroll(sideScroll);
-
-            var sideViewport = UiFactory.CreateStretchChild(sideScrollRt, "Viewport");
-            sideViewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            sideViewport.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.001f);
-
-            var sideContent = UiFactory.CreateStretchChild(sideViewport, "Content");
-            sideContent.pivot = new Vector2(0.5f, 1f);
-            sideContent.anchorMin = new Vector2(0f, 1f);
-            sideContent.anchorMax = new Vector2(1f, 1f);
-            sideContent.offsetMin = Vector2.zero;
-            sideContent.offsetMax = Vector2.zero;
-
-            _sidebarText = sideContent.gameObject.AddComponent<TextMeshProUGUI>();
-            _sidebarText.text = string.Empty;
-            _sidebarText.fontSize = 14;
-            _sidebarText.color = new Color(0.2f, 0.18f, 0.15f);
-            _sidebarText.alignment = TextAlignmentOptions.TopLeft;
-            _sidebarText.textWrappingMode = TextWrappingModes.Normal;
-            _sidebarText.lineSpacing = 2f;
-            _sidebarText.raycastTarget = false;
-            KoreanUiFont.Apply(_sidebarText);
-
-            var sideFitter = sideContent.gameObject.AddComponent<ContentSizeFitter>();
-            sideFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            sideScroll.viewport = sideViewport;
-            sideScroll.content = sideContent;
-
-            var tickerBg = UiFactory.CreatePanel(page.transform, "TickerBg",
-                new Vector2(0.02f, 0f), new Vector2(0.98f, 0.08f),
-                Vector2.zero, Vector2.zero);
-            tickerBg.gameObject.AddComponent<Image>().color = new Color(0.12f, 0.14f, 0.18f);
-
-            _tickerStrip = UiFactory.CreateText(tickerBg, "Ticker", "",
-                new Vector2(0.02f, 0.05f), new Vector2(0.98f, 0.95f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 15, new Color(0.9f, 0.92f, 0.95f));
-            _tickerStrip.textWrappingMode = TextWrappingModes.Normal;
-
-            return page;
-        }
-
-        private GameObject BuildMarketPage(RectTransform paper)
-        {
-            var page = UiFactory.CreatePanel(paper, "MarketPage",
-                new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.82f),
-                Vector2.zero, Vector2.zero).gameObject;
-            page.SetActive(false);
-
-            UiFactory.CreateText(page.transform, "Section", "증권  ·  문화푸드 지수",
-                new Vector2(0.02f, 0.92f), new Vector2(0.6f, 0.99f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.BottomLeft, 18,
-                new Color(0.15f, 0.25f, 0.35f)).fontStyle = FontStyles.Bold;
-
-            _marketHeader = UiFactory.CreateText(page.transform, "MarketNote", "",
-                new Vector2(0.02f, 0.84f), new Vector2(0.98f, 0.91f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 16,
-                new Color(0.25f, 0.22f, 0.18f));
-            _marketHeader.textWrappingMode = TextWrappingModes.Normal;
-
-            _portfolioText = UiFactory.CreateText(page.transform, "Portfolio", "",
-                new Vector2(0.02f, 0.77f), new Vector2(0.98f, 0.83f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 17,
-                new Color(0.1f, 0.35f, 0.2f));
-            _portfolioText.fontStyle = FontStyles.Bold;
-
-            var headerRow = UiFactory.CreatePanel(page.transform, "HeaderRow",
-                new Vector2(0.02f, 0.72f), new Vector2(0.98f, 0.76f),
-                Vector2.zero, Vector2.zero);
-            headerRow.gameObject.AddComponent<Image>().color = new Color(0.2f, 0.22f, 0.28f);
-            CreateMarketColumnText(headerRow, "H_Name", "종목",
-                0.00f, 0.34f, TextAlignmentOptions.MidlineLeft, 15, Color.white);
-            CreateMarketColumnText(headerRow, "H_Price", "현재가",
-                0.34f, 0.48f, TextAlignmentOptions.MidlineRight, 15, Color.white);
-            CreateMarketColumnText(headerRow, "H_Change", "등락",
-                0.48f, 0.58f, TextAlignmentOptions.Center, 15, Color.white);
-            CreateMarketColumnText(headerRow, "H_Hold", "보유",
-                0.58f, 0.68f, TextAlignmentOptions.Center, 15, Color.white);
-            CreateMarketColumnText(headerRow, "H_Trade", "거래",
-                0.70f, 0.99f, TextAlignmentOptions.Center, 15, Color.white);
-
-            var scrollRt = UiFactory.CreatePanel(page.transform, "MarketScroll",
-                new Vector2(0.02f, 0.02f), new Vector2(0.98f, 0.71f),
-                Vector2.zero, Vector2.zero);
+            var scrollRt = UiFactory.CreatePanel(listPanel, "Scroll",
+                new Vector2(0f, 0f), new Vector2(1f, 0.93f), Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             UiFactory.ConfigureScroll(scroll);
 
             var viewport = UiFactory.CreateStretchChild(scrollRt, "Viewport");
             viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            viewport.gameObject.AddComponent<Image>().color = new Color(1, 1, 1, 0.01f);
+            viewport.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
 
-            _marketListRoot = UiFactory.CreateStretchChild(viewport, "Content");
-            _marketListRoot.pivot = new Vector2(0.5f, 1f);
-            _marketListRoot.anchorMin = new Vector2(0, 1);
-            _marketListRoot.anchorMax = new Vector2(1, 1);
-            _marketListRoot.offsetMin = Vector2.zero;
-            _marketListRoot.offsetMax = Vector2.zero;
+            _listContent = UiFactory.CreateStretchChild(viewport, "Content");
+            _listContent.pivot = new Vector2(0.5f, 1f);
+            _listContent.anchorMin = new Vector2(0, 1);
+            _listContent.anchorMax = new Vector2(1, 1);
 
-            var vlg = _marketListRoot.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 4f;
-            vlg.childControlHeight = true;
-            vlg.childForceExpandHeight = false;
+            var vlg = _listContent.gameObject.AddComponent<VerticalLayoutGroup>();
+            vlg.spacing = 12;
             vlg.childControlWidth = true;
+            vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
-            vlg.padding = new RectOffset(0, 0, 4, 4);
+            vlg.childForceExpandHeight = false;
+            _listContent.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
 
-            var fitter = _marketListRoot.gameObject.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             scroll.viewport = viewport;
-            scroll.content = _marketListRoot;
+            scroll.content = _listContent;
 
-            return page;
+            // ── 우측: 선택한 뉴스 상세 ──
+            var detail = UiTheme.CreateBorderedPanel(body, "Detail",
+                new Vector2(0.30f, 0f), new Vector2(1f, 1f),
+                Vector2.zero, Vector2.zero, UiTheme.CardWhite, 4f);
+
+            UiTheme.CreateSectionLabel(detail, "DetailLabel", "선택한 뉴스",
+                new Vector2(0.04f, 0.93f), new Vector2(0.96f, 0.98f), Vector2.zero, Vector2.zero, 16);
+
+            var illustRt = UiTheme.CreateBorderedPanel(detail, "Illustration",
+                new Vector2(0.04f, 0.55f), new Vector2(0.96f, 0.91f),
+                Vector2.zero, Vector2.zero, new Color(0.94f, 0.90f, 0.82f), 2f);
+            _illustrationImage = illustRt.gameObject.GetComponent<Image>();
+            _illustrationImage.preserveAspect = true;
+            _illustrationImage.raycastTarget = false;
+
+            _headlineText = UiFactory.CreateText(detail, "Headline", "",
+                new Vector2(0.04f, 0.44f), new Vector2(0.96f, 0.53f),
+                Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.TopLeft, 22, UiTheme.TextDark);
+            _headlineText.fontStyle = FontStyles.Bold;
+
+            _bodyText = UiFactory.CreateText(detail, "Body", "",
+                new Vector2(0.04f, 0.24f), new Vector2(0.96f, 0.43f),
+                Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.TopLeft, 16, UiTheme.TextMuted);
+            _bodyText.textWrappingMode = TextWrappingModes.Normal;
+            _bodyText.overflowMode = TextOverflowModes.Ellipsis;
+
+            var econBox = UiTheme.CreateBorderedPanel(detail, "EconBox",
+                new Vector2(0.04f, 0.03f), new Vector2(0.49f, 0.22f),
+                Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
+            UiFactory.CreateText(econBox, "Label", "경제 영향",
+                new Vector2(0f, 0.6f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
+            _economyImpactText = UiFactory.CreateText(econBox, "Value", "",
+                new Vector2(0f, 0f), new Vector2(1f, 0.6f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.TopLeft, 14, UiTheme.TextDark);
+            _economyImpactText.textWrappingMode = TextWrappingModes.Normal;
+
+            var repBox = UiTheme.CreateBorderedPanel(detail, "RepBox",
+                new Vector2(0.51f, 0.03f), new Vector2(0.96f, 0.22f),
+                Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
+            UiFactory.CreateText(repBox, "Label", "평판 영향",
+                new Vector2(0f, 0.6f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
+            _reputationImpactText = UiFactory.CreateText(repBox, "Value", "",
+                new Vector2(0f, 0f), new Vector2(1f, 0.6f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.TopLeft, 14, UiTheme.TextDark);
+            _reputationImpactText.textWrappingMode = TextWrappingModes.Normal;
+
+            UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(_root.transform, "ContinueBtn",
+                    new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-240f, 32f), new Vector2(-40f, 112f)),
+                "다음으로", UiTheme.Accent, ContinueClicked, 20);
         }
 
-        private GameObject BuildBriefingPage(RectTransform paper)
+        public bool TryShow(Action onContinue)
         {
-            var page = UiFactory.CreatePanel(paper, "BriefingPage",
-                new Vector2(0.04f, 0.1f), new Vector2(0.96f, 0.82f),
-                Vector2.zero, Vector2.zero).gameObject;
-            page.SetActive(false);
+            var news = ChangJun.News.NewsManager.Instance.TodayNews;
+            if (news == null)
+            {
+                onContinue?.Invoke();
+                return false;
+            }
 
-            UiFactory.CreateText(page.transform, "Section", "영업 브리핑",
-                new Vector2(0.02f, 0.92f), new Vector2(0.5f, 0.99f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.BottomLeft, 18,
-                new Color(0.35f, 0.28f, 0.15f)).fontStyle = FontStyles.Bold;
+            _onContinue = onContinue;
 
-            _briefingHeadline = UiFactory.CreateText(page.transform, "BriefHead", "",
-                new Vector2(0.02f, 0.78f), new Vector2(0.98f, 0.9f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 30,
-                new Color(0.1f, 0.08f, 0.06f));
-            _briefingHeadline.fontStyle = FontStyles.Bold;
-            _briefingHeadline.textWrappingMode = TextWrappingModes.Normal;
+            int day = DayLoopController.Instance.Day;
+            _dateChip.text = $"{day}일차 {DayLoopController.Instance.FormatClock()}";
 
-            var box = UiFactory.CreatePanel(page.transform, "BriefBox",
-                new Vector2(0.02f, 0.04f), new Vector2(0.98f, 0.76f),
-                Vector2.zero, Vector2.zero);
-            box.gameObject.AddComponent<Image>().color = new Color(0.94f, 0.92f, 0.86f);
+            RebuildList(news);
+            Select(news);
+            PopulateEventBanner();
 
-            _briefingBody = UiFactory.CreateText(box, "BriefBody", "",
-                new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.96f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 22,
-                new Color(0.18f, 0.16f, 0.14f));
-            _briefingBody.textWrappingMode = TextWrappingModes.Normal;
-            _briefingBody.lineSpacing = 6f;
-
-            return page;
+            _root.SetActive(true);
+            return true;
         }
 
-        private void PopulateFrontPage(NewsSO news)
-        {
-            _headline.text = news.headline;
-            _subheadline.text = string.IsNullOrWhiteSpace(news.subheadline)
-                ? news.body
-                : news.subheadline;
-            _articleBody.text = GetArticleText(news);
-            _sidebarText.text = BuildSidebar(news);
-            _tickerStrip.text = BuildTickerStrip();
+        public void Hide() => _root.SetActive(false);
 
-            if (_illustrationImage != null)
+        private void ContinueClicked()
+        {
+            Hide();
+            _onContinue?.Invoke();
+        }
+
+        private void RebuildList(NewsSO main)
+        {
+            foreach (var row in _listRows)
+                UnityEngine.Object.Destroy(row);
+            _listRows.Clear();
+
+            AddListRow(main);
+            foreach (var side in ChangJun.News.NewsManager.Instance.TodaySideStories)
+                AddListRow(side);
+        }
+
+        private void AddListRow(NewsSO news)
+        {
+            if (news == null) return;
+
+            var rowWrap = new GameObject($"Row_{news.headline}", typeof(RectTransform));
+            rowWrap.transform.SetParent(_listContent, false);
+            rowWrap.AddComponent<LayoutElement>().preferredHeight = 84;
+
+            var row = UiTheme.CreateShadowCard(rowWrap.transform, "Card",
+                Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-4f, 0f),
+                UiTheme.CardWhite, 3f, 4f);
+
+            var btn = row.gameObject.AddComponent<Button>();
+            btn.targetGraphic = row.gameObject.GetComponent<Image>();
+            btn.onClick.AddListener(() => Select(news));
+
+            var swatch = UiFactory.CreatePanel(row, "Swatch",
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14f, -24f), new Vector2(62f, 24f));
+            swatch.gameObject.AddComponent<Image>().color = CultureSwatch(news.cultureGroup);
+
+            UiFactory.CreateText(row, "Title", news.headline,
+                new Vector2(0f, 0.5f), new Vector2(1f, 0.92f), new Vector2(76f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 15, UiTheme.TextDark);
+
+            UiFactory.CreateText(row, "Tag", $"{SentimentLabel(news.sentiment)} · {news.sectionTag}",
+                new Vector2(0f, 0.08f), new Vector2(1f, 0.5f), new Vector2(76f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 11, UiTheme.TextMuted);
+
+            _listRows.Add(rowWrap);
+        }
+
+        private void Select(NewsSO news)
+        {
+            if (news == null) return;
+            _selected = news;
+
+            _headlineText.text = news.headline;
+            _bodyText.text = !string.IsNullOrWhiteSpace(news.article) ? news.article
+                : !string.IsNullOrWhiteSpace(news.body) ? news.body
+                : "오늘의 소식이 전해지고 있습니다.";
+
+            if (news.illustration != null)
             {
                 _illustrationImage.sprite = news.illustration;
-                _illustrationImage.color = news.illustration != null
-                    ? Color.white
-                    : new Color(0.88f, 0.84f, 0.76f);
-                _illustrationImage.enabled = true;
+                _illustrationImage.color = Color.white;
             }
-        }
+            else
+            {
+                _illustrationImage.sprite = null;
+                _illustrationImage.color = new Color(0.94f, 0.90f, 0.82f);
+            }
 
-        private void PopulateMarketPage()
-        {
-            var news = _current;
-            _marketHeader.text = news != null
-                ? $"오늘의 헤드라인 「{news.headline}」이(가) 관련 종목 시세에 반영되었습니다. 아침 장 시작 전에 매수·매도할 수 있습니다."
-                : "문화푸드 지수 시세입니다.";
+            string menuEffect = news.priceMultiplier >= 1f
+                ? $"{CultureLabel(news.cultureGroup)} 수요 상승 (판매가 x{news.priceMultiplier:0.00})"
+                : $"{CultureLabel(news.cultureGroup)} 손님 감소 가능 (판매가 x{news.priceMultiplier:0.00})";
+            _economyImpactText.text = menuEffect;
 
-            RefreshPortfolioLine();
-            RebuildMarketRows();
-        }
-
-        private void PopulateBriefingPage(NewsSO news)
-        {
-            _briefingHeadline.text = $"오늘의 영업 포인트 — {news.headline}";
-            _briefingBody.text = BuildBriefing(news);
+            _reputationImpactText.text = news.sentiment switch
+            {
+                NewsSentiment.Discrimination => "차별·편견 보도 — 상생 지수에 악영향을 줄 수 있어요.",
+                NewsSentiment.Positive => "긍정적인 여론 — 평판에 도움이 될 수 있어요.",
+                _ => "특별한 평판 영향은 없습니다.",
+            };
         }
 
         private void PopulateEventBanner()
@@ -448,205 +266,26 @@ namespace ChangJun.Bootstrap
             };
         }
 
-        private void RefreshPortfolioLine()
+        private static TextMeshProUGUI CreateHeaderChip(RectTransform header, string text)
         {
-            if (StockMarketManager.Instance == null)
-            {
-                _portfolioText.text = "현금: -";
-                return;
-            }
-
-            int cash = MoneyManager.Instance.Money;
-            int portfolio = StockMarketManager.Instance.GetPortfolioValue();
-            _portfolioText.text = $"현금 {cash:N0}원  ·  보유 주식 평가 {portfolio:N0}원  ·  총자산 {cash + portfolio:N0}원";
-        }
-
-        private void RebuildMarketRows()
-        {
-            foreach (var row in _marketRows)
-                UnityEngine.Object.Destroy(row);
-            _marketRows.Clear();
-
-            if (StockMarketManager.Instance == null) return;
-
-            foreach (var ticker in StockMarketManager.Instance.Tickers)
-            {
-                if (ticker == null) continue;
-                _marketRows.Add(CreateMarketRow(ticker));
-            }
-        }
-
-        private GameObject CreateMarketRow(StockTickerSO ticker)
-        {
-            var row = UiFactory.CreatePanel(_marketListRoot, $"Row_{ticker.code}",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
-            row.gameObject.AddComponent<Image>().color = new Color(0.98f, 0.97f, 0.94f);
-            row.sizeDelta = new Vector2(0, 52);
-
-            var le = row.gameObject.AddComponent<LayoutElement>();
-            le.minHeight = 58f;
-            le.preferredHeight = 58f;
-
-            int price = StockMarketManager.Instance.GetPrice(ticker.code);
-            float change = StockMarketManager.Instance.GetChangePercent(ticker.code);
-            int holding = StockMarketManager.Instance.GetHolding(ticker.code);
-            string changeStr = change >= 0 ? $"+{change:0.0}%" : $"{change:0.0}%";
-            Color changeColor = change >= 0 ? new Color(0.75f, 0.15f, 0.12f) : new Color(0.12f, 0.3f, 0.65f);
-
-            CreateMarketColumnText(row, "Name", $"{ticker.code}\n{ticker.displayName}",
-                0.00f, 0.34f, TextAlignmentOptions.MidlineLeft, 14,
-                new Color(0.12f, 0.1f, 0.08f));
-
-            CreateMarketColumnText(row, "Price", $"{price:N0}원",
-                0.34f, 0.48f, TextAlignmentOptions.MidlineRight, 16,
-                new Color(0.12f, 0.1f, 0.08f));
-
-            var changeText = CreateMarketColumnText(row, "Change", changeStr,
-                0.48f, 0.58f, TextAlignmentOptions.Center, 16, changeColor);
-            changeText.fontStyle = FontStyles.Bold;
-
-            CreateMarketColumnText(row, "Hold", $"{holding}주",
-                0.58f, 0.68f, TextAlignmentOptions.Center, 15,
-                new Color(0.3f, 0.28f, 0.25f));
-
-            var buyRt = UiFactory.CreatePanel(row, "Buy",
-                new Vector2(0.70f, 0.12f), new Vector2(0.84f, 0.88f),
-                Vector2.zero, Vector2.zero);
-            var buyBtn = buyRt.gameObject.AddComponent<Button>();
-            buyBtn.targetGraphic = buyRt.gameObject.AddComponent<Image>();
-            buyBtn.targetGraphic.color = new Color(0.7f, 0.2f, 0.18f);
-            string code = ticker.code;
-            buyBtn.onClick.AddListener(() => OnBuy(code));
-            UiFactory.CreateText(buyRt, "L", "매수",
+            var chip = UiTheme.CreateBorderedPanel(header,
+                "DateChip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-190f, -18f), new Vector2(-26f, 18f), UiTheme.CardWhite, 2f);
+            return UiFactory.CreateText(chip, "Text", text,
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 14, Color.white);
-
-            var sellRt = UiFactory.CreatePanel(row, "Sell",
-                new Vector2(0.85f, 0.12f), new Vector2(0.99f, 0.88f),
-                Vector2.zero, Vector2.zero);
-            var sellBtn = sellRt.gameObject.AddComponent<Button>();
-            sellBtn.targetGraphic = sellRt.gameObject.AddComponent<Image>();
-            sellBtn.targetGraphic.color = new Color(0.2f, 0.35f, 0.55f);
-            sellBtn.onClick.AddListener(() => OnSell(code));
-            UiFactory.CreateText(sellRt, "L", "매도",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 14, Color.white);
-
-            return row.gameObject;
+                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
         }
 
-        private static TextMeshProUGUI CreateMarketColumnText(Transform parent, string name,
-            string text, float xMin, float xMax, TextAlignmentOptions align, int fontSize, Color color)
+        private static Color CultureSwatch(CultureGroup c) => c switch
         {
-            return UiFactory.CreateText(parent, name, text,
-                new Vector2(xMin, 0.08f), new Vector2(xMax, 0.92f),
-                Vector2.zero, Vector2.zero, align, fontSize, color);
-        }
-
-        private void OnBuy(string code)
-        {
-            if (StockMarketManager.Instance.TryBuy(code))
-            {
-                RefreshPortfolioLine();
-                RebuildMarketRows();
-            }
-        }
-
-        private void OnSell(string code)
-        {
-            if (StockMarketManager.Instance.TrySell(code))
-            {
-                RefreshPortfolioLine();
-                RebuildMarketRows();
-            }
-        }
-
-        private string BuildTickerStrip()
-        {
-            if (StockMarketManager.Instance == null)
-                return "시세 정보 없음";
-
-            var sb = new StringBuilder();
-            foreach (var ticker in StockMarketManager.Instance.Tickers)
-            {
-                if (ticker == null) continue;
-                float ch = StockMarketManager.Instance.GetChangePercent(ticker.code);
-                string arrow = ch >= 0 ? "▲" : "▼";
-                sb.Append($"{ticker.code} {StockMarketManager.Instance.GetPrice(ticker.code):N0} {arrow}{Mathf.Abs(ch):0.0}%   ");
-            }
-            return sb.ToString().Trim();
-        }
-
-        private static string BuildSidebar(NewsSO main)
-        {
-            var sb = new StringBuilder();
-
-            if (!string.IsNullOrWhiteSpace(main.sidebarNote))
-            {
-                sb.AppendLine("【 오늘의 시각 】");
-                sb.AppendLine(main.sidebarNote);
-                sb.AppendLine();
-            }
-
-            var sides = NewsManager.Instance.TodaySideStories;
-            for (int i = 0; i < sides.Count; i++)
-            {
-                var s = sides[i];
-                sb.AppendLine($"- {s.headline}");
-                sb.AppendLine(string.IsNullOrWhiteSpace(s.body) ? s.subheadline : s.body);
-                sb.AppendLine();
-            }
-
-            sb.AppendLine("【 오늘의 문화 키워드 】");
-            sb.Append(CultureLabel(main.cultureGroup));
-            sb.Append(" · ");
-            sb.Append(SentimentLabel(main.sentiment));
-            return sb.ToString().TrimEnd();
-        }
-
-        private static string BuildBriefing(NewsSO news)
-        {
-            if (!string.IsNullOrWhiteSpace(news.summary))
-                return news.summary + "\n\n" + BuildEffectBlock(news);
-
-            return BuildEffectBlock(news);
-        }
-
-        private static string BuildEffectBlock(NewsSO news)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"> 영향 문화권: {CultureLabel(news.cultureGroup)}");
-            sb.AppendLine($"> 보도 톤: {SentimentLabel(news.sentiment)} ({news.sectionTag})");
-            sb.AppendLine();
-
-            string menuEffect = news.priceMultiplier >= 1f
-                ? $"해당 문화권 메뉴 수요 상승  (판매가 x{news.priceMultiplier:0.00})"
-                : $"해당 문화권 손님 감소 가능  (판매가 x{news.priceMultiplier:0.00})";
-            sb.AppendLine("【 가게 영향 】");
-            sb.AppendLine(menuEffect);
-
-            if (!string.IsNullOrEmpty(news.primaryStockCode))
-                sb.AppendLine($"> 관련 종목: {news.primaryStockCode}");
-
-            sb.AppendLine();
-            sb.AppendLine("【 증권면 안내 】");
-            sb.AppendLine("앞 페이지에서 문화푸드 주식을 사고팔 수 있습니다.");
-            sb.AppendLine("뉴스와 연결된 문화권 종목이 오늘 더 크게 움직일 수 있어요.");
-            sb.AppendLine();
-            sb.AppendLine("준비되면 영업을 시작하세요!");
-            return sb.ToString();
-        }
-
-        private static string GetArticleText(NewsSO news)
-        {
-            if (!string.IsNullOrWhiteSpace(news.article))
-                return news.article;
-
-            if (!string.IsNullOrWhiteSpace(news.body))
-                return news.body;
-
-            return "오늘의 소식이 전해지고 있습니다.";
-        }
+            CultureGroup.Korean => UiTheme.Accent,
+            CultureGroup.Muslim => UiTheme.Success,
+            CultureGroup.Hindu => UiTheme.Gold,
+            CultureGroup.Vegan => UiTheme.Success,
+            CultureGroup.SEAsian => UiTheme.Info,
+            CultureGroup.AfricanAmerican => new Color32(0xD9, 0x8C, 0xB0, 0xFF),
+            _ => UiTheme.TextFaint,
+        };
 
         private static string CultureLabel(CultureGroup culture) => culture switch
         {

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.13.17/dist/galmuri.css">
+<style>body{margin:0;}</style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#FFF6E6;font-family:'Galmuri11',monospace;color:#3A2415;overflow:hidden;position:relative;">
+
+  <div style="flex:none;height:72px;display:flex;align-items:center;gap:14px;padding:0 26px;background:#FF6F61;border-bottom:4px solid #1a1a1a;">
+    <div style="width:40px;height:40px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <div style="width:10px;height:10px;border-left:3px solid #3A2415;border-bottom:3px solid #3A2415;transform:rotate(45deg);"></div>
+    </div>
+    <span style="font-size:20px;color:#fff;">인벤토리</span>
+    <div style="flex:1;"></div>
+    <div style="display:flex;background:#fff;border:2px solid #1a1a1a;padding:4px;gap:4px;">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+        <div style="padding:8px 16px;cursor:pointer;font-size:13px;background:{{ t.bg }};color:{{ t.color }};">{{ t.label }}</div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;gap:24px;padding:24px 32px;">
+
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:14px;color:#8A6238;">재료 · 재고</div>
+      <div style="flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:150px;gap:16px;">
+        <sc-for list="{{ items }}" as="it" hint-placeholder-count="18">
+          <div style="background:#fff;border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;position:relative;">
+            <div style="width:52px;height:52px;background:{{ it.color }};border:2px solid #1a1a1a;"></div>
+            <span style="font-size:12px;">{{ it.name }}</span>
+            <div style="position:absolute;bottom:6px;right:6px;background:#3A2415;color:#fff;font-size:10px;padding:2px 6px;">x{{ it.qty }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="width:380px;display:flex;flex-direction:column;gap:18px;">
+
+      <div style="background:#fff;border:4px solid #1a1a1a;box-shadow:6px 6px 0 #1a1a1a;padding:20px;flex:1;display:flex;flex-direction:column;">
+        <div style="font-size:14px;color:#8A6238;margin-bottom:14px;">선택한 항목</div>
+        <div style="flex:1;border:2px dashed #D9A97A;display:flex;align-items:center;justify-content:center;">
+          <span style="font-size:12px;color:#B08055;">EMPTY — 아이템 상세 정보 표시</span>
+        </div>
+      </div>
+
+      <div style="background:#F2E4C8;border:4px solid #1a1a1a;padding:18px;">
+        <div style="font-size:13px;color:#8A6238;margin-bottom:12px;">보관함 용량</div>
+        <div style="height:24px;border:3px solid #1a1a1a;background:#fff;overflow:hidden;">
+          <div style="width:58%;height:100%;background:#F2B705;"></div>
+        </div>
+        <div style="font-size:12px;color:#8A6238;margin-top:8px;">42 / 72 슬롯 사용 중</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1920, &quot;height&quot;: 1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['흰쌀밥','제육','불고기','오징어','김치','단무지','계란','고추장','마요','대파','고춧가루','참기름','당근','양파','치즈','스팸','베이컨','옥수수'];
+    const colors = ['#FFF3D6','#FF6F61','#B5723A','#D98CB0','#E23B3B','#F2D24A','#FFFDF6','#C9451F','#FFF9EC','#5FAE4E','#D9432E','#8A6238','#FF9645','#F2E4C8','#F2E4C8','#D98CB0','#B5723A','#F2D24A'];
+    return {
+      tabs: [
+        { label: '재료', bg: '#FF6F61', color: '#fff' },
+        { label: '완제품', bg: 'transparent', color: '#3A2415' },
+        { label: '장비', bg: 'transparent', color: '#3A2415' },
+        { label: '기타', bg: 'transparent', color: '#3A2415' }
+      ],
+      items: names.map((n, i) => ({ name: n, color: colors[i], qty: (i * 3 + 2) % 20 + 1 }))
+    };
+  }
+}
+</script>
+</body>
+</html>

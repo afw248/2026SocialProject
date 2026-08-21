@@ -9,7 +9,7 @@ namespace ChangJun.Bootstrap
     /// </summary>
     public static class KoreanUiFont
     {
-        private const string FontResourcePath = "Fonts/MalgunSDF";
+        private const string FontResourcePath = "Fonts/Galmuri11 SDF";
         private static TMP_FontAsset _cached;
         private static bool _warned;
 
@@ -25,8 +25,8 @@ namespace ChangJun.Bootstrap
             if (!_warned)
             {
                 Debug.LogWarning(
-                    "[KoreanUiFont] MalgunSDF 가 없거나 손상되었습니다. " +
-                    "Tools > CupRice > Setup Korean Font 를 실행하세요. (기본 폰트로 폴백)");
+                    "[KoreanUiFont] Galmuri11 SDF 가 없거나 손상되었습니다. " +
+                    "Assets/Resources/Fonts/Galmuri11 SDF.asset 을 확인하세요. (기본 폰트로 폴백)");
                 _warned = true;
             }
 

@@ -26,6 +26,7 @@ namespace ChangJun.Bootstrap
         private readonly Button _actionButton;
         private readonly TextMeshProUGUI _actionButtonLabel;
         private readonly RectTransform _upgradeContent;
+        private readonly TextMeshProUGUI _moneyChip;
         private readonly Dictionary<string, int> _cart = new();
         private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
@@ -38,22 +39,23 @@ namespace ChangJun.Bootstrap
             _root = UiFactory.CreateOverlayRoot("ShopOverlay", 85);
             _root.SetActive(false);
 
-            var panel = UiFactory.CreatePanel(_root.transform, "Panel",
-                new Vector2(0.06f, 0.06f), new Vector2(0.94f, 0.94f),
-                Vector2.zero, Vector2.zero);
-            panel.gameObject.AddComponent<Image>().color = new Color(0.95f, 0.96f, 0.98f);
+            var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
+            bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
-            UiFactory.CreateText(panel, "Title", "온라인 재료 마켓",
-                new Vector2(0.03f, 0.92f), new Vector2(0.55f, 0.99f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 30,
-                new Color(0.1f, 0.2f, 0.4f));
+            var header = UiTheme.CreateHeaderBar(_root.transform, "재료 상점");
+            var moneyChip = UiTheme.CreateBorderedPanel(header,
+                "MoneyChip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-176f, -18f), new Vector2(-26f, 18f), UiTheme.CardWhite, 2f);
+            _moneyChip = UiFactory.CreateText(moneyChip, "Text", "",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
+
+            var panel = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
             // ── 왼쪽: 재료 목록 ──
-            var upgradeScroll = UiFactory.CreatePanel(panel, "UpgradeScroll",
-                new Vector2(0.03f, 0.82f), new Vector2(0.58f, 0.9f),
-                Vector2.zero, Vector2.zero);
-            upgradeScroll.gameObject.AddComponent<Image>().color = new Color(0.9f, 0.93f, 0.98f);
+            var upgradeScroll = UiTheme.CreateBorderedPanel(panel, "UpgradeScroll",
+                new Vector2(0.03f, 0.82f), new Vector2(0.74f, 0.9f),
+                Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             var upgradeHlg = upgradeScroll.gameObject.AddComponent<HorizontalLayoutGroup>();
             upgradeHlg.spacing = 6;
             upgradeHlg.padding = new RectOffset(6, 6, 4, 4);
@@ -63,7 +65,7 @@ namespace ChangJun.Bootstrap
             _upgradeContent = upgradeScroll;
 
             var scrollRt = UiFactory.CreatePanel(panel, "Scroll",
-                new Vector2(0.03f, 0.14f), new Vector2(0.58f, 0.81f),
+                new Vector2(0.03f, 0.14f), new Vector2(0.74f, 0.81f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -79,10 +81,10 @@ namespace ChangJun.Bootstrap
             _gridContent.anchorMax = new Vector2(1, 1);
 
             var grid = _gridContent.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(260, 160);
-            grid.spacing = new Vector2(10, 10);
+            grid.cellSize = new Vector2(300, 190);
+            grid.spacing = new Vector2(14, 14);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 2;
+            grid.constraintCount = 4;
             grid.padding = new RectOffset(6, 6, 6, 6);
             _gridContent.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
                 ContentSizeFitter.FitMode.PreferredSize;
@@ -91,16 +93,14 @@ namespace ChangJun.Bootstrap
             scroll.content = _gridContent;
 
             // ── 오른쪽: 장바구니 ──
-            var cartPanel = UiFactory.CreatePanel(panel, "CartPanel",
-                new Vector2(0.6f, 0.14f), new Vector2(0.97f, 0.9f),
-                Vector2.zero, Vector2.zero);
-            cartPanel.gameObject.AddComponent<Image>().color = new Color(0.88f, 0.91f, 0.96f);
+            var cartPanel = UiTheme.CreateBorderedPanel(panel, "CartPanel",
+                new Vector2(0.76f, 0.14f), new Vector2(0.97f, 0.9f),
+                Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             UiFactory.CreateText(cartPanel, "CartTitle", "장바구니",
                 new Vector2(0.05f, 0.92f), new Vector2(0.95f, 0.99f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 24,
-                new Color(0.1f, 0.2f, 0.35f));
+                TextAlignmentOptions.MidlineLeft, 24, UiTheme.TextDark);
 
             CreateCartHeader(cartPanel, out _cartHeader);
 
@@ -136,21 +136,18 @@ namespace ChangJun.Bootstrap
             _cartEmptyText = UiFactory.CreateText(cartPanel, "Empty", "담은 재료가 없습니다",
                 new Vector2(0.05f, 0.45f), new Vector2(0.95f, 0.6f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 20,
-                new Color(0.45f, 0.48f, 0.55f));
+                TextAlignmentOptions.Center, 20, UiTheme.TextFaint);
 
             _cartTotalText = UiFactory.CreateText(cartPanel, "CartTotal", "합계  0원",
                 new Vector2(0.05f, 0.06f), new Vector2(0.95f, 0.16f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 22,
-                new Color(0.1f, 0.15f, 0.25f));
+                TextAlignmentOptions.MidlineRight, 22, UiTheme.TextDark);
             _cartTotalText.fontStyle = FontStyles.Bold;
 
             _receiptBanner = UiFactory.CreateText(cartPanel, "ReceiptBanner", "",
                 new Vector2(0.05f, 0.83f), new Vector2(0.95f, 0.91f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 18,
-                new Color(0.15f, 0.45f, 0.25f));
+                TextAlignmentOptions.MidlineLeft, 18, UiTheme.Success);
             _receiptBanner.fontStyle = FontStyles.Bold;
             _receiptBanner.gameObject.SetActive(false);
 
@@ -158,33 +155,19 @@ namespace ChangJun.Bootstrap
             _totalText = UiFactory.CreateText(panel, "Total", "합계: 0원",
                 new Vector2(0.03f, 0.05f), new Vector2(0.4f, 0.12f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 22,
-                new Color(0.1f, 0.15f, 0.25f));
+                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextDark);
 
             _balanceText = UiFactory.CreateText(panel, "Balance", "",
                 new Vector2(0.4f, 0.05f), new Vector2(0.62f, 0.12f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 20,
-                new Color(0.2f, 0.35f, 0.2f));
+                TextAlignmentOptions.MidlineRight, 20, UiTheme.TextMuted);
 
-            var buyRt = UiFactory.CreatePanel(panel, "BuyBtn",
-                new Vector2(0.64f, 0.04f), new Vector2(0.97f, 0.12f),
-                Vector2.zero, Vector2.zero);
-            _actionButton = buyRt.gameObject.AddComponent<Button>();
-            _actionButton.targetGraphic = buyRt.gameObject.AddComponent<Image>();
-            _actionButton.targetGraphic.color = new Color(0.15f, 0.4f, 0.7f);
-            _actionButton.onClick.AddListener(OnActionButton);
-
-            var labelGo = new GameObject("Label", typeof(RectTransform));
-            labelGo.transform.SetParent(buyRt, false);
-            UiFactory.Stretch(labelGo.GetComponent<RectTransform>());
-            _actionButtonLabel = labelGo.AddComponent<TextMeshProUGUI>();
-            _actionButtonLabel.text = "구매 완료";
-            _actionButtonLabel.fontSize = 24;
-            _actionButtonLabel.color = Color.white;
-            _actionButtonLabel.alignment = TextAlignmentOptions.Center;
-            _actionButtonLabel.raycastTarget = false;
-            KoreanUiFont.Apply(_actionButtonLabel);
+            _actionButton = UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(panel, "BuyBtn",
+                    new Vector2(0.64f, 0.04f), new Vector2(0.97f, 0.12f),
+                    Vector2.zero, Vector2.zero),
+                "구매 완료", UiTheme.Accent, OnActionButton, 24);
+            _actionButtonLabel = _actionButton.GetComponentInChildren<TextMeshProUGUI>();
         }
 
         public void Show(IReadOnlyList<IngredientSO> ingredients)
@@ -192,6 +175,7 @@ namespace ChangJun.Bootstrap
             _ingredients = ingredients;
             _cart.Clear();
             _showingReceipt = false;
+            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
             _cartHeader.SetActive(true);
             _receiptBanner.gameObject.SetActive(false);
             _actionButtonLabel.text = "구매 완료";
@@ -220,7 +204,7 @@ namespace ChangJun.Bootstrap
                 btnGo.transform.SetParent(_upgradeContent, false);
                 btnGo.AddComponent<LayoutElement>().preferredHeight = 36;
                 var img = btnGo.AddComponent<Image>();
-                img.color = owned ? new Color(0.55f, 0.75f, 0.55f) : new Color(0.55f, 0.65f, 0.85f);
+                img.color = owned ? UiTheme.Success : UiTheme.Gold;
                 if (!owned)
                 {
                     var btn = btnGo.AddComponent<Button>();
@@ -241,7 +225,7 @@ namespace ChangJun.Bootstrap
                     : $"{upgrade.displayName} ({upgrade.purchaseCost:N0}원)";
                 tmp.fontSize = 13;
                 tmp.alignment = TextAlignmentOptions.Center;
-                tmp.color = Color.white;
+                tmp.color = owned ? UiTheme.CardWhite : UiTheme.TextDark;
                 tmp.raycastTarget = false;
                 KoreanUiFont.Apply(tmp);
             }
@@ -264,11 +248,12 @@ namespace ChangJun.Bootstrap
 
         private void CreateShopCard(IngredientSO ing)
         {
-            var card = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
-            var le = card.gameObject.AddComponent<LayoutElement>();
+            var cardWrap = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
+            var le = cardWrap.gameObject.AddComponent<LayoutElement>();
             le.preferredHeight = 160;
             le.preferredWidth = 260;
-            card.gameObject.AddComponent<Image>().color = Color.white;
+            var card = UiTheme.CreateBorderedPanel(cardWrap, "Fill",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             var iconRt = UiFactory.CreatePanel(card, "Icon",
                 new Vector2(0.04f, 0.58f), new Vector2(0.22f, 0.92f),
@@ -286,15 +271,13 @@ namespace ChangJun.Bootstrap
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원",
                 new Vector2(0.24f, 0.58f), new Vector2(0.96f, 0.92f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 17,
-                new Color(0.1f, 0.12f, 0.2f));
+                TextAlignmentOptions.TopLeft, 17, UiTheme.TextDark);
 
             UiFactory.CreateText(card, "Stock",
                 $"보유 {stock}  ·  배달대기 {warehouse}",
                 new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 14,
-                new Color(0.35f, 0.4f, 0.5f));
+                TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextMuted);
 
             string code = ing.code;
             int initial = _cart.TryGetValue(code, out var q) ? q : 0;
@@ -375,6 +358,7 @@ namespace ChangJun.Bootstrap
             _cartTotalText.text = totalLine;
             _totalText.text = $"합계: {total:N0}원{bulkNote}";
             _balanceText.text = $"잔액: {MoneyManager.Instance.Money:N0}원";
+            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
         }
 
         private static float GetBulkDiscountMultiplier(Dictionary<string, int> cart, out int unitCount)
@@ -421,7 +405,7 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.05f, 0.84f), new Vector2(0.95f, 0.91f),
                 Vector2.zero, Vector2.zero);
             headerRoot = header.gameObject;
-            header.gameObject.AddComponent<Image>().color = new Color(0.75f, 0.8f, 0.88f);
+            header.gameObject.AddComponent<Image>().color = UiTheme.TanRow;
 
             var hlg = header.gameObject.AddComponent<HorizontalLayoutGroup>();
             hlg.padding = new RectOffset(8, 8, 4, 4);
@@ -458,7 +442,7 @@ namespace ChangJun.Bootstrap
             tmp.text = label;
             tmp.fontSize = 15;
             tmp.fontStyle = FontStyles.Bold;
-            tmp.color = new Color(0.15f, 0.2f, 0.3f);
+            tmp.color = UiTheme.TextDark;
             tmp.alignment = align;
             tmp.raycastTarget = false;
             KoreanUiFont.Apply(tmp);
@@ -582,6 +566,7 @@ namespace ChangJun.Bootstrap
             _cartTotalText.text = $"결제  {total:N0}원";
             _totalText.text = $"합계: {total:N0}원";
             _balanceText.text = $"잔액: {MoneyManager.Instance.Money:N0}원";
+            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
         }
     }
 }

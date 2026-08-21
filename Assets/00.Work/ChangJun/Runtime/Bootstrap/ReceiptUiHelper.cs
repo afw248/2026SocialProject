@@ -10,11 +10,11 @@ namespace ChangJun.Bootstrap
     /// </summary>
     public static class ReceiptUiHelper
     {
-        public static readonly Color PaperColor = new(0.97f, 0.95f, 0.89f);
-        public static readonly Color PaperDark = new(0.94f, 0.91f, 0.84f);
-        public static readonly Color InkColor = new(0.15f, 0.12f, 0.08f);
-        public static readonly Color MutedInk = new(0.42f, 0.36f, 0.28f);
-        public static readonly Color AccentBrown = new(0.55f, 0.42f, 0.28f);
+        public static readonly Color PaperColor = UiTheme.Background;
+        public static readonly Color PaperDark = UiTheme.TanRow;
+        public static readonly Color InkColor = UiTheme.TextDark;
+        public static readonly Color MutedInk = UiTheme.TextMuted;
+        public static readonly Color AccentBrown = UiTheme.Accent;
 
         public static RectTransform CreateDim(Transform parent, float alpha = 0.72f)
         {
@@ -26,21 +26,8 @@ namespace ChangJun.Bootstrap
         public static RectTransform CreatePaperPanel(Transform parent, string name,
             Vector2 anchorMin, Vector2 anchorMax)
         {
-            var panel = UiFactory.CreatePanel(parent, name, anchorMin, anchorMax,
-                Vector2.zero, Vector2.zero);
-            var bg = panel.gameObject.AddComponent<Image>();
-            bg.color = PaperColor;
-            bg.raycastTarget = true;
-
-            var outline = panel.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0.45f, 0.35f, 0.22f, 0.65f);
-            outline.effectDistance = new Vector2(2f, -2f);
-
-            var shadow = panel.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0, 0, 0, 0.35f);
-            shadow.effectDistance = new Vector2(3f, -4f);
-
-            return panel;
+            return UiTheme.CreateShadowCard(parent, name, anchorMin, anchorMax,
+                Vector2.zero, Vector2.zero, PaperColor);
         }
 
         public static TextMeshProUGUI CreateReceiptHeader(Transform parent, string title,
@@ -153,18 +140,13 @@ namespace ChangJun.Bootstrap
             Vector2 anchorMin, Vector2 anchorMax, Action onClick,
             Color? bgColor = null)
         {
-            var btnRt = UiFactory.CreatePanel(parent, $"Btn_{label}",
+            var slot = UiFactory.CreatePanel(parent, $"Slot_{label}",
                 anchorMin, anchorMax, Vector2.zero, Vector2.zero);
-            var btn = btnRt.gameObject.AddComponent<Button>();
-            var img = btnRt.gameObject.AddComponent<Image>();
-            img.color = bgColor ?? AccentBrown;
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => onClick?.Invoke());
 
-            UiFactory.CreateText(btnRt, "Label", label,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 22, Color.white);
-            return btn;
+            var fill = bgColor ?? AccentBrown;
+            bool isLight = fill == UiTheme.CardWhite || fill == PaperColor || fill == PaperDark;
+            return UiTheme.CreateFlatButton(slot, label, fill,
+                () => onClick?.Invoke(), 22, isLight ? UiTheme.TextDark : UiTheme.CardWhite);
         }
 
         private static GameObject CreateLineCell(Transform parent, float flexOrWidth, float minWidth)

@@ -13,20 +13,28 @@ using UnityEngine.UI;
 
 namespace ChangJun.Bootstrap
 {
+    public enum IngredientCategory
+    {
+        Main,
+        Sauce,
+        Topping,
+    }
+
     /// <summary>
     /// 재료 그리드·밥그릇 프리뷰·액션 바·결과 텍스트 HUD.
     /// </summary>
     public sealed class CraftHudPresenter
     {
-        private const int GridColumns = 5;
         private const float ToppingRadius = 42f;
         private const float ToppingSize = 72f;
 
         private readonly CraftController _controller;
         private readonly RectTransform _craftRoot;
+        private readonly RectTransform _cookContent;
         private readonly RectTransform _toppingLayer;
         private readonly TextMeshProUGUI _moneyText;
         private readonly TextMeshProUGUI _resultText;
+        private readonly TextMeshProUGUI _orderStatusText;
         private readonly Dictionary<string, Button> _ingredientButtons = new();
         private readonly Dictionary<string, Image> _ingredientImages = new();
         private readonly List<Image> _toppingImages = new();
@@ -35,119 +43,94 @@ namespace ChangJun.Bootstrap
         private bool _craftEnabled = true;
 
         public RectTransform CraftRoot => _craftRoot;
-        public GameObject HeaderRoot { get; }
 
         public CraftHudPresenter(RectTransform root, RectTransform craftContent,
-            CraftController controller, IReadOnlyList<IngredientSO> ingredients)
+            CraftController controller, IReadOnlyList<IngredientSO> ingredients, RectTransform topBar)
         {
             _controller = controller;
             IngredientVisualCatalog.EnsureLoaded();
             IngredientHoverTooltip.Ensure(root);
 
-            var header = UiFactory.CreatePanel(root, "Header",
-                new Vector2(0.26f, 0.68f), new Vector2(0.88f, 0.92f), Vector2.zero, Vector2.zero);
-            HeaderRoot = header.gameObject;
-            header.gameObject.AddComponent<Image>().color = new Color(0.07f, 0.09f, 0.13f, 0.94f);
-
-            var toolbar = UiFactory.CreateStretchChild(header, "Toolbar");
-            var toolbarLayout = toolbar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            toolbarLayout.spacing = 16;
-            toolbarLayout.padding = new RectOffset(18, 18, 10, 10);
-            toolbarLayout.childControlWidth = true;
-            toolbarLayout.childControlHeight = true;
-            toolbarLayout.childForceExpandWidth = true;
-            toolbarLayout.childForceExpandHeight = true;
-            toolbarLayout.childAlignment = TextAnchor.MiddleCenter;
-
-            _moneyText = CreateLayoutText(toolbar, "MoneyText", "자산: 0원",
-                TextAlignmentOptions.MidlineLeft, 26, 0.85f);
-            _resultText = CreateLayoutText(toolbar, "ResultText", "",
-                TextAlignmentOptions.Center, 30, 2.2f);
-            _resultText.fontStyle = FontStyles.Bold;
-            _resultText.textWrappingMode = TextWrappingModes.NoWrap;
-            _resultText.overflowMode = TextOverflowModes.Ellipsis;
+            // 상단 바에 자산 칩을 배치 (Day/Time 칩 오른쪽)
+            var moneyChip = UiTheme.CreateBorderedPanel(topBar, "MoneyChip",
+                new Vector2(0f, 0.18f), new Vector2(0f, 0.82f),
+                new Vector2(250f, 0f), new Vector2(520f, 0f), UiTheme.CardWhite, 2f);
+            _moneyText = UiFactory.CreateText(moneyChip, "MoneyText", "자산: 0원",
+                Vector2.zero, Vector2.one, new Vector2(14f, 0f), Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextDark);
 
             _craftRoot = UiFactory.CreatePanel(craftContent, "CraftArea",
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
             // 다른 탭이 비쳐 보이지 않도록 불투명 배경
-            _craftRoot.gameObject.AddComponent<Image>().color =
-                new Color(0.07f, 0.08f, 0.11f, 1f);
+            _craftRoot.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
-            // 위: 가로 도마 배경 + 재료 그리드 (픽셀 비율 유지)
-            var scrollPanel = UiFactory.CreatePanel(_craftRoot, "IngredientScroll",
-                new Vector2(0.05f, 0.52f), new Vector2(0.95f, 0.99f),
-                Vector2.zero, Vector2.zero);
+            // 결과/배너 텍스트 — 조리 화면 상단 중앙에 떠 있는 배너
+            var resultBanner = UiTheme.CreateShadowCard(_craftRoot, "ResultBanner",
+                new Vector2(0.28f, 0.94f), new Vector2(0.72f, 0.995f), Vector2.zero, Vector2.zero,
+                UiTheme.CardWhite, 3f, 4f);
+            _resultText = UiFactory.CreateText(resultBanner, "ResultText", "",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 24, UiTheme.TextDark);
+            _resultText.fontStyle = FontStyles.Bold;
+            _resultText.textWrappingMode = TextWrappingModes.NoWrap;
+            _resultText.overflowMode = TextOverflowModes.Ellipsis;
 
-            // 재료 영역 어두운 베이스
-            scrollPanel.gameObject.AddComponent<Image>().color =
-                new Color(0.04f, 0.03f, 0.02f, 0.92f);
+            // "조리하기" 화면 전체(재료 존·밥그릇·액션바) — 주문받기 화면일 때는 통째로 숨긴다.
+            _cookContent = UiFactory.CreatePanel(_craftRoot, "CookContent",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            var boardGo = new GameObject("CuttingBoard", typeof(RectTransform));
-            boardGo.transform.SetParent(scrollPanel, false);
-            var boardRt = boardGo.GetComponent<RectTransform>();
-            boardRt.anchorMin = Vector2.zero;
-            boardRt.anchorMax = Vector2.one;
-            boardRt.offsetMin = new Vector2(6f, 6f);
-            boardRt.offsetMax = new Vector2(-6f, -6f);
-            var boardImg = boardGo.AddComponent<Image>();
-            var boardSprites = Resources.LoadAll<Sprite>("Craft/Sprites/CuttingBoard");
-            boardImg.sprite = boardSprites != null && boardSprites.Length > 0
-                ? boardSprites[0]
-                : Resources.Load<Sprite>("Craft/Sprites/CuttingBoard");
-            boardImg.preserveAspect = true;
-            boardImg.raycastTarget = false;
-            boardImg.color = boardImg.sprite != null
-                ? Color.white
-                : new Color(0.72f, 0.58f, 0.38f, 0.95f);
+            var orderStatusChip = UiTheme.CreateBorderedPanel(_cookContent, "OrderStatusChip",
+                new Vector2(0f, 0.94f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(220f, 0f),
+                UiTheme.CardWhite, 2f);
+            _orderStatusText = UiFactory.CreateText(orderStatusChip, "Text", "주문서 확인 중",
+                Vector2.zero, Vector2.one, new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextDark);
 
-            // 스프라이트가 이미 재료칸 비율(~2.4:1)이라 FitInParent로도 픽셀이 안 늘어남
-            float boardAspect = 2.4f;
-            if (boardImg.sprite != null)
-            {
-                var rect = boardImg.sprite.rect;
-                if (rect.height > 0.01f)
-                    boardAspect = rect.width / rect.height;
-            }
-            var boardFitter = boardGo.AddComponent<AspectRatioFitter>();
-            boardFitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-            boardFitter.aspectRatio = boardAspect;
-
-            var scroll = scrollPanel.gameObject.AddComponent<ScrollRect>();
-            scroll.horizontal = false;
-            scroll.vertical = true;
-            UiFactory.ConfigureScroll(scroll);
-
-            var viewport = UiFactory.CreateStretchChild(scrollPanel, "Viewport");
-            viewport.gameObject.AddComponent<Mask>().showMaskGraphic = false;
-            viewport.gameObject.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
-
-            var content = UiFactory.CreateStretchChild(viewport, "Content");
-            content.pivot = new Vector2(0.5f, 1f);
-            content.anchorMin = new Vector2(0, 1);
-            content.anchorMax = new Vector2(1, 1);
-
-            var grid = content.gameObject.AddComponent<GridLayoutGroup>();
-            // 5칸이 도마 안쪽에 들어가도록 셀/패딩 조정
-            grid.cellSize = new Vector2(92, 92);
-            grid.spacing = new Vector2(8, 8);
-            grid.padding = new RectOffset(28, 28, 18, 18);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = GridColumns;
-            grid.childAlignment = TextAnchor.UpperCenter;
-
-            content.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
-                ContentSizeFitter.FitMode.PreferredSize;
-
-            scroll.viewport = viewport;
-            scroll.content = content;
-
+            // Cupbap Order UI 목업의 조리 화면처럼 메인/밥/소스/토핑을 밥그릇 둘레에 배치한다.
+            var mains = new List<IngredientSO>();
+            var sauces = new List<IngredientSO>();
+            var toppings = new List<IngredientSO>();
             foreach (var ing in ingredients)
-                CreateIngredientButton(content, ing);
+            {
+                switch (GetCategory(ing.code))
+                {
+                    case IngredientCategory.Sauce: sauces.Add(ing); break;
+                    case IngredientCategory.Topping: toppings.Add(ing); break;
+                    default: mains.Add(ing); break;
+                }
+            }
 
-            // 가운데: Rice + 토핑 프리뷰 (도마는 재료 영역에만)
-            var bowlArea = UiFactory.CreatePanel(_craftRoot, "BowlArea",
-                new Vector2(0.06f, 0.16f), new Vector2(0.94f, 0.50f),
-                Vector2.zero, Vector2.zero);
+            CreateCategoryZone(_cookContent, "메인", UiTheme.Accent,
+                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.92f), mains, vertical: false, cellSize: 74f);
+
+            CreateCategoryZone(_cookContent, "토핑", UiTheme.Accent,
+                new Vector2(0.05f, 0.16f), new Vector2(0.95f, 0.28f), toppings, vertical: false, cellSize: 74f);
+
+            CreateCategoryZone(_cookContent, "소스", UiTheme.Accent,
+                new Vector2(0.80f, 0.30f), new Vector2(0.95f, 0.78f), sauces, vertical: true, cellSize: 88f);
+
+            // 가운데-좌측: 밥 (자동 지급 — 선택 불가, 장식용 표시)
+            var riceZone = UiFactory.CreatePanel(_cookContent, "RiceZone",
+                new Vector2(0.05f, 0.30f), new Vector2(0.20f, 0.78f), Vector2.zero, Vector2.zero);
+            CreateCategoryPill(riceZone, "밥", UiTheme.Accent);
+            var riceIconGo = new GameObject("RiceIcon", typeof(RectTransform));
+            riceIconGo.transform.SetParent(riceZone, false);
+            var riceIconRt = riceIconGo.GetComponent<RectTransform>();
+            riceIconRt.anchorMin = new Vector2(0.5f, 0.5f);
+            riceIconRt.anchorMax = new Vector2(0.5f, 0.5f);
+            riceIconRt.sizeDelta = new Vector2(88f, 88f);
+            riceIconRt.anchoredPosition = new Vector2(0f, -18f);
+            var riceIconImg = riceIconGo.AddComponent<Image>();
+            riceIconImg.sprite = IngredientVisualCatalog.Rice;
+            riceIconImg.preserveAspect = true;
+            riceIconImg.raycastTarget = false;
+            if (riceIconImg.sprite == null)
+                riceIconImg.color = new Color(0.95f, 0.92f, 0.85f, 0.9f);
+
+            // 가운데: Rice + 토핑 프리뷰
+            var bowlArea = UiTheme.CreateShadowCard(_cookContent, "BowlArea",
+                new Vector2(0.22f, 0.30f), new Vector2(0.78f, 0.78f), Vector2.zero, Vector2.zero,
+                UiTheme.CardWhite, 3f, 5f);
 
             var riceGo = new GameObject("Rice", typeof(RectTransform));
             riceGo.transform.SetParent(bowlArea, false);
@@ -166,7 +149,7 @@ namespace ChangJun.Bootstrap
             _toppingLayer = UiFactory.CreateStretchChild(bowlArea, "ToppingLayer");
 
             // 아래: 초기화 / 제작!
-            var actionBar = UiFactory.CreatePanel(_craftRoot, "ActionBar",
+            var actionBar = UiFactory.CreatePanel(_cookContent, "ActionBar",
                 new Vector2(0.12f, 0.01f), new Vector2(0.88f, 0.14f),
                 Vector2.zero, Vector2.zero);
             var layout = actionBar.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -184,6 +167,9 @@ namespace ChangJun.Bootstrap
             InventoryManager.Instance.OnStockChanged += RefreshIngredientStates;
             RefreshIngredientStates();
         }
+
+        /// <summary>주문받기 화면일 땐 숨기고, 조리하기 화면일 땐 보여준다.</summary>
+        public void SetCookViewVisible(bool visible) => _cookContent.gameObject.SetActive(visible);
 
         public void BindMoney(MoneyManager money)
         {
@@ -345,9 +331,14 @@ namespace ChangJun.Bootstrap
             var go = new GameObject($"Btn_{ing.code}", typeof(RectTransform));
             go.transform.SetParent(parent, false);
 
-            // 도마 위에서도 아이콘이 선명하도록 어두운 받침
-            var plate = go.AddComponent<Image>();
-            plate.color = new Color(0.08f, 0.07f, 0.05f, 0.82f);
+            // 목업처럼 흰 카드 + 검정 테두리 받침
+            var border = go.AddComponent<Image>();
+            border.color = UiTheme.Border;
+
+            var plateRt = UiFactory.CreatePanel(go.transform, "Plate",
+                Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            var plate = plateRt.gameObject.AddComponent<Image>();
+            plate.color = UiTheme.CardWhite;
 
             var icon = IngredientVisualCatalog.GetButtonIcon(ing.code);
             Image img;
@@ -356,7 +347,7 @@ namespace ChangJun.Bootstrap
             if (icon != null)
             {
                 var iconGo = new GameObject("Icon", typeof(RectTransform));
-                iconGo.transform.SetParent(go.transform, false);
+                iconGo.transform.SetParent(plateRt, false);
                 var iconRt = iconGo.GetComponent<RectTransform>();
                 iconRt.anchorMin = new Vector2(0.08f, 0.22f);
                 iconRt.anchorMax = new Vector2(0.92f, 0.96f);
@@ -438,43 +429,68 @@ namespace ChangJun.Bootstrap
             };
         }
 
-        private static TextMeshProUGUI CreateLayoutText(Transform parent, string name, string text,
-            TextAlignmentOptions align, int fontSize, float flex)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            UiFactory.Stretch(go.GetComponent<RectTransform>());
-            go.AddComponent<LayoutElement>().flexibleWidth = flex;
-            var tmp = go.AddComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = fontSize;
-            tmp.color = Color.white;
-            tmp.alignment = align;
-            tmp.raycastTarget = false;
-            KoreanUiFont.Apply(tmp);
-            return tmp;
-        }
-
         private static Button CreateActionButton(Transform parent, string label, Action onClick)
         {
             var go = new GameObject($"Btn_{label}", typeof(RectTransform));
             go.transform.SetParent(parent, false);
             go.AddComponent<LayoutElement>().minHeight = 56;
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.48f, 0.18f);
+
+            bool isPrimary = label == "제작!";
+            var borderImg = go.AddComponent<Image>();
+            borderImg.color = UiTheme.Border;
             var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
+
+            var fillRt = UiFactory.CreatePanel(go.transform, "Fill",
+                Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            var fillImg = fillRt.gameObject.AddComponent<Image>();
+            fillImg.color = isPrimary ? UiTheme.Accent : UiTheme.CardWhite;
+            btn.targetGraphic = fillImg;
             btn.onClick.AddListener(() => onClick());
-            var labelGo = new GameObject("Text", typeof(RectTransform));
-            labelGo.transform.SetParent(go.transform, false);
-            UiFactory.Stretch(labelGo.GetComponent<RectTransform>());
-            var tmp = labelGo.AddComponent<TextMeshProUGUI>();
-            tmp.text = label;
-            tmp.fontSize = 24;
-            tmp.color = Color.white;
-            tmp.alignment = TextAlignmentOptions.Center;
-            KoreanUiFont.Apply(tmp);
+
+            var tmp = UiFactory.CreateText(fillRt, "Text", label,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 24, isPrimary ? UiTheme.CardWhite : UiTheme.TextDark);
+            tmp.raycastTarget = false;
             return btn;
+        }
+
+        /// <summary>재료를 메인/소스/토핑 중 하나로 분류 — 조리 화면 배치용(게임 로직에는 영향 없음).</summary>
+        private static IngredientCategory GetCategory(string code) => code switch
+        {
+            "SPC" or "CUR" => IngredientCategory.Sauce,
+            "KIM" or "EGG" or "VEG" or "CHS" or "BSP" => IngredientCategory.Topping,
+            _ => IngredientCategory.Main,
+        };
+
+        private void CreateCategoryZone(Transform parent, string label, Color pillColor,
+            Vector2 anchorMin, Vector2 anchorMax, List<IngredientSO> items, bool vertical, float cellSize)
+        {
+            var zone = UiFactory.CreatePanel(parent, $"Zone_{label}", anchorMin, anchorMax, Vector2.zero, Vector2.zero);
+            CreateCategoryPill(zone, label, pillColor);
+
+            var rowArea = UiFactory.CreatePanel(zone, "Row",
+                Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0f, -34f));
+            var grid = rowArea.gameObject.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(cellSize, cellSize);
+            grid.spacing = new Vector2(10f, 10f);
+            grid.childAlignment = TextAnchor.MiddleCenter;
+            grid.constraint = vertical
+                ? GridLayoutGroup.Constraint.FixedColumnCount
+                : GridLayoutGroup.Constraint.FixedRowCount;
+            grid.constraintCount = 1;
+
+            foreach (var ing in items)
+                CreateIngredientButton(rowArea, ing);
+        }
+
+        private static void CreateCategoryPill(Transform zone, string label, Color pillColor)
+        {
+            var pill = UiTheme.CreateBorderedPanel(zone, "Pill",
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-42f, -28f), new Vector2(42f, 0f),
+                pillColor, 2f);
+            UiFactory.CreateText(pill, "Text", label,
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 13, UiTheme.CardWhite);
         }
     }
 }

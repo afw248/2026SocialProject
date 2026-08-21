@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,30 +7,26 @@ namespace ChangJun.Bootstrap
 {
     public enum MainTab
     {
-        Craft,
         Memo,
         Recipe,
         Status,
     }
 
     /// <summary>
-    /// 우측 세로 탭 — 한 번에 하나의 패널만 표시한다.
+    /// 제작(홈) 화면 우측의 세로 아이콘 내비게이션.
+    /// 클릭하면 해당 화면이 별개의 풀스크린 오버레이로 뜬다(스와핑이 아님).
     /// </summary>
     public sealed class SideTabBar
     {
-        private readonly Dictionary<MainTab, GameObject> _panels = new();
-        private readonly Dictionary<MainTab, Image> _tabImages = new();
-        private readonly Dictionary<MainTab, Color> _tabColors = new();
         private readonly GameObject _barRoot;
-        private MainTab _current = MainTab.Craft;
 
-        public event Action<MainTab> OnTabChanged;
+        public event Action<MainTab> OnTabSelected;
         public event Action OnDeliveryRequested;
 
-        public SideTabBar(RectTransform parent, Action<MainTab> onTabSelected)
+        public SideTabBar(RectTransform parent)
         {
             var bar = UiFactory.CreatePanel(parent, "SideTabBar",
-                new Vector2(0.9f, 0.08f), new Vector2(1f, 0.70f),
+                new Vector2(0.9f, 0.1f), new Vector2(1f, 0.9f),
                 new Vector2(-8, 0), new Vector2(-4, 0));
             _barRoot = bar.gameObject;
 
@@ -44,90 +39,40 @@ namespace ChangJun.Bootstrap
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            CreateTabButton(bar, MainTab.Craft, "제작", new Color(0.2f, 0.55f, 0.35f), onTabSelected);
-            CreateTabButton(bar, MainTab.Memo, "메모", new Color(0.95f, 0.85f, 0.45f), onTabSelected);
-            CreateTabButton(bar, MainTab.Recipe, "도감", new Color(0.25f, 0.4f, 0.7f), onTabSelected);
-            CreateTabButton(bar, MainTab.Status, "정보", new Color(0.45f, 0.35f, 0.65f), onTabSelected);
             CreateDeliveryButton(bar);
-
-            RefreshTabVisuals();
+            CreateNavButton(bar, "메모", new Color32(0xD9, 0x8C, 0xB0, 0xFF),
+                () => OnTabSelected?.Invoke(MainTab.Memo));
+            CreateNavButton(bar, "도감", UiTheme.Success,
+                () => OnTabSelected?.Invoke(MainTab.Recipe));
+            CreateNavButton(bar, "정보", new Color32(0xF2, 0xD2, 0x4A, 0xFF),
+                () => OnTabSelected?.Invoke(MainTab.Status));
         }
 
-        public void RegisterPanel(MainTab tab, GameObject panel)
+        private static void CreateNavButton(RectTransform bar, string label, Color iconColor, Action onClick)
         {
-            if (panel == null) return;
-            _panels[tab] = panel;
-            ApplyVisibility();
-        }
-
-        /// <summary>등록된 패널 중 현재 탭만 표시. 부모 재활성화 후에도 호출.</summary>
-        public void RefreshVisibility() => ApplyVisibility();
-
-        public void SelectTab(MainTab tab)
-        {
-            _current = tab;
-            ApplyVisibility();
-            RefreshTabVisuals();
-            OnTabChanged?.Invoke(tab);
-        }
-
-        private void ApplyVisibility()
-        {
-            foreach (var pair in _panels)
-            {
-                if (pair.Value == null) continue;
-                bool show = pair.Key == _current;
-                pair.Value.SetActive(show);
-                if (show)
-                    pair.Value.transform.SetAsLastSibling();
-            }
-        }
-
-        private void RefreshTabVisuals()
-        {
-            foreach (var pair in _tabImages)
-            {
-                bool selected = pair.Key == _current;
-                pair.Value.color = selected
-                    ? Brighten(_tabColors[pair.Key], 1.2f)
-                    : _tabColors[pair.Key] * 0.75f;
-                pair.Value.color = new Color(pair.Value.color.r, pair.Value.color.g,
-                    pair.Value.color.b, selected ? 1f : 0.85f);
-                pair.Value.transform.localScale = selected ? Vector3.one * 1.05f : Vector3.one;
-            }
-        }
-
-        private void CreateTabButton(RectTransform bar, MainTab tab, string label,
-            Color color, Action<MainTab> onTabSelected)
-        {
-            var go = new GameObject($"Tab_{tab}", typeof(RectTransform));
+            var go = new GameObject($"Nav_{label}", typeof(RectTransform));
             go.transform.SetParent(bar, false);
             var le = go.AddComponent<LayoutElement>();
             le.preferredHeight = 72;
             le.preferredWidth = 72;
 
-            var img = go.AddComponent<Image>();
-            img.color = color;
-            _tabImages[tab] = img;
-            _tabColors[tab] = color;
+            var borderImg = go.AddComponent<Image>();
+            borderImg.color = UiTheme.Border;
 
             var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            var captured = tab;
-            btn.onClick.AddListener(() =>
-            {
-                if (captured == _current && captured != MainTab.Craft)
-                {
-                    SelectTab(MainTab.Craft);
-                    onTabSelected?.Invoke(MainTab.Craft);
-                    return;
-                }
 
-                SelectTab(captured);
-                onTabSelected?.Invoke(captured);
-            });
+            var fillRt = UiFactory.CreatePanel(go.transform, "Fill",
+                Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            var fillImg = fillRt.gameObject.AddComponent<Image>();
+            fillImg.color = UiTheme.CardWhite;
+            btn.targetGraphic = fillImg;
 
-            AddButtonLabel(go.transform, label);
+            var iconRt = UiFactory.CreatePanel(fillRt, "Icon",
+                new Vector2(0.24f, 0.42f), new Vector2(0.76f, 0.88f), Vector2.zero, Vector2.zero);
+            iconRt.gameObject.AddComponent<Image>().color = iconColor;
+
+            AddButtonLabel(fillRt, label);
+            btn.onClick.AddListener(() => onClick?.Invoke());
         }
 
         private void CreateDeliveryButton(RectTransform bar)
@@ -138,34 +83,43 @@ namespace ChangJun.Bootstrap
             le.preferredHeight = 72;
             le.preferredWidth = 72;
 
-            var img = go.AddComponent<Image>();
-            img.color = new Color(0.22f, 0.38f, 0.62f);
+            var borderImg = go.AddComponent<Image>();
+            borderImg.color = UiTheme.Border;
 
             var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => OnDeliveryRequested?.Invoke());
 
-            AddButtonLabel(go.transform, "배달");
+            var fillRt = UiFactory.CreatePanel(go.transform, "Fill",
+                Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            var fillImg = fillRt.gameObject.AddComponent<Image>();
+            fillImg.color = UiTheme.CardWhite;
+            btn.targetGraphic = fillImg;
+
+            var iconRt = UiFactory.CreatePanel(fillRt, "Icon",
+                new Vector2(0.24f, 0.42f), new Vector2(0.76f, 0.88f), Vector2.zero, Vector2.zero);
+            iconRt.gameObject.AddComponent<Image>().color = UiTheme.Info;
+
+            AddButtonLabel(fillRt, "배달");
+            btn.onClick.AddListener(() => OnDeliveryRequested?.Invoke());
         }
 
-        private static void AddButtonLabel(Transform parent, string label)
+        private static TextMeshProUGUI AddButtonLabel(Transform parent, string label)
         {
             var labelGo = new GameObject("Label", typeof(RectTransform));
             labelGo.transform.SetParent(parent, false);
-            UiFactory.Stretch(labelGo.GetComponent<RectTransform>());
+            var labelRt = labelGo.GetComponent<RectTransform>();
+            labelRt.anchorMin = new Vector2(0f, 0f);
+            labelRt.anchorMax = new Vector2(1f, 0.4f);
+            labelRt.offsetMin = Vector2.zero;
+            labelRt.offsetMax = Vector2.zero;
             var tmp = labelGo.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
-            tmp.fontSize = 20;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.color = Color.white;
+            tmp.fontSize = 15;
+            tmp.color = UiTheme.TextDark;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.raycastTarget = false;
             KoreanUiFont.Apply(tmp);
+            return tmp;
         }
-
-        private static Color Brighten(Color c, float factor) =>
-            new Color(Mathf.Min(c.r * factor, 1f), Mathf.Min(c.g * factor, 1f),
-                Mathf.Min(c.b * factor, 1f), c.a);
 
         public void SetVisible(bool visible) => _barRoot.SetActive(visible);
     }

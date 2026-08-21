@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.13.17/dist/galmuri.css">
+<style>body{margin:0;}</style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#FFF6E6;font-family:'Galmuri11',monospace;color:#3A2415;overflow:hidden;position:relative;">
+
+  <div style="flex:none;height:72px;display:flex;align-items:center;gap:14px;padding:0 26px;background:#FF6F61;border-bottom:4px solid #1a1a1a;">
+    <span style="font-size:20px;color:#fff;">정산 · 2일차 마감</span>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #1a1a1a;padding:5px 12px;">
+      <div style="width:26px;height:26px;background:#F2B705;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:11px;">W</div>
+      <span style="font-size:15px;">1,267</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;gap:24px;padding:24px 32px;">
+
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:14px;color:#8A6238;">오늘의 판매 내역</div>
+      <div style="display:flex;gap:14px;padding:10px 16px;background:#F2E4C8;border:3px solid #1a1a1a;font-size:12px;color:#8A6238;">
+        <div style="width:200px;">메뉴</div>
+        <div style="width:120px;">판매 수</div>
+        <div style="width:140px;">단가</div>
+        <div style="flex:1;">비고</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+        <sc-for list="{{ sales }}" as="s" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:#fff;border:3px solid #1a1a1a;">
+            <div style="width:200px;font-size:13px;">{{ s.name }}</div>
+            <div style="width:120px;font-size:13px;">{{ s.count }}개</div>
+            <div style="width:140px;font-size:13px;">₩{{ s.price }}</div>
+            <div style="flex:1;font-size:12px;color:{{ s.noteColor }};">{{ s.note }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;gap:14px;">
+        <div style="flex:1;border:2px dashed #D9A97A;padding:14px;">
+          <span style="font-size:12px;color:#B08055;">EMPTY — 손님 만족도 로그</span>
+        </div>
+        <div style="flex:1;border:2px dashed #D9A97A;padding:14px;">
+          <span style="font-size:12px;color:#B08055;">EMPTY — 놓친 주문 로그</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="width:420px;display:flex;flex-direction:column;gap:18px;">
+
+      <div style="background:#fff;border:4px solid #1a1a1a;box-shadow:6px 6px 0 #1a1a1a;padding:22px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:#8A6238;">총 매출</span>
+          <span style="font-size:16px;">₩ 4,820</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:13px;color:#8A6238;">재료 지출</span>
+          <span style="font-size:16px;color:#D9432E;">- ₩ 1,650</span>
+        </div>
+        <div style="height:2px;background:#1a1a1a;margin:4px 0;"></div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:15px;">순이익</span>
+          <span style="font-size:20px;color:#5FAE4E;">+ ₩ 3,170</span>
+        </div>
+      </div>
+
+      <div style="background:#F2E4C8;border:4px solid #1a1a1a;padding:20px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:13px;color:#8A6238;">평판 변화</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <sc-for list="{{ stars }}" as="star" hint-placeholder-count="5">
+            <div style="width:20px;height:20px;background:{{ star.color }};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div>
+          </sc-for>
+          <span style="font-size:13px;color:#5FAE4E;margin-left:8px;">+1</span>
+        </div>
+      </div>
+
+      <div style="flex:1;"></div>
+
+      <div style="height:60px;background:#F2B705;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="transform:translate(2px,2px);">
+        <span style="font-size:15px;color:#3A2415;">재료 구매하러 가기<br></span>
+      </div>
+      <div style="height:60px;background:#FF6F61;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="transform:translate(2px,2px);">
+        <span style="font-size:15px;color:#fff;">다음 날로</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1920, &quot;height&quot;: 1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      sales: [
+        { name: '제육 컵밥', count: 8, price: 350, note: '', noteColor: '#8A6238' },
+        { name: '불고기 컵밥', count: 5, price: 380, note: '', noteColor: '#8A6238' },
+        { name: '오징어 컵밥', count: 3, price: 400, note: '재고 부족으로 판매 중단', noteColor: '#D9432E' },
+        { name: '커스텀 컵밥', count: 4, price: 420, note: '', noteColor: '#8A6238' }
+      ],
+      stars: [
+        { color: '#F2B705' }, { color: '#F2B705' }, { color: '#F2B705' }, { color: '#F2B705' }, { color: '#FFEBC7' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

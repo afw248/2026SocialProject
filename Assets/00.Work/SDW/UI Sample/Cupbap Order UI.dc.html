@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.13.17/dist/galmuri.css">
+<style>
+body{margin:0;}
+@keyframes servePulse{0%,100%{box-shadow:6px 6px 0 #1a1a1a;}50%{box-shadow:9px 9px 0 #1a1a1a;}}
+</style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#FFF6E6;font-family:'Galmuri11',monospace;color:#3A2415;overflow:hidden;position:relative;">
+
+  <div style="flex:none;height:72px;display:flex;align-items:center;gap:14px;padding:0 26px;background:#FF6F61;border-bottom:4px solid #1a1a1a;position:relative;z-index:5;">
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #1a1a1a;padding:8px 16px;">
+      <div style="width:10px;height:10px;background:#F2B705;border:2px solid #1a1a1a;"></div>
+      <span style="font-size:15px;color:#3A2415;">{{ dayLabel }} {{ timeLabel }}</span>
+    </div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #1a1a1a;padding:5px 12px;">
+      <div style="width:26px;height:26px;background:#F2B705;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:11px;color:#3A2415;">W</div>
+      <span style="font-size:15px;color:#3A2415;">{{ goldAmount }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #1a1a1a;padding:6px 14px;">
+      <div style="width:18px;height:18px;background:#6FC7D9;border:2px solid #1a1a1a;transform:rotate(45deg);"></div>
+      <span style="font-size:15px;color:#3A2415;">{{ gemAmount }}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;background:#fff;border:2px solid #1a1a1a;padding:8px 14px;">
+      <sc-for list="{{ trustStars }}" as="star" hint-placeholder-count="5">
+        <div style="width:18px;height:18px;background:{{ star.color }};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div>
+      </sc-for>
+    </div>
+
+    <div style="display:flex;background:#fff;border:2px solid #1a1a1a;padding:4px;gap:4px;">
+      <div style="padding:8px 16px;cursor:pointer;font-size:13px;background:{{ orderTabBg }};color:{{ orderTabColor }};" onClick="{{ goOrder }}">주문받기</div>
+      <div style="padding:8px 16px;cursor:pointer;font-size:13px;background:{{ cookTabBg }};color:{{ cookTabColor }};" onClick="{{ goCook }}">조리하기</div>
+    </div>
+
+    <div style="width:44px;height:44px;background:#fff;border:2px solid #1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+      <div style="width:20px;height:3px;background:#3A2415;"></div>
+      <div style="width:20px;height:3px;background:#3A2415;"></div>
+      <div style="width:20px;height:3px;background:#3A2415;"></div>
+    </div>
+  </div>
+
+  <div style="flex:1;position:relative;overflow:hidden;">
+
+    <sc-if value="{{ isOrder }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;background:#6B4229;">
+        <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.15) 0 3px,transparent 3px 90px);"></div>
+
+        <div style="position:absolute;top:26px;left:200px;width:400px;">
+          <div style="font-size:14px;color:#fff;text-align:center;margin-bottom:8px;">인내심</div>
+          <div style="position:relative;height:24px;border:3px solid #1a1a1a;overflow:hidden;background:linear-gradient(90deg,#D9432E 0%,#D9432E 30%,#E8C43A 30%,#E8C43A 60%,#5FAE4E 60%,#5FAE4E 100%);">
+            <div style="position:absolute;top:0;right:0;bottom:0;width:{{ patienceDimWidth }}%;background:rgba(0,0,0,.35);"></div>
+            <div style="position:absolute;top:-3px;bottom:-3px;left:{{ patiencePercent }}%;width:5px;background:#1a1a1a;transform:translateX(-2.5px);"></div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:200px;bottom:150px;width:520px;height:600px;border:4px solid #1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:#FFD9A0;">
+          <div style="width:150px;height:150px;background:#FF6F61;border:3px solid #1a1a1a;margin-bottom:-14px;"></div>
+          <div style="width:270px;height:290px;background:#F2B705;border:3px solid #1a1a1a;"></div>
+          <div style="position:absolute;top:24px;left:0;right:0;text-align:center;font-size:16px;color:#3A2415;">CUSTOMER SLOT</div>
+          <div style="position:absolute;top:52px;left:0;right:0;text-align:center;font-size:13px;color:#5A4028;">손님 캐릭터 자리 (placeholder)</div>
+        </div>
+
+        <div style="position:absolute;left:770px;top:80px;width:600px;">
+          <div style="display:inline-block;background:#1a1a1a;color:#FFD9A0;font-size:13px;padding:6px 16px;margin-left:26px;">주문서 · ORDER TICKET</div>
+          <div style="position:relative;background:#FFF6E6;border:4px solid #1a1a1a;padding:36px;height:320px;box-shadow:6px 6px 0 #1a1a1a;">
+            <div style="border:3px dashed #D9A97A;height:100%;display:flex;align-items:center;justify-content:center;">
+              <span style="color:#B08055;font-size:15px;text-align:center;">EMPTY &nbsp;·&nbsp; 주문 내용이 여기에 표시됩니다</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:18px;margin-top:26px;">
+            <div style="flex:1;height:76px;background:#FFD9A0;border:4px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:5px 5px 0 #1a1a1a;" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #1a1a1a;">
+              <span style="font-size:17px;color:#3A2415;">힌트 보기</span>
+            </div>
+            <div style="flex:1;height:76px;background:#FF6F61;border:4px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:5px 5px 0 #1a1a1a;" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #1a1a1a;" onClick="{{ goCook }}">
+              <span style="font-size:17px;color:#fff;">바로 주문 받기</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="position:absolute;right:60px;top:60px;display:flex;flex-direction:column;gap:20px;">
+          <sc-for list="{{ navItems }}" as="nav" hint-placeholder-count="5">
+            <a href="{{ nav.href }}" style="text-decoration:none;">
+              <div style="width:90px;height:90px;background:#fff;border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;" style-hover="transform:translate(2px,2px);box-shadow:2px 2px 0 #1a1a1a;">
+                <div style="width:32px;height:32px;background:{{ nav.color }};border:2px solid #1a1a1a;"></div>
+                <span style="font-size:11px;color:#3A2415;">{{ nav.label }}</span>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+
+        <div style="position:absolute;left:0;right:0;bottom:120px;height:90px;background:#F2B705;border-top:4px solid #1a1a1a;"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;height:120px;background-image:linear-gradient(45deg,#FFD9A0 25%,transparent 25%,transparent 75%,#FFD9A0 75%),linear-gradient(45deg,#FFD9A0 25%,transparent 25%,transparent 75%,#FFD9A0 75%);background-size:24px 24px;background-position:0 0,12px 12px;background-color:#FF6F61;"></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isCook }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:#FFF6E6;display:flex;flex-direction:column;">
+
+        <div style="flex:none;display:flex;align-items:center;gap:16px;padding:20px 32px;">
+          <div style="width:40px;height:40px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" onClick="{{ goOrder }}">
+            <div style="width:10px;height:10px;border-left:3px solid #3A2415;border-bottom:3px solid #3A2415;transform:rotate(45deg);"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#fff;border:3px solid #1a1a1a;padding:8px 16px;">
+            <div style="width:28px;height:22px;border:2px dashed #D9A97A;"></div>
+            <span style="font-size:13px;color:#3A2415;">주문서 확인 중</span>
+          </div>
+          <div style="flex:1;"></div>
+          <div style="width:340px;">
+            <div style="font-size:12px;color:#3A2415;text-align:center;margin-bottom:6px;">인내심</div>
+            <div style="position:relative;height:18px;border:3px solid #1a1a1a;overflow:hidden;background:linear-gradient(90deg,#D9432E 0%,#D9432E 30%,#E8C43A 30%,#E8C43A 60%,#5FAE4E 60%,#5FAE4E 100%);">
+              <div style="position:absolute;top:0;right:0;bottom:0;width:{{ patienceDimWidth }}%;background:rgba(0,0,0,.4);"></div>
+              <div style="position:absolute;top:-2px;bottom:-2px;left:{{ patiencePercent }}%;width:4px;background:#1a1a1a;transform:translateX(-2px);"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:1;position:relative;padding:6px 40px 32px;">
+          <div style="display:grid;grid-template-columns:180px 1fr 190px;grid-template-rows:170px 1fr 170px;gap:18px;height:100%;">
+
+            <div></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <div style="background:#FF6F61;color:#fff;border:2px solid #1a1a1a;padding:5px 14px;font-size:12px;">메인</div>
+              <div style="display:flex;gap:14px;justify-content:center;">
+                <sc-for list="{{ mainItems }}" as="ing" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;" style-hover="transform:translateY(-4px);">
+                    <div style="width:96px;height:96px;background:{{ ing.color1 }};border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;"></div>
+                    <span style="font-size:13px;color:#3A2415;">{{ ing.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div></div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+              <div style="background:#FF6F61;color:#fff;border:2px solid #1a1a1a;padding:5px 14px;font-size:12px;">밥</div>
+              <sc-for list="{{ riceItems }}" as="ing" hint-placeholder-count="1">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;" style-hover="transform:translateY(-4px);">
+                  <div style="width:120px;height:120px;background:{{ ing.color1 }};border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;"></div>
+                  <span style="font-size:13px;color:#3A2415;">{{ ing.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#fff;border:4px solid #1a1a1a;padding:18px;box-shadow:6px 6px 0 #1a1a1a;">
+              <div style="font-size:16px;color:#3A2415;text-align:center;">현재 조리 중인 컵밥</div>
+              <div style="width:260px;height:260px;position:relative;">
+                <div style="position:absolute;inset:0;background:#FFD9A0;border:3px solid #1a1a1a;clip-path:polygon(18% 0%,82% 0%,100% 100%,0% 100%);display:flex;align-items:center;justify-content:center;">
+                  <span style="font-size:14px;color:#8A6238;">미리보기</span>
+                </div>
+                <div style="position:absolute;top:-9px;left:14%;width:72%;height:22px;background:#F2B705;border:3px solid #1a1a1a;"></div>
+              </div>
+              <div style="font-size:12px;color:#8A6238;text-align:center;">재료를 선택해 담아보세요</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+              <div style="background:#FF6F61;color:#fff;border:2px solid #1a1a1a;padding:5px 14px;font-size:12px;">소스</div>
+              <sc-for list="{{ sauceItems }}" as="ing" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;" style-hover="transform:translateY(-4px);">
+                  <div style="width:110px;height:110px;background:{{ ing.color1 }};border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;"></div>
+                  <span style="font-size:13px;color:#3A2415;">{{ ing.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+              <div style="display:flex;gap:14px;justify-content:center;">
+                <sc-for list="{{ toppingItems }}" as="ing" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;" style-hover="transform:translateY(-4px);">
+                    <div style="width:96px;height:96px;background:#fff;border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;display:flex;align-items:center;justify-content:center;">
+                      <sc-if value="{{ ing.eggSpecial }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:60px;height:60px;background:#fff;display:flex;align-items:center;justify-content:center;">
+                          <div style="width:28px;height:28px;background:#F2B705;border:2px solid #1a1a1a;"></div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ ing.notEgg }}" hint-placeholder-val="{{ true }}">
+                        <div style="width:80px;height:80px;background:{{ ing.color1 }};"></div>
+                      </sc-if>
+                    </div>
+                    <span style="font-size:13px;color:#3A2415;">{{ ing.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background:#FF6F61;color:#fff;border:2px solid #1a1a1a;padding:5px 14px;font-size:12px;">토핑</div>
+            </div>
+            <div></div>
+
+          </div>
+
+          <div style="position:absolute;bottom:32px;right:40px;width:200px;height:88px;background:#FF6F61;border:4px solid #1a1a1a;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;animation:servePulse 1.6s steps(2) infinite;" style-hover="transform:translate(3px,3px);" onClick="{{ goOrder }}">
+            <div style="width:26px;height:26px;background:#fff;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;">
+              <div style="width:12px;height:8px;border-left:4px solid #FF6F61;border-bottom:4px solid #FF6F61;transform:rotate(-45deg) translate(1px,-2px);"></div>
+            </div>
+            <span style="font-size:20px;color:#fff;">서빙하기</span>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1920, &quot;height&quot;: 1080}, &quot;dayLabel&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;1일차&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;timeLabel&quot;: {&quot;editor&quot;: &quot;text&quot;, &quot;default&quot;: &quot;18:45&quot;, &quot;tsType&quot;: &quot;string&quot;}, &quot;goldAmount&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 1250, &quot;tsType&quot;: &quot;number&quot;, &quot;min&quot;: 0}, &quot;gemAmount&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 14, &quot;tsType&quot;: &quot;number&quot;, &quot;min&quot;: 0}, &quot;patiencePercent&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 58, &quot;tsType&quot;: &quot;number&quot;, &quot;min&quot;: 0, &quot;max&quot;: 100, &quot;section&quot;: &quot;Game state&quot;}, &quot;trustLevel&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 4, &quot;tsType&quot;: &quot;number&quot;, &quot;min&quot;: 0, &quot;max&quot;: 5, &quot;section&quot;: &quot;Game state&quot;}}">
+class Component extends DCLogic {
+  state = { screen: 'order' };
+
+  renderVals() {
+    const patience = Math.max(0, Math.min(100, this.props.patiencePercent ?? 58));
+    const trust = Math.max(0, Math.min(5, this.props.trustLevel ?? 4));
+    const trustStars = Array.from({ length: 5 }, (_, i) => ({
+      color: i < trust ? '#F2B705' : '#FFEBC7'
+    }));
+    const isOrder = this.state.screen === 'order';
+    return {
+      dayLabel: this.props.dayLabel ?? '1일차',
+      timeLabel: this.props.timeLabel ?? '18:45',
+      goldAmount: this.props.goldAmount ?? 1250,
+      gemAmount: this.props.gemAmount ?? 14,
+      patiencePercent: patience,
+      patienceDimWidth: 100 - patience,
+      trustStars,
+      isOrder,
+      isCook: !isOrder,
+      orderTabBg: isOrder ? '#FF6F61' : 'transparent',
+      orderTabColor: isOrder ? '#fff' : '#3A2415',
+      cookTabBg: !isOrder ? '#FF6F61' : 'transparent',
+      cookTabColor: !isOrder ? '#fff' : '#3A2415',
+      goOrder: () => this.setState({ screen: 'order' }),
+      goCook: () => this.setState({ screen: 'cook' }),
+      navItems: [
+        { label: '배송', href: 'Delivery UI.dc.html', color: '#6FC7D9' },
+        { label: '메모', href: 'Memo Pad UI.dc.html', color: '#D98CB0' },
+        { label: '도감', href: 'Recipe Book UI.dc.html', color: '#5FAE4E' },
+        { label: '정보', href: 'Status & Skill Tree UI.dc.html', color: '#F2D24A' },
+        { label: '인벤토리', href: 'Inventory UI.dc.html', color: '#8A6238' }
+      ],
+      riceItems: [
+        { label: '흰쌀밥', color1: '#FFF3D6' }
+      ],
+      mainItems: [
+        { label: '제육', color1: '#FF6F61' },
+        { label: '불고기', color1: '#B5723A' },
+        { label: '오징어', color1: '#D98CB0' }
+      ],
+      toppingItems: [
+        { label: '김치', color1: '#E23B3B', eggSpecial: false, notEgg: true },
+        { label: '단무지', color1: '#F2D24A', eggSpecial: false, notEgg: true },
+        { label: '계란', eggSpecial: true, notEgg: false }
+      ],
+      sauceItems: [
+        { label: '고추장', color1: '#C9451F' },
+        { label: '마요', color1: '#FFF9EC' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

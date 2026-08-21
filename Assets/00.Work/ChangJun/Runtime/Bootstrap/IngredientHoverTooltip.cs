@@ -18,12 +18,17 @@ namespace ChangJun.Bootstrap
         private RectTransform _canvasRt;
         private bool _visible;
 
+        /// <summary>
+        /// 어느 화면에서 처음 호출되든 상관없이 항상 모든 오버레이보다 위에 뜨도록
+        /// 전용 최상단 캔버스를 만든다. 인자는 과거 호환용으로 더 이상 쓰이지 않는다.
+        /// </summary>
         public static void Ensure(Transform canvasRoot)
         {
             if (_instance != null) return;
 
+            var overlayRoot = UiFactory.CreateOverlayRoot("IngredientHoverTooltipCanvas", 1000);
             var go = new GameObject("IngredientHoverTooltip", typeof(RectTransform));
-            go.transform.SetParent(canvasRoot, false);
+            go.transform.SetParent(overlayRoot.transform, false);
             _instance = go.AddComponent<IngredientHoverTooltip>();
             _instance.Build();
         }

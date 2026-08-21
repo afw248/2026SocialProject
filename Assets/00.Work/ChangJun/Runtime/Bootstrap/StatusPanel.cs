@@ -1,3 +1,4 @@
+using System;
 using ChangJun.Data;
 using ChangJun.Inventory;
 using ChangJun.Progression;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// 이해도 스킬트리 + 재고 현황 탭 패널.
+    /// 정보 — 독립 풀스크린 화면. 이해도 스킬트리 + 재고 현황.
     /// </summary>
     public sealed class StatusPanel
     {
@@ -16,27 +17,34 @@ namespace ChangJun.Bootstrap
         private readonly UnderstandingTreePanel _treePanel;
         private readonly RectTransform _stockContent;
 
-        public StatusPanel(RectTransform parent)
-        {
-            _root = UiFactory.CreatePanel(parent, "StatusPanel",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject;
-            _root.AddComponent<Image>().color = new Color(0.08f, 0.1f, 0.15f, 0.97f);
+        public event Action OnBack;
 
-            var treeHost = UiFactory.CreatePanel(_root.transform, "TreeHost",
-                new Vector2(0.02f, 0.38f), new Vector2(0.98f, 0.98f),
+        public StatusPanel()
+        {
+            _root = UiFactory.CreateOverlayRoot("StatusOverlay", 60);
+            _root.SetActive(false);
+
+            var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
+            bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
+
+            var header = UiTheme.CreateHeaderBar(_root.transform, "정보", 72f, 78f);
+            UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
+
+            var body = UiTheme.CreateScreenBody(_root.transform, 72f, 20f);
+
+            var treeHost = UiFactory.CreatePanel(body, "TreeHost",
+                new Vector2(0f, 0.38f), new Vector2(1f, 1f),
                 Vector2.zero, Vector2.zero);
             _treePanel = new UnderstandingTreePanel(treeHost);
 
-            UiFactory.CreateText(_root.transform, "StockLabel", "재고 현황",
-                new Vector2(0.04f, 0.32f), new Vector2(0.96f, 0.37f),
+            UiFactory.CreateText(body, "StockLabel", "재고 현황",
+                new Vector2(0.02f, 0.32f), new Vector2(0.98f, 0.37f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 20,
-                new Color(0.85f, 0.9f, 1f));
+                TextAlignmentOptions.MidlineLeft, 20, UiTheme.TextMuted);
 
-            var scrollRt = UiFactory.CreatePanel(_root.transform, "StockScroll",
-                new Vector2(0.04f, 0.03f), new Vector2(0.96f, 0.31f),
-                Vector2.zero, Vector2.zero);
-            scrollRt.gameObject.AddComponent<Image>().color = new Color(0.05f, 0.06f, 0.1f, 0.65f);
+            var scrollRt = UiTheme.CreateBorderedPanel(body, "StockScroll",
+                new Vector2(0.02f, 0f), new Vector2(0.98f, 0.31f),
+                Vector2.zero, Vector2.zero, UiTheme.TanRow, 3f);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
             UiFactory.ConfigureScroll(scroll);
@@ -69,7 +77,8 @@ namespace ChangJun.Bootstrap
             RebuildStockList();
         }
 
-        public GameObject Root => _root;
+        public void Show() => _root.SetActive(true);
+        public void Hide() => _root.SetActive(false);
 
         public void RefreshGauges() => RefreshTree();
 
@@ -78,7 +87,7 @@ namespace ChangJun.Bootstrap
         private void RebuildStockList()
         {
             foreach (Transform child in _stockContent)
-                Object.Destroy(child.gameObject);
+                UnityEngine.Object.Destroy(child.gameObject);
 
             if (InventoryManager.Instance == null) return;
 
@@ -93,7 +102,7 @@ namespace ChangJun.Bootstrap
 
                 var row = UiFactory.CreateStretchChild(_stockContent, $"Stock_{ing.code}");
                 row.gameObject.AddComponent<LayoutElement>().preferredHeight = 36;
-                row.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.04f);
+                row.gameObject.AddComponent<Image>().color = new Color(1f, 1f, 1f, 0.5f);
 
                 var labelGo = new GameObject("Label", typeof(RectTransform));
                 labelGo.transform.SetParent(row, false);
@@ -102,7 +111,7 @@ namespace ChangJun.Bootstrap
                 string tags = ing.isFairTrade ? " · 공정무역" : ing.isLocalSourced ? " · 로컬" : "";
                 tmp.text = $"  {ing.displayName}{tags}    보유 {stock}  ·  배달대기 {warehouse}";
                 tmp.fontSize = 18;
-                tmp.color = stock > 0 ? new Color(0.92f, 0.94f, 0.98f) : new Color(1f, 0.55f, 0.55f);
+                tmp.color = stock > 0 ? UiTheme.TextDark : UiTheme.Danger;
                 tmp.alignment = TextAlignmentOptions.MidlineLeft;
                 tmp.raycastTarget = false;
                 KoreanUiFont.Apply(tmp);

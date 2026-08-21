@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ChangJun.Data;
 using TMPro;
@@ -7,39 +8,39 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// 탭 콘텐츠 영역 — 아이콘 중심 레시피 도감.
+    /// 레시피 도감 — 독립 풀스크린 화면. 아이콘 중심 레시피 목록.
     /// </summary>
     public sealed class RecipeBookPanel
     {
         private readonly GameObject _root;
 
-        public GameObject Root => _root;
+        public event Action OnBack;
 
-        public RecipeBookPanel(RectTransform parent,
-            IReadOnlyList<MenuRecipeSO> menus,
+        public RecipeBookPanel(IReadOnlyList<MenuRecipeSO> menus,
             IReadOnlyList<IngredientSO> ingredients)
         {
             IngredientVisualCatalog.EnsureLoaded();
-            IngredientHoverTooltip.Ensure(parent);
 
-            _root = UiFactory.CreatePanel(parent, "RecipePanel",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero).gameObject;
-            _root.AddComponent<Image>().color = new Color(0.12f, 0.14f, 0.2f, 0.98f);
+            _root = UiFactory.CreateOverlayRoot("RecipeOverlay", 60);
+            _root.SetActive(false);
+            IngredientHoverTooltip.Ensure(_root.transform);
 
-            UiFactory.CreateText(_root.transform, "Title", "컵밥 레시피 도감",
-                new Vector2(0.06f, 0.92f), new Vector2(0.94f, 0.99f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 28);
+            var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
+            bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
-            UiFactory.CreateText(_root.transform, "Hint",
+            var header = UiTheme.CreateHeaderBar(_root.transform, "컵밥 레시피 도감", 72f, 78f);
+            UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
+
+            var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
+
+            UiFactory.CreateText(body, "Hint",
                 "재료 2~3개 조합 · 아이콘에 마우스를 올리면 이름이 보입니다",
-                new Vector2(0.06f, 0.87f), new Vector2(0.94f, 0.92f),
+                new Vector2(0f, 0.94f), new Vector2(1f, 1f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15,
-                new Color(0.75f, 0.78f, 0.85f));
+                TextAlignmentOptions.Center, 15, UiTheme.TextMuted);
 
-            var scrollRt = UiFactory.CreatePanel(_root.transform, "Scroll",
-                new Vector2(0.06f, 0.03f), new Vector2(0.94f, 0.86f),
+            var scrollRt = UiFactory.CreatePanel(body, "Scroll",
+                new Vector2(0f, 0f), new Vector2(1f, 0.92f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -76,14 +77,18 @@ namespace ChangJun.Bootstrap
             }
         }
 
+        public void Show() => _root.SetActive(true);
+        public void Hide() => _root.SetActive(false);
+
         private static void CreateRecipeCard(RectTransform content, MenuRecipeSO menu,
             Dictionary<string, string> nameMap)
         {
-            var card = UiFactory.CreateStretchChild(content, $"Card_{menu.code}");
-            var le = card.gameObject.AddComponent<LayoutElement>();
+            var cardWrap = UiFactory.CreateStretchChild(content, $"Card_{menu.code}");
+            var le = cardWrap.gameObject.AddComponent<LayoutElement>();
             le.preferredHeight = 118;
             le.minHeight = 118;
-            card.gameObject.AddComponent<Image>().color = ReceiptUiHelper.PaperColor;
+            var card = UiTheme.CreateBorderedPanel(cardWrap, "Fill",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             UiFactory.CreateText(card, "MenuName", menu.displayName,
                 new Vector2(0.03f, 0.58f), new Vector2(0.72f, 0.94f),

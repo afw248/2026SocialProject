@@ -1,6 +1,7 @@
 using ChangJun.Time;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace ChangJun.Bootstrap
 {
@@ -11,20 +12,23 @@ namespace ChangJun.Bootstrap
 
         public DayClockHud(RectTransform parent)
         {
-            var panel = UiFactory.CreatePanel(parent, "DayClock",
-                new Vector2(0.02f, 0.92f), new Vector2(0.22f, 0.99f),
-                Vector2.zero, Vector2.zero);
+            var panel = UiTheme.CreateBorderedPanel(parent, "DayClock",
+                new Vector2(0f, 0.18f), new Vector2(0f, 0.82f),
+                new Vector2(20f, 0f), new Vector2(230f, 0f), UiTheme.CardWhite, 2f);
+
+            var dot = UiFactory.CreatePanel(panel, "Dot",
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14f, -6f), new Vector2(26f, 6f));
+            dot.gameObject.AddComponent<Image>().color = UiTheme.Gold;
 
             _dayText = UiFactory.CreateText(panel, "Day", "1일째",
-                new Vector2(0, 0.5f), new Vector2(1, 1),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 22);
+                new Vector2(0f, 0.5f), new Vector2(1f, 1f),
+                new Vector2(34f, 0f), Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 20, UiTheme.TextDark);
 
             _clockText = UiFactory.CreateText(panel, "Clock", "10:00 AM",
-                new Vector2(0, 0), new Vector2(1, 0.5f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 26,
-                new Color(1f, 0.95f, 0.7f));
+                new Vector2(0f, 0f), new Vector2(1f, 0.5f),
+                new Vector2(34f, 0f), Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextMuted);
 
             DayLoopController.Instance.OnTimeChanged += (_, _) => Refresh();
             DayLoopController.Instance.OnDayChanged += _ => Refresh();

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.13.17/dist/galmuri.css">
+<style>body{margin:0;}</style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#FFF6E6;font-family:'Galmuri11',monospace;color:#3A2415;overflow:hidden;position:relative;">
+
+  <div style="flex:none;height:72px;display:flex;align-items:center;gap:14px;padding:0 26px;background:#FF6F61;border-bottom:4px solid #1a1a1a;">
+    <div style="width:40px;height:40px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <div style="width:10px;height:10px;border-left:3px solid #3A2415;border-bottom:3px solid #3A2415;transform:rotate(45deg);"></div>
+    </div>
+    <span style="font-size:20px;color:#fff;">메모장</span>
+    <div style="flex:1;"></div>
+    <div style="width:150px;height:44px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">
+      <span style="font-size:14px;">+ 새 메모</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;gap:24px;padding:24px 32px;">
+
+    <div style="width:420px;display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;gap:8px;">
+        <sc-for list="{{ folders }}" as="f" hint-placeholder-count="4">
+          <div style="padding:8px 14px;background:{{ f.bg }};color:{{ f.color }};border:2px solid #1a1a1a;font-size:12px;cursor:pointer;">{{ f.label }}</div>
+        </sc-for>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+        <sc-for list="{{ notes }}" as="n" hint-placeholder-count="5">
+          <div style="background:#fff;border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;padding:14px 16px;display:flex;flex-direction:column;gap:6px;cursor:pointer;">
+            <div style="display:flex;justify-content:space-between;">
+              <span style="font-size:14px;">{{ n.title }}</span>
+              <div style="width:14px;height:14px;background:{{ n.tagColor }};border:2px solid #1a1a1a;"></div>
+            </div>
+            <span style="font-size:11px;color:#8A6238;">{{ n.date }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex:1;background:#fff;border:4px solid #1a1a1a;box-shadow:6px 6px 0 #1a1a1a;padding:28px;display:flex;flex-direction:column;gap:16px;">
+      <div style="border:2px solid #1a1a1a;padding:10px 14px;font-size:16px;color:#3A2415;">제목 없음</div>
+      <div style="display:flex;gap:10px;">
+        <div style="padding:6px 12px;background:#F2E4C8;border:2px solid #1a1a1a;font-size:11px;">태그: 문화권 취향</div>
+        <div style="padding:6px 12px;background:#F2E4C8;border:2px solid #1a1a1a;font-size:11px;">태그: 레시피 아이디어</div>
+        <div style="padding:6px 12px;background:#F2E4C8;border:2px solid #1a1a1a;font-size:11px;">+ 태그 추가</div>
+      </div>
+      <div style="flex:1;border:2px dashed #D9A97A;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:13px;color:#B08055;">EMPTY — 본문 내용이 여기에 표시됩니다</span>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;">
+        <div style="width:120px;height:44px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="font-size:13px;">삭제</span></div>
+        <div style="width:120px;height:44px;background:#FF6F61;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="font-size:13px;color:#fff;">저장</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1920, &quot;height&quot;: 1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      folders: [
+        { label: '전체', bg: '#FF6F61', color: '#fff' },
+        { label: '손님 정보', bg: '#fff', color: '#3A2415' },
+        { label: '레시피', bg: '#fff', color: '#3A2415' },
+        { label: '경영', bg: '#fff', color: '#3A2415' }
+      ],
+      notes: [
+        { title: '메모 01', date: '1일차', tagColor: '#5FAE4E' },
+        { title: '메모 02', date: '1일차', tagColor: '#F2B705' },
+        { title: '메모 03', date: '2일차', tagColor: '#D9432E' },
+        { title: '메모 04', date: '2일차', tagColor: '#6FC7D9' },
+        { title: '메모 05', date: '3일차', tagColor: '#5FAE4E' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

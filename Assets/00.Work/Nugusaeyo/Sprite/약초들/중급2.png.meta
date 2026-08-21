@@ -4,7 +4,7 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: -2819514520812889331
-    second: "8\0\0\U00107000\0Z"
+    second: 8
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -126,7 +126,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\x10\0\0\0\0\0\0_0"
+      name: "\x10"
       rect:
         serializedVersion: 2
         x: 31
@@ -161,7 +161,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "\uC911\uAE09\x01\0\0": -2819514520812889331
+      "\x10": -2819514520812889331
+      "\uC911\uAE09\x01": -2819514520812889331
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

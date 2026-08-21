@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri@2.13.17/dist/galmuri.css">
+<style>body{margin:0;}</style>
+</helmet>
+<div style="width:1920px;height:1080px;display:flex;flex-direction:column;background:#FFF6E6;font-family:'Galmuri11',monospace;color:#3A2415;overflow:hidden;position:relative;">
+
+  <div style="flex:none;height:72px;display:flex;align-items:center;gap:14px;padding:0 26px;background:#FF6F61;border-bottom:4px solid #1a1a1a;">
+    <div style="width:40px;height:40px;background:#fff;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <div style="width:10px;height:10px;border-left:3px solid #3A2415;border-bottom:3px solid #3A2415;transform:rotate(45deg);"></div>
+    </div>
+    <span style="font-size:20px;color:#fff;">주식 시장</span>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.85);border:2px solid #1a1a1a;padding:6px 14px;">
+      <span style="font-size:13px;">2일차 · 18:45</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:#fff;border:2px solid #1a1a1a;padding:5px 12px;">
+      <div style="width:26px;height:26px;background:#F2B705;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:11px;">W</div>
+      <span style="font-size:15px;">1,267</span>
+    </div>
+  </div>
+
+  <div style="flex:1;display:flex;gap:24px;padding:24px 32px;">
+
+    <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:14px;color:#8A6238;">종목 목록</div>
+
+      <div style="display:flex;gap:14px;padding:10px 16px;background:#F2E4C8;border:3px solid #1a1a1a;font-size:12px;color:#8A6238;">
+        <div style="width:160px;">종목명</div>
+        <div style="width:120px;">현재가</div>
+        <div style="width:120px;">변동률</div>
+        <div style="flex:1;">추세 (placeholder)</div>
+        <div style="width:110px;">거래</div>
+      </div>
+
+      <sc-for list="{{ stocks }}" as="s" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border:3px solid #1a1a1a;box-shadow:4px 4px 0 #1a1a1a;">
+          <div style="width:160px;display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;background:{{ s.badgeColor }};border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;flex:none;">{{ s.initial }}</div>
+            <span style="font-size:14px;">{{ s.name }}</span>
+          </div>
+          <div style="width:120px;font-size:14px;">₩{{ s.price }}</div>
+          <div style="width:120px;font-size:14px;color:{{ s.changeColor }};">{{ s.change }}</div>
+          <div style="flex:1;height:34px;display:flex;align-items:flex-end;gap:5px;padding:0 6px;">
+            <sc-for list="{{ s.trend }}" as="h" hint-placeholder-count="8">
+              <div style="width:9px;height:{{ h }}%;background:{{ s.changeColor }};border:1px solid #1a1a1a;"></div>
+            </sc-for>
+          </div>
+          <div style="width:110px;height:36px;background:#FF6F61;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="transform:translate(2px,2px);">
+            <span style="font-size:13px;color:#fff;">매수</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="width:400px;display:flex;flex-direction:column;gap:18px;">
+
+      <div style="background:#fff;border:4px solid #1a1a1a;box-shadow:6px 6px 0 #1a1a1a;padding:20px;">
+        <div style="font-size:14px;color:#8A6238;margin-bottom:10px;">총 자산</div>
+        <div style="font-size:30px;color:#3A2415;">₩ {{ totalAssets }}</div>
+        <div style="font-size:13px;color:#5FAE4E;margin-top:4px;">수익률 +{{ returnRate }}%</div>
+      </div>
+
+      <div style="background:#fff;border:4px solid #1a1a1a;box-shadow:6px 6px 0 #1a1a1a;padding:20px;flex:1;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:14px;color:#8A6238;">보유 종목</div>
+        <sc-for list="{{ holdings }}" as="h" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;border:2px solid #1a1a1a;padding:10px 12px;">
+            <div style="width:26px;height:26px;background:{{ h.badgeColor }};border:2px solid #1a1a1a;flex:none;"></div>
+            <span style="font-size:13px;flex:1;">{{ h.name }}</span>
+            <span style="font-size:13px;color:#8A6238;">{{ h.qty }}주</span>
+            <span style="font-size:12px;color:{{ h.pnlColor }};">{{ h.pnl }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#F2E4C8;border:4px solid #1a1a1a;padding:18px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:30px;height:30px;background:{{ selected.badgeColor }};border:2px solid #1a1a1a;"></div>
+          <span style="font-size:14px;">{{ selected.name }}</span>
+          <span style="font-size:13px;color:#8A6238;margin-left:auto;">₩{{ selected.price }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <div style="width:36px;height:36px;background:#fff;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;">-</div>
+          <div style="flex:1;height:36px;background:#fff;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;font-size:14px;">수량 0</div>
+          <div style="width:36px;height:36px;background:#fff;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;">+</div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;height:48px;background:#5FAE4E;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="transform:translate(2px,2px);"><span style="font-size:14px;color:#fff;">매수</span></div>
+          <div style="flex:1;height:48px;background:#D9432E;border:3px solid #1a1a1a;display:flex;align-items:center;justify-content:center;cursor:pointer;" style-hover="transform:translate(2px,2px);"><span style="font-size:14px;color:#fff;">매도</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1920, &quot;height&quot;: 1080}}">
+class Component extends DCLogic {
+  renderVals() {
+    const badges = ['#FF6F61', '#F2B705', '#5FAE4E', '#D9432E', '#6FC7D9', '#D98CB0'];
+    const stocks = [
+      { name: '종목 A', price: '1,240', change: '+2.4%', changeColor: '#5FAE4E', trend: [40,55,45,60,70,65,80,90] },
+      { name: '종목 B', price: '860', change: '-1.1%', changeColor: '#D9432E', trend: [70,65,60,55,50,48,42,38] },
+      { name: '종목 C', price: '2,015', change: '+0.6%', changeColor: '#5FAE4E', trend: [50,52,48,55,58,56,60,62] },
+      { name: '종목 D', price: '430', change: '-3.2%', changeColor: '#D9432E', trend: [80,70,60,55,45,40,30,25] },
+      { name: '종목 E', price: '1,590', change: '+5.8%', changeColor: '#5FAE4E', trend: [30,35,45,50,65,75,85,95] },
+      { name: '종목 F', price: '710', change: '0.0%', changeColor: '#8A6238', trend: [50,50,52,49,51,50,50,50] }
+    ].map((s, i) => ({ ...s, initial: s.name.slice(-1), badgeColor: badges[i % badges.length] }));
+
+    const holdings = [
+      { name: '종목 A', qty: 12, pnl: '+₩3,240', pnlColor: '#5FAE4E', badgeColor: badges[0] },
+      { name: '종목 C', qty: 4, pnl: '+₩180', pnlColor: '#5FAE4E', badgeColor: badges[2] }
+    ];
+
+    return {
+      stocks,
+      holdings,
+      selected: stocks[0],
+      totalAssets: '18,940',
+      returnRate: '6.2'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ namespace ChangJun.Bootstrap
     public sealed class RecipeBookPanel
     {
         private readonly GameObject _root;
+        private readonly UiTheme.HeaderMeta _headerMeta;
 
         public event Action OnBack;
 
@@ -30,6 +31,7 @@ namespace ChangJun.Bootstrap
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "컵밥 레시피 도감", 72f, 78f);
             UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
@@ -77,7 +79,11 @@ namespace ChangJun.Bootstrap
             }
         }
 
-        public void Show() => _root.SetActive(true);
+        public void Show()
+        {
+            UiTheme.RefreshHeaderMeta(_headerMeta);
+            _root.SetActive(true);
+        }
         public void Hide() => _root.SetActive(false);
 
         private static void CreateRecipeCard(RectTransform content, MenuRecipeSO menu,

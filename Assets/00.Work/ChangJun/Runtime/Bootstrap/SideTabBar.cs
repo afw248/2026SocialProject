@@ -22,6 +22,7 @@ namespace ChangJun.Bootstrap
 
         public event Action<MainTab> OnTabSelected;
         public event Action OnDeliveryRequested;
+        public event Action OnEarlyClose;
 
         public SideTabBar(RectTransform parent)
         {
@@ -46,6 +47,8 @@ namespace ChangJun.Bootstrap
                 () => OnTabSelected?.Invoke(MainTab.Recipe));
             CreateNavButton(bar, "정보", new Color32(0xF2, 0xD2, 0x4A, 0xFF),
                 () => OnTabSelected?.Invoke(MainTab.Status));
+            CreateNavButton(bar, "조기마감", UiTheme.Danger,
+                () => OnEarlyClose?.Invoke());
         }
 
         private static void CreateNavButton(RectTransform bar, string label, Color iconColor, Action onClick)

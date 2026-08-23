@@ -10,14 +10,13 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// 뉴스 — 독립 풀스크린 화면. 좌측 소식 목록 · 우측 선택한 뉴스 상세.
-    /// "다음으로"를 누르면 주식 시장 화면으로 넘어간다(콜백으로 위임).
+    /// 뉴스 — 좌측 목록, 우측 상세. 헤더와 본문이 겹치지 않게 구역을 나눈다.
     /// </summary>
     public sealed class NewsOverlay
     {
         private readonly GameObject _root;
         private readonly RectTransform _listContent;
-        private readonly TextMeshProUGUI _dateChip;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly Image _illustrationImage;
         private readonly TextMeshProUGUI _headlineText;
         private readonly TextMeshProUGUI _bodyText;
@@ -38,24 +37,23 @@ namespace ChangJun.Bootstrap
             bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "뉴스", 72f);
-            _dateChip = CreateHeaderChip(header, "");
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
-            _eventBanner = UiFactory.CreateText(_root.transform, "EventBanner", "",
-                new Vector2(0.06f, 0.86f), new Vector2(0.94f, 0.895f),
+            var body = UiTheme.CreateScreenBody(_root.transform, 72f, 20f);
+
+            _eventBanner = UiFactory.CreateText(body, "EventBanner", "",
+                new Vector2(0f, 0.93f), new Vector2(1f, 1f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 16, UiTheme.Danger);
             _eventBanner.fontStyle = FontStyles.Bold;
             _eventBanner.gameObject.SetActive(false);
 
-            var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
-
-            // ── 좌측: 소식 목록 ──
             var listPanel = UiFactory.CreatePanel(body, "List",
-                new Vector2(0f, 0f), new Vector2(0.27f, 1f),
+                new Vector2(0f, 0.10f), new Vector2(0.32f, 0.92f),
                 Vector2.zero, Vector2.zero);
 
             UiTheme.CreateSectionLabel(listPanel, "ListLabel", "최근 소식",
-                new Vector2(0f, 0.95f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero, 16);
+                new Vector2(0f, 0.94f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero, 16);
 
             var scrollRt = UiFactory.CreatePanel(listPanel, "Scroll",
                 new Vector2(0f, 0f), new Vector2(1f, 0.93f), Vector2.zero, Vector2.zero);
@@ -73,7 +71,8 @@ namespace ChangJun.Bootstrap
             _listContent.anchorMax = new Vector2(1, 1);
 
             var vlg = _listContent.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 12;
+            vlg.spacing = 10;
+            vlg.padding = new RectOffset(0, 8, 0, 8);
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
@@ -84,31 +83,32 @@ namespace ChangJun.Bootstrap
             scroll.viewport = viewport;
             scroll.content = _listContent;
 
-            // ── 우측: 선택한 뉴스 상세 ──
             var detail = UiTheme.CreateBorderedPanel(body, "Detail",
-                new Vector2(0.30f, 0f), new Vector2(1f, 1f),
+                new Vector2(0.34f, 0.10f), new Vector2(1f, 0.92f),
                 Vector2.zero, Vector2.zero, UiTheme.CardWhite, 4f);
 
             UiTheme.CreateSectionLabel(detail, "DetailLabel", "선택한 뉴스",
-                new Vector2(0.04f, 0.93f), new Vector2(0.96f, 0.98f), Vector2.zero, Vector2.zero, 16);
+                new Vector2(0.04f, 0.93f), new Vector2(0.96f, 0.99f), Vector2.zero, Vector2.zero, 16);
 
             var illustRt = UiTheme.CreateBorderedPanel(detail, "Illustration",
-                new Vector2(0.04f, 0.55f), new Vector2(0.96f, 0.91f),
+                new Vector2(0.04f, 0.62f), new Vector2(0.96f, 0.92f),
                 Vector2.zero, Vector2.zero, new Color(0.94f, 0.90f, 0.82f), 2f);
             _illustrationImage = illustRt.gameObject.GetComponent<Image>();
             _illustrationImage.preserveAspect = true;
             _illustrationImage.raycastTarget = false;
 
             _headlineText = UiFactory.CreateText(detail, "Headline", "",
-                new Vector2(0.04f, 0.44f), new Vector2(0.96f, 0.53f),
+                new Vector2(0.04f, 0.48f), new Vector2(0.96f, 0.61f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 22, UiTheme.TextDark);
+                TextAlignmentOptions.TopLeft, 20, UiTheme.TextDark);
             _headlineText.fontStyle = FontStyles.Bold;
+            _headlineText.textWrappingMode = TextWrappingModes.Normal;
+            _headlineText.overflowMode = TextOverflowModes.Ellipsis;
 
             _bodyText = UiFactory.CreateText(detail, "Body", "",
-                new Vector2(0.04f, 0.24f), new Vector2(0.96f, 0.43f),
+                new Vector2(0.04f, 0.24f), new Vector2(0.96f, 0.47f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 16, UiTheme.TextMuted);
+                TextAlignmentOptions.TopLeft, 15, UiTheme.TextMuted);
             _bodyText.textWrappingMode = TextWrappingModes.Normal;
             _bodyText.overflowMode = TextOverflowModes.Ellipsis;
 
@@ -116,10 +116,10 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.04f, 0.03f), new Vector2(0.49f, 0.22f),
                 Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             UiFactory.CreateText(econBox, "Label", "경제 영향",
-                new Vector2(0f, 0.6f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0f, 0.62f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
                 TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
             _economyImpactText = UiFactory.CreateText(econBox, "Value", "",
-                new Vector2(0f, 0f), new Vector2(1f, 0.6f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0f, 0f), new Vector2(1f, 0.62f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
                 TextAlignmentOptions.TopLeft, 14, UiTheme.TextDark);
             _economyImpactText.textWrappingMode = TextWrappingModes.Normal;
 
@@ -127,16 +127,16 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.51f, 0.03f), new Vector2(0.96f, 0.22f),
                 Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             UiFactory.CreateText(repBox, "Label", "평판 영향",
-                new Vector2(0f, 0.6f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0f, 0.62f), new Vector2(1f, 1f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
                 TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
             _reputationImpactText = UiFactory.CreateText(repBox, "Value", "",
-                new Vector2(0f, 0f), new Vector2(1f, 0.6f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0f, 0f), new Vector2(1f, 0.62f), new Vector2(10f, 0f), new Vector2(-10f, 0f),
                 TextAlignmentOptions.TopLeft, 14, UiTheme.TextDark);
             _reputationImpactText.textWrappingMode = TextWrappingModes.Normal;
 
             UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(_root.transform, "ContinueBtn",
-                    new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-240f, 32f), new Vector2(-40f, 112f)),
+                UiFactory.CreatePanel(body, "ContinueBtn",
+                    new Vector2(0.78f, 0f), new Vector2(1f, 0.08f), Vector2.zero, Vector2.zero),
                 "다음으로", UiTheme.Accent, ContinueClicked, 20);
         }
 
@@ -150,14 +150,10 @@ namespace ChangJun.Bootstrap
             }
 
             _onContinue = onContinue;
-
-            int day = DayLoopController.Instance.Day;
-            _dateChip.text = $"{day}일차 {DayLoopController.Instance.FormatClock()}";
-
+            UiTheme.RefreshHeaderMeta(_headerMeta);
             RebuildList(news);
             Select(news);
             PopulateEventBanner();
-
             _root.SetActive(true);
             return true;
         }
@@ -185,9 +181,9 @@ namespace ChangJun.Bootstrap
         {
             if (news == null) return;
 
-            var rowWrap = new GameObject($"Row_{news.headline}", typeof(RectTransform));
+            var rowWrap = new GameObject("Row", typeof(RectTransform));
             rowWrap.transform.SetParent(_listContent, false);
-            rowWrap.AddComponent<LayoutElement>().preferredHeight = 84;
+            rowWrap.AddComponent<LayoutElement>().preferredHeight = 78;
 
             var row = UiTheme.CreateShadowCard(rowWrap.transform, "Card",
                 Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-4f, 0f),
@@ -198,15 +194,17 @@ namespace ChangJun.Bootstrap
             btn.onClick.AddListener(() => Select(news));
 
             var swatch = UiFactory.CreatePanel(row, "Swatch",
-                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(14f, -24f), new Vector2(62f, 24f));
+                new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(10f, -16f), new Vector2(42f, 16f));
             swatch.gameObject.AddComponent<Image>().color = CultureSwatch(news.cultureGroup);
 
-            UiFactory.CreateText(row, "Title", news.headline,
-                new Vector2(0f, 0.5f), new Vector2(1f, 0.92f), new Vector2(76f, 0f), new Vector2(-10f, 0f),
-                TextAlignmentOptions.MidlineLeft, 15, UiTheme.TextDark);
+            var title = UiFactory.CreateText(row, "Title", news.headline,
+                new Vector2(0f, 0.42f), new Vector2(1f, 0.94f), new Vector2(50f, 0f), new Vector2(-8f, 0f),
+                TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextDark);
+            title.textWrappingMode = TextWrappingModes.Normal;
+            title.overflowMode = TextOverflowModes.Ellipsis;
 
             UiFactory.CreateText(row, "Tag", $"{SentimentLabel(news.sentiment)} · {news.sectionTag}",
-                new Vector2(0f, 0.08f), new Vector2(1f, 0.5f), new Vector2(76f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0f, 0.06f), new Vector2(1f, 0.42f), new Vector2(50f, 0f), new Vector2(-8f, 0f),
                 TextAlignmentOptions.MidlineLeft, 11, UiTheme.TextMuted);
 
             _listRows.Add(rowWrap);
@@ -259,21 +257,11 @@ namespace ChangJun.Bootstrap
             _eventBanner.text = events.TodayEvent switch
             {
                 ActiveCulturalEvent.CultureFestival =>
-                    $"★ 문화 축제 ★  {CultureLabel(events.FestivalCulture)} 손님 ×2 · 메뉴 +10%",
+                    $"문화 축제  ·  {CultureLabel(events.FestivalCulture)} 손님 ×2 · 메뉴 +10%",
                 ActiveCulturalEvent.FusionWorkshop =>
-                    "★ 퓨전 워크숍 ★  M20~M23 퓨전 메뉴 주문 가능",
+                    "퓨전 워크숍  ·  M20~M23 퓨전 메뉴 주문 가능",
                 _ => "",
             };
-        }
-
-        private static TextMeshProUGUI CreateHeaderChip(RectTransform header, string text)
-        {
-            var chip = UiTheme.CreateBorderedPanel(header,
-                "DateChip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-190f, -18f), new Vector2(-26f, 18f), UiTheme.CardWhite, 2f);
-            return UiFactory.CreateText(chip, "Text", text,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
         }
 
         private static Color CultureSwatch(CultureGroup c) => c switch

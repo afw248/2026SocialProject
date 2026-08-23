@@ -75,6 +75,44 @@ namespace ChangJun.Bootstrap
             return bar;
         }
 
+        public struct HeaderMeta
+        {
+            public TextMeshProUGUI Clock;
+            public TextMeshProUGUI Money;
+        }
+
+        /// <summary>모든 화면 헤더 우측 — 시간 칩 + 돈 칩. 위치 일관.</summary>
+        public static HeaderMeta CreateHeaderMeta(RectTransform header)
+        {
+            var moneyChip = CreateBorderedPanel(header, "MoneyChip",
+                new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-188f, -18f), new Vector2(-16f, 18f), CardWhite, 2f);
+            var money = UiFactory.CreateText(moneyChip, "Text", "0원",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 15, TextDark);
+
+            var clockChip = CreateBorderedPanel(header, "ClockChip",
+                new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
+                new Vector2(-430f, -18f), new Vector2(-198f, 18f), CardWhite, 2f);
+            var clock = UiFactory.CreateText(clockChip, "Text", "",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 15, TextDark);
+
+            var title = header.Find("Title") as RectTransform;
+            if (title != null)
+                title.offsetMax = new Vector2(-440f, title.offsetMax.y);
+
+            return new HeaderMeta { Clock = clock, Money = money };
+        }
+
+        public static void RefreshHeaderMeta(HeaderMeta meta)
+        {
+            if (meta.Clock != null && ChangJun.Time.DayLoopController.Instance != null)
+                meta.Clock.text = ChangJun.Time.DayLoopController.Instance.FormatDayClock();
+            if (meta.Money != null && ChangJun.Economy.MoneyManager.Instance != null)
+                meta.Money.text = $"{ChangJun.Economy.MoneyManager.Instance.Money:N0}원";
+        }
+
         /// <summary>헤더 바 좌측의 뒤로가기 버튼(홈 화면으로 복귀).</summary>
         public static Button CreateBackButton(Transform headerBar, UnityAction onClick)
         {

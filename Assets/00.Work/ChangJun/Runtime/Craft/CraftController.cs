@@ -29,6 +29,7 @@ namespace ChangJun.Craft
 
         public CraftCustomerSO CurrentCustomer => _currentCustomer;
         public bool CanCraft => _phaseAllowsCraft;
+        public bool BargainAccepted { get; set; }
         private bool _phaseAllowsCraft;
 
         public void Initialize(IRecipeMatcher matcher, CraftCustomerSO customer,
@@ -37,6 +38,7 @@ namespace ChangJun.Craft
             _matcher = matcher;
             _currentCustomer = customer;
             _allIngredients = allIngredients;
+            BargainAccepted = false;
             _selected.Clear();
             OnSelectionChanged?.Invoke(_selected);
         }
@@ -118,6 +120,8 @@ namespace ChangJun.Craft
                     }
                     if (HasFairTradeIngredient(matched))
                         price = Mathf.RoundToInt(price * 1.08f);
+                    if (BargainAccepted && _currentCustomer != null && _currentCustomer.canBargain)
+                        price = Mathf.RoundToInt(price * (1f - Mathf.Clamp01(_currentCustomer.bargainDiscount)));
 
                     money.AddMoney(price);
                     ledger.AddRevenue(price, matched.displayName);
@@ -132,7 +136,7 @@ namespace ChangJun.Craft
                 case CraftResult.TabooViolation:
                 {
                     int penalty = Mathf.RoundToInt(_tabooPenalty *
-                        (ShopUpgradeManager.Instance?.GetTabooPenaltyMultiplier() ?? 1f));
+                        (ShopUpgradeManager.Instance?.GetTabooPenaltyMultiplier(_currentCustomer.diet) ?? 1f));
                     money.SpendMoney(penalty);
                     ledger.AddPenalty(penalty, "금기위반 환불");
                     break;
@@ -151,6 +155,7 @@ namespace ChangJun.Craft
             }
 
             UnderstandingManager.Instance.HandleCraftResult(result, _currentCustomer);
+            RegularCustomerService.Instance?.RecordResult(_currentCustomer, result);
             DayLoopController.Instance.AdvanceAfterCustomer();
         }
 

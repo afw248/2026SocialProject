@@ -42,6 +42,8 @@ namespace ChangJun.Editor
             EnsureDirectory(DeliveryDir);
             EnsureDirectory(NodeDir);
             EnsureDirectory(UpgradeDir);
+            EnsureDirectory("Assets/Resources/Craft/Staff");
+            EnsureDirectory("Assets/Resources/Craft/Conflicts");
 
             CreateDayConfig();
             CreateIngredients();
@@ -50,6 +52,8 @@ namespace ChangJun.Editor
             CreateThresholds();
             CreateUnderstandingNodes();
             CreateUpgrades();
+            CreateStaff();
+            CreateConflictEvents();
             CreateNews();
             CreateStocks();
             CreateDeliveryEvents();
@@ -234,6 +238,36 @@ namespace ChangJun.Editor
             CreateCustomer("Leo", "로컬 채소 든든한 밥이요.", Diet.Vegan, CultureGroup.Vegan, "M15");
             CreateCustomer("Darnell", "소울 두부밥, 따뜻하게요.", Diet.Vegan, CultureGroup.AfricanAmerican, "M24");
 
+            ApplyCustomerSocial("응웬", "베트남에서 와 공장 일을 하는 손님. 한 끼 가격이 중요하다.",
+                bargain: true, discount: 0.25f, accessible: false, null,
+                Beat(2, 0, "어제 그 계란밥, 고향 아침이랑 비슷했어요."),
+                Beat(4, 2, "송금하고 나면 점심값이 빠듯해서요. 조금만 깎아주면 내일도 올게요."));
+            ApplyCustomerSocial("첸", "중국에서 와 한국에 정착한 손님. 한식을 배우며 산다.",
+                false, 0.2f, false, null,
+                Beat(2, 0, "한국 온 지 3년째예요. 두부는 익숙한데 김치는 아직…"),
+                Beat(4, 2, "고향에선 아침마다 두부를 했어요. 여기 컵밥이 그 자리를 대신하네요."));
+            ApplyCustomerSocial("왕", "중국 동포. 매운 한식을 좋아한다.",
+                false, 0.2f, false, null,
+                Beat(2, 0, "여기 김치 계란이 제일 익숙해요."));
+            ApplyCustomerSocial("유코", "일본에서 유학 온 손님.",
+                false, 0.2f, false, null,
+                Beat(2, 0, "한국 컵밥에 치즈라니… 신기해서 또 왔어요."),
+                Beat(4, 2, "기숙사에서 해 먹기 어려운 맛을 여기서 찾아요."));
+            ApplyCustomerSocial("마르코", "이탈리아에서 온 교환학생.",
+                false, 0.2f, false, null,
+                Beat(2, 0, "김치랑 치즈가 의외로 잘 맞더라고요."));
+            ApplyCustomerSocial("박영자", "동네에 오래 사신 손님. 거동이 느리다.",
+                false, 0.2f, true, "천천히 해주시고, 글씨는 크게 보여주세요.",
+                Beat(2, 0, "여기 사장님은 말을 천천히 해줘서 좋아요."),
+                Beat(4, 2, "손주가 다문화 친구랑 논대요. 그 아이 도시락 생각이 나요."));
+            ApplyCustomerSocial("아이샤", "한국에 온 지 얼마 안 된 무슬림 손님.",
+                false, 0.2f, false, null,
+                Beat(2, 0, "여기서는 돼지 없다고 해서 마음이 놓여요."),
+                Beat(4, 2, "고국의 불고기 냄새가 나면서도, 안심하고 먹을 수 있어서요."));
+            ApplyCustomerSocial("Bao", "동남아에서 온 손님. 해산물이 고향 맛.",
+                true, 0.15f, false, null,
+                Beat(2, 0, "매운 해산물… 정말 고향 같아요."));
+
             foreach (var name in new[] { "지우" })
             {
                 string path = $"{CusDir}/Customer_{name}.asset";
@@ -253,6 +287,102 @@ namespace ChangJun.Editor
             so.diet = diet;
             so.cultureGroup = culture;
             so.requiredMenu = menu;
+            EditorUtility.SetDirty(so);
+        }
+
+        private static RegularStoryBeat Beat(int visits, int affinity, string line)
+        {
+            return new RegularStoryBeat
+            {
+                requiredVisits = visits,
+                requiredAffinity = affinity,
+                line = line
+            };
+        }
+
+        private static void ApplyCustomerSocial(string customerName, string originNote,
+            bool bargain, float discount, bool accessible, string accessLine,
+            params RegularStoryBeat[] beats)
+        {
+            string path = $"{CusDir}/Customer_{customerName}.asset";
+            var so = AssetDatabase.LoadAssetAtPath<CraftCustomerSO>(path);
+            if (so == null) return;
+            so.originNote = originNote;
+            so.canBargain = bargain;
+            so.bargainDiscount = discount;
+            so.needsAccessibleService = accessible;
+            so.accessibleRequestLine = accessLine ?? "";
+            so.storyBeats = beats;
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void CreateStaff()
+        {
+            const string dir = "Assets/Resources/Craft/Staff";
+            CreateStaffAsset(dir, "amin", "아민", CultureGroup.Muslim, 200, 90, 0.25f,
+                "돼지고기·알코올은 빼세요. 칼과 도마도 구분하는 게 좋아요.",
+                "할랄 주방을 아는 조리원.");
+            CreateStaffAsset(dir, "anand", "아난드", CultureGroup.Hindu, 200, 90, 0.25f,
+                "소고기는 안 됩니다. 채식 커리면 안심하세요.",
+                "남아시아 식문화를 아는 동료.");
+            CreateStaffAsset(dir, "linh", "린", CultureGroup.SEAsian, 180, 80, 0.2f,
+                "해산물 알레르기와 가격에 민감한 손님이 많아요.",
+                "동남아 이주 노동자 커뮤니티와 가깝다.");
+            CreateStaffAsset(dir, "michelle", "미셸", CultureGroup.AfricanAmerican, 200, 90, 0.2f,
+                "소울푸드는 정성이에요. 대충 내면 바로 티 납니다.",
+                "동네 상생 캠페인에서 만났다.");
+        }
+
+        private static void CreateStaffAsset(string dir, string id, string display, CultureGroup culture,
+            int hire, int wage, float bonus, string hint, string bio)
+        {
+            string path = $"{dir}/Staff_{id}.asset";
+            var so = LoadOrCreate<StaffSO>(path);
+            so.staffId = id;
+            so.displayName = display;
+            so.cultureGroup = culture;
+            so.hireCost = hire;
+            so.dailyWage = wage;
+            so.understandingBonus = bonus;
+            so.tabooHint = hint;
+            so.bio = bio;
+            EditorUtility.SetDirty(so);
+        }
+
+        private static void CreateConflictEvents()
+        {
+            const string dir = "Assets/Resources/Craft/Conflicts";
+            CreateConflictAsset(dir, "queue_halal", CultureGroup.Korean, CultureGroup.Muslim,
+                "줄에서 한 손님이 다른 손님을 보며 말합니다.",
+                "저 사람들 음식은 냄새도 이상하고, 따로 해야 하는 거 아니에요?",
+                "개입: 타문화 손님이 안심하고, 이해도가 조금 오릅니다.",
+                "방관: 편견이 가게 분위기가 됩니다. 해당 문화권 손님이 줄어듭니다.");
+            CreateConflictAsset(dir, "queue_sea", CultureGroup.Korean, CultureGroup.SEAsian,
+                "대기줄에서 볼멘소리가 들립니다.",
+                "이주 노동자들 때문에 줄이 길어진다니까요.",
+                "개입: 동남아 손님의 신뢰가 회복됩니다.",
+                "방관: 동남아 손님 방문이 며칠 줄어듭니다.");
+            CreateConflictAsset(dir, "queue_vegan", CultureGroup.Korean, CultureGroup.Vegan,
+                "한 손님이 채식 주문 카드를 보고 코웃음 칩니다.",
+                "고기도 안 먹고 유난이네. 밥이 음식이면 됐지.",
+                "개입: 채식 손님이 이 가게를 안전한 곳으로 기억합니다.",
+                "방관: 채식 손님 발길이 뜸해집니다.");
+        }
+
+        private static void CreateConflictAsset(string dir, string id, CultureGroup speaker, CultureGroup target,
+            string prompt, string line, string interveneNote, string ignoreNote)
+        {
+            string path = $"{dir}/Conflict_{id}.asset";
+            var so = LoadOrCreate<ConflictEventSO>(path);
+            so.eventId = id;
+            so.speakerCulture = speaker;
+            so.targetCulture = target;
+            so.prompt = prompt;
+            so.prejudiceLine = line;
+            so.interveneLabel = "개입한다";
+            so.ignoreLabel = "모른 척한다";
+            so.interveneNote = interveneNote;
+            so.ignoreNote = ignoreNote;
             EditorUtility.SetDirty(so);
         }
 

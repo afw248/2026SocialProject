@@ -43,6 +43,12 @@ namespace ChangJun.Customer
             if (ShopUpgradeManager.Instance != null)
                 weight *= ShopUpgradeManager.Instance.GetSpawnMultiplier(customer.cultureGroup);
 
+            if (RegularCustomerService.Instance != null)
+                weight *= RegularCustomerService.Instance.GetSpawnWeight(customer);
+
+            if (CustomerConflictService.Instance != null)
+                weight *= CustomerConflictService.Instance.GetSpawnWeight(customer);
+
             return Mathf.Max(0.05f, weight);
         }
     }

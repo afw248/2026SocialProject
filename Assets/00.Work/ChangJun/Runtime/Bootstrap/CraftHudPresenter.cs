@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ChangJun.Craft;
 using ChangJun.Data;
-using ChangJun.Economy;
 using ChangJun.Inventory;
 using ChangJun.Judge;
 using ChangJun.Progression;
@@ -32,7 +31,6 @@ namespace ChangJun.Bootstrap
         private readonly RectTransform _craftRoot;
         private readonly RectTransform _cookContent;
         private readonly RectTransform _toppingLayer;
-        private readonly TextMeshProUGUI _moneyText;
         private readonly TextMeshProUGUI _resultText;
         private readonly TextMeshProUGUI _orderStatusText;
         private readonly Dictionary<string, Button> _ingredientButtons = new();
@@ -45,19 +43,11 @@ namespace ChangJun.Bootstrap
         public RectTransform CraftRoot => _craftRoot;
 
         public CraftHudPresenter(RectTransform root, RectTransform craftContent,
-            CraftController controller, IReadOnlyList<IngredientSO> ingredients, RectTransform topBar)
+            CraftController controller, IReadOnlyList<IngredientSO> ingredients)
         {
             _controller = controller;
             IngredientVisualCatalog.EnsureLoaded();
             IngredientHoverTooltip.Ensure(root);
-
-            // 상단 바에 자산 칩을 배치 (Day/Time 칩 오른쪽)
-            var moneyChip = UiTheme.CreateBorderedPanel(topBar, "MoneyChip",
-                new Vector2(0f, 0.18f), new Vector2(0f, 0.82f),
-                new Vector2(250f, 0f), new Vector2(520f, 0f), UiTheme.CardWhite, 2f);
-            _moneyText = UiFactory.CreateText(moneyChip, "MoneyText", "자산: 0원",
-                Vector2.zero, Vector2.one, new Vector2(14f, 0f), Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextDark);
 
             _craftRoot = UiFactory.CreatePanel(craftContent, "CraftArea",
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
@@ -101,13 +91,13 @@ namespace ChangJun.Bootstrap
             }
 
             CreateCategoryZone(_cookContent, "메인", UiTheme.Accent,
-                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.92f), mains, vertical: false, cellSize: 74f);
+                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.92f), mains, vertical: false, cellSize: 80f);
 
             CreateCategoryZone(_cookContent, "토핑", UiTheme.Accent,
-                new Vector2(0.05f, 0.16f), new Vector2(0.95f, 0.28f), toppings, vertical: false, cellSize: 74f);
+                new Vector2(0.05f, 0.16f), new Vector2(0.95f, 0.28f), toppings, vertical: false, cellSize: 80f);
 
             CreateCategoryZone(_cookContent, "소스", UiTheme.Accent,
-                new Vector2(0.80f, 0.30f), new Vector2(0.95f, 0.78f), sauces, vertical: true, cellSize: 88f);
+                new Vector2(0.80f, 0.30f), new Vector2(0.95f, 0.78f), sauces, vertical: true, cellSize: 80f);
 
             // 가운데-좌측: 밥 (자동 지급 — 선택 불가, 장식용 표시)
             var riceZone = UiFactory.CreatePanel(_cookContent, "RiceZone",
@@ -118,8 +108,9 @@ namespace ChangJun.Bootstrap
             var riceIconRt = riceIconGo.GetComponent<RectTransform>();
             riceIconRt.anchorMin = new Vector2(0.5f, 0.5f);
             riceIconRt.anchorMax = new Vector2(0.5f, 0.5f);
-            riceIconRt.sizeDelta = new Vector2(88f, 88f);
-            riceIconRt.anchoredPosition = new Vector2(0f, -18f);
+            riceIconRt.sizeDelta = new Vector2(80f, 80f);
+            riceIconRt.anchoredPosition = Vector2.zero;
+            riceIconRt.pivot = new Vector2(0.5f, 0.5f);
             var riceIconImg = riceIconGo.AddComponent<Image>();
             riceIconImg.sprite = IngredientVisualCatalog.Rice;
             riceIconImg.preserveAspect = true;
@@ -170,12 +161,6 @@ namespace ChangJun.Bootstrap
 
         /// <summary>주문받기 화면일 땐 숨기고, 조리하기 화면일 땐 보여준다.</summary>
         public void SetCookViewVisible(bool visible) => _cookContent.gameObject.SetActive(visible);
-
-        public void BindMoney(MoneyManager money)
-        {
-            money.OnMoneyChanged += v => _moneyText.text = $"자산: {v:N0}원";
-            _moneyText.text = $"자산: {money.Money:N0}원";
-        }
 
         public void UpdateSlot(IReadOnlyList<IngredientSO> list)
         {
@@ -349,8 +334,9 @@ namespace ChangJun.Bootstrap
                 var iconGo = new GameObject("Icon", typeof(RectTransform));
                 iconGo.transform.SetParent(plateRt, false);
                 var iconRt = iconGo.GetComponent<RectTransform>();
-                iconRt.anchorMin = new Vector2(0.08f, 0.22f);
-                iconRt.anchorMax = new Vector2(0.92f, 0.96f);
+                iconRt.pivot = new Vector2(0.5f, 0.5f);
+                iconRt.anchorMin = new Vector2(0.12f, 0.30f);
+                iconRt.anchorMax = new Vector2(0.88f, 0.94f);
                 iconRt.offsetMin = Vector2.zero;
                 iconRt.offsetMax = Vector2.zero;
 
@@ -472,7 +458,8 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.one, Vector2.zero, new Vector2(0f, -34f));
             var grid = rowArea.gameObject.AddComponent<GridLayoutGroup>();
             grid.cellSize = new Vector2(cellSize, cellSize);
-            grid.spacing = new Vector2(10f, 10f);
+            grid.spacing = new Vector2(12f, 12f);
+            grid.padding = new RectOffset(8, 8, 6, 6);
             grid.childAlignment = TextAnchor.MiddleCenter;
             grid.constraint = vertical
                 ? GridLayoutGroup.Constraint.FixedColumnCount

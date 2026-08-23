@@ -148,8 +148,10 @@ namespace ChangJun.Time
             int displayHour = _hour % 12;
             if (displayHour == 0) displayHour = 12;
             string ampm = _hour < 12 ? "AM" : "PM";
-            return $"{displayHour}:{_minute:00} {ampm}";
+            return $"{ampm} {displayHour}:{_minute:00}";
         }
+
+        public string FormatDayClock() => $"{_day}일차  {FormatClock()}";
 
         private void SetTime(int hour, int minute)
         {

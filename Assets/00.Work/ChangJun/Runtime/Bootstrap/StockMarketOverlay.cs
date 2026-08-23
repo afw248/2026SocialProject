@@ -10,21 +10,22 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// 주식 시장 — 독립 풀스크린 화면. 종목 목록 + 보유 현황 + 매수/매도.
+    /// 주식 시장 — 목록에서 상세보기를 누르면 거래 팝업이 열린다.
     /// </summary>
     public sealed class StockMarketOverlay
     {
         private readonly GameObject _root;
         private readonly RectTransform _listContent;
         private readonly RectTransform _holdingsContent;
-        private readonly TextMeshProUGUI _dateChip;
-        private readonly TextMeshProUGUI _moneyChip;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly TextMeshProUGUI _totalAssetsText;
-        private readonly RectTransform _tradeBadge;
-        private readonly TextMeshProUGUI _tradeName;
-        private readonly TextMeshProUGUI _tradePrice;
-        private readonly TextMeshProUGUI _tradeQtyText;
-        private readonly TextMeshProUGUI _feedbackText;
+        private readonly GameObject _popupRoot;
+        private TextMeshProUGUI _popupName;
+        private TextMeshProUGUI _popupPrice;
+        private TextMeshProUGUI _popupQty;
+        private TextMeshProUGUI _popupTotal;
+        private TextMeshProUGUI _popupFeedback;
+        private Image _popupBadge;
         private readonly List<GameObject> _listRows = new();
         private readonly List<GameObject> _holdingRows = new();
 
@@ -44,12 +45,10 @@ namespace ChangJun.Bootstrap
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "주식 시장", 72f, 78f);
             UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
-            _dateChip = CreateHeaderChip(header, "", 210f);
-            _moneyChip = CreateHeaderChip(header, "", 26f);
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
-            // ── 좌측: 종목 목록 ──
             var listPanel = UiFactory.CreatePanel(body, "List",
                 Vector2.zero, new Vector2(0.66f, 1f), Vector2.zero, Vector2.zero);
 
@@ -59,8 +58,9 @@ namespace ChangJun.Bootstrap
             var headerRow = UiTheme.CreateBorderedPanel(listPanel, "HeaderRow",
                 new Vector2(0f, 0.87f), new Vector2(1f, 0.93f), Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             CreateColumnText(headerRow, "종목명", 0f, 0.32f, UiTheme.TextMuted);
-            CreateColumnText(headerRow, "현재가", 0.32f, 0.56f, UiTheme.TextMuted);
-            CreateColumnText(headerRow, "변동률", 0.56f, 0.78f, UiTheme.TextMuted);
+            CreateColumnText(headerRow, "현재가", 0.32f, 0.52f, UiTheme.TextMuted);
+            CreateColumnText(headerRow, "변동률", 0.52f, 0.74f, UiTheme.TextMuted);
+            CreateColumnText(headerRow, "상세", 0.74f, 1f, UiTheme.TextMuted);
 
             var scrollRt = UiFactory.CreatePanel(listPanel, "Scroll",
                 new Vector2(0f, 0f), new Vector2(1f, 0.86f), Vector2.zero, Vector2.zero);
@@ -89,12 +89,11 @@ namespace ChangJun.Bootstrap
             scroll.viewport = viewport;
             scroll.content = _listContent;
 
-            // ── 우측: 자산 · 보유 · 거래 ──
             var side = UiFactory.CreatePanel(body, "Side",
-                new Vector2(0.69f, 0f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
+                new Vector2(0.69f, 0.12f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero);
 
             var assetsCard = UiTheme.CreateShadowCard(side, "Assets",
-                new Vector2(0f, 0.86f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero,
+                new Vector2(0f, 0.72f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero,
                 UiTheme.CardWhite, 3f, 4f);
             UiFactory.CreateText(assetsCard, "Label", "총 자산",
                 new Vector2(0.06f, 0.6f), new Vector2(0.94f, 0.9f), Vector2.zero, Vector2.zero,
@@ -104,13 +103,13 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.MidlineLeft, 26, UiTheme.TextDark);
 
             var holdingsCard = UiTheme.CreateShadowCard(side, "Holdings",
-                new Vector2(0f, 0.58f), new Vector2(1f, 0.83f), Vector2.zero, Vector2.zero,
+                new Vector2(0f, 0f), new Vector2(1f, 0.68f), Vector2.zero, Vector2.zero,
                 UiTheme.CardWhite, 3f, 4f);
             UiFactory.CreateText(holdingsCard, "Label", "보유 종목",
-                new Vector2(0.06f, 0.87f), new Vector2(0.94f, 0.97f), Vector2.zero, Vector2.zero,
+                new Vector2(0.06f, 0.88f), new Vector2(0.94f, 0.98f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextMuted);
             _holdingsContent = UiFactory.CreatePanel(holdingsCard, "HoldingsContent",
-                new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.85f), Vector2.zero, Vector2.zero);
+                new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.86f), Vector2.zero, Vector2.zero);
             var hvlg = _holdingsContent.gameObject.AddComponent<VerticalLayoutGroup>();
             hvlg.spacing = 6;
             hvlg.childControlWidth = true;
@@ -118,56 +117,79 @@ namespace ChangJun.Bootstrap
             hvlg.childForceExpandWidth = true;
             hvlg.childForceExpandHeight = false;
 
-            var tradeBox = UiTheme.CreateBorderedPanel(side, "TradeBox",
-                new Vector2(0f, 0.16f), new Vector2(1f, 0.54f), Vector2.zero, Vector2.zero, UiTheme.TanRow, 3f);
-
-            _tradeBadge = UiFactory.CreatePanel(tradeBox, "Badge",
-                new Vector2(0.05f, 0.80f), new Vector2(0.18f, 0.95f), Vector2.zero, Vector2.zero);
-            _tradeBadge.gameObject.AddComponent<Image>().color = UiTheme.Accent;
-
-            _tradeName = UiFactory.CreateText(tradeBox, "Name", "",
-                new Vector2(0.22f, 0.80f), new Vector2(0.7f, 0.95f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 16, UiTheme.TextDark);
-            _tradePrice = UiFactory.CreateText(tradeBox, "Price", "",
-                new Vector2(0.7f, 0.80f), new Vector2(0.95f, 0.95f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineRight, 14, UiTheme.TextMuted);
-
-            CreateStepButton(tradeBox, new Vector2(0.05f, 0.56f), new Vector2(0.22f, 0.75f), "-", () => AdjustTradeQty(-1));
-            _tradeQtyText = UiFactory.CreateText(tradeBox, "Qty", "수량 1",
-                new Vector2(0.24f, 0.56f), new Vector2(0.76f, 0.75f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
-            CreateStepButton(tradeBox, new Vector2(0.78f, 0.56f), new Vector2(0.95f, 0.75f), "+", () => AdjustTradeQty(1));
-
-            _feedbackText = UiFactory.CreateText(tradeBox, "Feedback", "",
-                new Vector2(0.05f, 0.40f), new Vector2(0.95f, 0.54f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 13, UiTheme.Danger);
-
             UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(tradeBox, "BuyBtn", new Vector2(0.05f, 0.08f), new Vector2(0.49f, 0.38f),
-                    Vector2.zero, Vector2.zero),
-                "매수", UiTheme.Success, OnBuyClicked, 16);
-            UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(tradeBox, "SellBtn", new Vector2(0.51f, 0.08f), new Vector2(0.95f, 0.38f),
-                    Vector2.zero, Vector2.zero),
-                "매도", UiTheme.Danger, OnSellClicked, 16);
-
-            UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(_root.transform, "ContinueBtn",
-                    new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-240f, 32f), new Vector2(-40f, 112f)),
+                UiFactory.CreatePanel(body, "ContinueBtn",
+                    new Vector2(0.69f, 0f), new Vector2(1f, 0.10f), Vector2.zero, Vector2.zero),
                 "영업 시작", UiTheme.Accent, ContinueClicked, 20);
+
+            _popupRoot = BuildTradePopup();
 
             if (StockMarketManager.Instance != null)
                 StockMarketManager.Instance.OnMarketUpdated += RefreshAll;
+        }
+
+        private GameObject BuildTradePopup()
+        {
+            var popup = new GameObject("TradePopup", typeof(RectTransform));
+            popup.transform.SetParent(_root.transform, false);
+            UiFactory.Stretch(popup.GetComponent<RectTransform>());
+            popup.SetActive(false);
+
+            var dim = UiFactory.CreateStretchChild(popup.transform, "Dim");
+            var dimImg = dim.gameObject.AddComponent<Image>();
+            dimImg.color = new Color(0.08f, 0.04f, 0.02f, 0.55f);
+            var dimBtn = dim.gameObject.AddComponent<Button>();
+            dimBtn.transition = Selectable.Transition.None;
+            dimBtn.onClick.AddListener(HidePopup);
+
+            var card = UiTheme.CreateShadowCard(popup.transform, "Card",
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(-250f, -210f), new Vector2(250f, 210f),
+                UiTheme.CardWhite, 4f, 8f);
+
+            var badge = UiFactory.CreatePanel(card, "Badge",
+                new Vector2(0.06f, 0.82f), new Vector2(0.18f, 0.94f), Vector2.zero, Vector2.zero);
+            _popupBadge = badge.gameObject.AddComponent<Image>();
+            _popupBadge.color = UiTheme.Accent;
+
+            _popupName = UiFactory.CreateText(card, "Name", "",
+                new Vector2(0.22f, 0.80f), new Vector2(0.94f, 0.96f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 20, UiTheme.TextDark);
+            _popupPrice = UiFactory.CreateText(card, "Price", "",
+                new Vector2(0.06f, 0.68f), new Vector2(0.94f, 0.80f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 15, UiTheme.TextMuted);
+
+            CreateStepButton(card, new Vector2(0.08f, 0.50f), new Vector2(0.22f, 0.64f), "-", () => AdjustTradeQty(-1));
+            _popupQty = UiFactory.CreateText(card, "Qty", "수량 1",
+                new Vector2(0.24f, 0.50f), new Vector2(0.76f, 0.64f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 16, UiTheme.TextDark);
+            CreateStepButton(card, new Vector2(0.78f, 0.50f), new Vector2(0.92f, 0.64f), "+", () => AdjustTradeQty(1));
+
+            _popupTotal = UiFactory.CreateText(card, "Total", "총비용  0원",
+                new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.48f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 18, UiTheme.TextDark);
+
+            _popupFeedback = UiFactory.CreateText(card, "Feedback", "",
+                new Vector2(0.08f, 0.26f), new Vector2(0.92f, 0.36f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 13, UiTheme.Danger);
+
+            UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(card, "BuyBtn", new Vector2(0.08f, 0.08f), new Vector2(0.48f, 0.24f),
+                    Vector2.zero, Vector2.zero),
+                "매수", UiTheme.Success, OnBuyClicked, 16);
+            UiTheme.CreateFlatButton(
+                UiFactory.CreatePanel(card, "SellBtn", new Vector2(0.52f, 0.08f), new Vector2(0.92f, 0.24f),
+                    Vector2.zero, Vector2.zero),
+                "매도", UiTheme.Danger, OnSellClicked, 16);
+
+            return popup;
         }
 
         public void Show(Action onContinue)
         {
             _onContinue = onContinue;
             _tradeQty = 1;
-            _feedbackText.text = "";
-
-            int day = DayLoopController.Instance.Day;
-            _dateChip.text = $"{day}일차 · {DayLoopController.Instance.FormatClock()}";
+            HidePopup();
 
             if (_selected == null && StockMarketManager.Instance != null)
             {
@@ -182,13 +204,29 @@ namespace ChangJun.Bootstrap
             _root.SetActive(true);
         }
 
-        public void Hide() => _root.SetActive(false);
+        public void Hide()
+        {
+            HidePopup();
+            _root.SetActive(false);
+        }
 
         private void ContinueClicked()
         {
             Hide();
             _onContinue?.Invoke();
         }
+
+        private void OpenPopup(StockTickerSO ticker)
+        {
+            _selected = ticker;
+            _tradeQty = 1;
+            if (_popupFeedback != null) _popupFeedback.text = "";
+            RefreshPopup();
+            _popupRoot.SetActive(true);
+            _popupRoot.transform.SetAsLastSibling();
+        }
+
+        private void HidePopup() => _popupRoot.SetActive(false);
 
         private void AddListRow(StockTickerSO ticker)
         {
@@ -199,10 +237,6 @@ namespace ChangJun.Bootstrap
             var row = UiTheme.CreateShadowCard(rowWrap.transform, "Card",
                 Vector2.zero, Vector2.one, Vector2.zero, new Vector2(-4f, 0f),
                 UiTheme.CardWhite, 3f, 4f);
-
-            var btn = row.gameObject.AddComponent<Button>();
-            btn.targetGraphic = row.gameObject.GetComponent<Image>();
-            btn.onClick.AddListener(() => SelectTicker(ticker));
 
             var badge = UiFactory.CreatePanel(row, "Badge",
                 new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(12f, -18f), new Vector2(48f, 18f));
@@ -222,51 +256,28 @@ namespace ChangJun.Bootstrap
 
             var price = StockMarketManager.Instance.GetPrice(ticker.code);
             UiFactory.CreateText(row, "Price", $"{price:N0}원",
-                new Vector2(0.32f, 0f), new Vector2(0.56f, 1f), Vector2.zero, Vector2.zero,
+                new Vector2(0.32f, 0f), new Vector2(0.52f, 1f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextDark);
 
             float change = StockMarketManager.Instance.GetChangePercent(ticker.code);
             string changeStr = change >= 0 ? $"+{change:0.0}%" : $"{change:0.0}%";
             var changeColor = change > 0 ? UiTheme.Success : change < 0 ? UiTheme.Danger : UiTheme.TextMuted;
             UiFactory.CreateText(row, "Change", changeStr,
-                new Vector2(0.56f, 0f), new Vector2(0.78f, 1f), Vector2.zero, Vector2.zero,
+                new Vector2(0.52f, 0f), new Vector2(0.74f, 1f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 14, changeColor);
 
             UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(row, "Buy", new Vector2(0.8f, 0.15f), new Vector2(0.97f, 0.85f),
+                UiFactory.CreatePanel(row, "Detail", new Vector2(0.76f, 0.18f), new Vector2(0.97f, 0.82f),
                     Vector2.zero, Vector2.zero),
-                "매수", UiTheme.Accent, () =>
-                {
-                    _selected = ticker;
-                    _tradeQty = 1;
-
-                    if (StockMarketManager.Instance.TryBuy(ticker.code, 1))
-                    {
-                        _feedbackText.text = "";
-                        RefreshAll();
-                    }
-                    else
-                    {
-                        RefreshTradeBox();
-                        ShowTradeFailure(ticker.code, 1);
-                    }
-                }, 13);
+                "상세보기", UiTheme.Accent, () => OpenPopup(ticker), 13);
 
             _listRows.Add(rowWrap);
-        }
-
-        private void SelectTicker(StockTickerSO ticker)
-        {
-            _selected = ticker;
-            _tradeQty = 1;
-            _feedbackText.text = "";
-            RefreshTradeBox();
         }
 
         private void AdjustTradeQty(int delta)
         {
             _tradeQty = Mathf.Max(1, _tradeQty + delta);
-            RefreshTradeBox();
+            RefreshPopup();
         }
 
         private void OnBuyClicked()
@@ -274,8 +285,9 @@ namespace ChangJun.Bootstrap
             if (_selected == null || StockMarketManager.Instance == null) return;
             if (StockMarketManager.Instance.TryBuy(_selected.code, _tradeQty))
             {
-                _feedbackText.text = "";
+                if (_popupFeedback != null) _popupFeedback.text = "";
                 RefreshAll();
+                RefreshPopup();
             }
             else
             {
@@ -288,21 +300,23 @@ namespace ChangJun.Bootstrap
             if (_selected == null || StockMarketManager.Instance == null) return;
             if (StockMarketManager.Instance.TrySell(_selected.code, _tradeQty))
             {
-                _feedbackText.text = "";
+                if (_popupFeedback != null) _popupFeedback.text = "";
                 RefreshAll();
+                RefreshPopup();
             }
-            else
+            else if (_popupFeedback != null)
             {
-                _feedbackText.text = "보유 수량이 부족합니다.";
+                _popupFeedback.text = "보유 수량이 부족합니다.";
             }
         }
 
         private void ShowTradeFailure(string code, int qty)
         {
+            if (_popupFeedback == null || StockMarketManager.Instance == null) return;
             int cost = StockMarketManager.Instance.GetPrice(code) * qty;
             int cash = MoneyManager.Instance != null ? MoneyManager.Instance.Money : 0;
-            _feedbackText.text = cash < cost
-                ? $"잔액이 부족합니다 (필요 {cost:N0}원 · 보유 {cash:N0}원)"
+            _popupFeedback.text = cash < cost
+                ? $"잔액 부족 (필요 {cost:N0}원 · 보유 {cash:N0}원)"
                 : "매수할 수 없습니다.";
         }
 
@@ -310,14 +324,13 @@ namespace ChangJun.Bootstrap
         {
             if (StockMarketManager.Instance == null || MoneyManager.Instance == null) return;
 
-            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
+            UiTheme.RefreshHeaderMeta(_headerMeta);
 
             int cash = MoneyManager.Instance.Money;
             int portfolio = StockMarketManager.Instance.GetPortfolioValue();
             _totalAssetsText.text = $"{cash + portfolio:N0}원";
 
             RebuildHoldings();
-            RefreshTradeBox();
 
             foreach (var row in _listRows)
             {
@@ -374,14 +387,21 @@ namespace ChangJun.Bootstrap
             }
         }
 
-        private void RefreshTradeBox()
+        private void RefreshPopup()
         {
             if (_selected == null || StockMarketManager.Instance == null) return;
 
-            _tradeBadge.GetComponent<Image>().color = TickerColor(_selected);
-            _tradeName.text = _selected.displayName;
-            _tradePrice.text = $"{StockMarketManager.Instance.GetPrice(_selected.code):N0}원";
-            _tradeQtyText.text = $"수량 {_tradeQty}";
+            int unit = StockMarketManager.Instance.GetPrice(_selected.code);
+            int total = unit * _tradeQty;
+            int holding = StockMarketManager.Instance.GetHolding(_selected.code);
+
+            if (_popupBadge != null) _popupBadge.color = TickerColor(_selected);
+            if (_popupName != null) _popupName.text = _selected.displayName;
+            if (_popupPrice != null)
+                _popupPrice.text = $"현재가 {unit:N0}원  ·  보유 {holding}주";
+            if (_popupQty != null) _popupQty.text = $"수량 {_tradeQty}";
+            if (_popupTotal != null)
+                _popupTotal.text = $"총비용  {total:N0}원\n<size=70%><color=#8A6238>{_tradeQty}주 × {unit:N0}원</color></size>";
         }
 
         private static void CreateStepButton(Transform parent, Vector2 anchorMin, Vector2 anchorMax,
@@ -397,16 +417,6 @@ namespace ChangJun.Bootstrap
             UiFactory.CreateText(parent, label, label,
                 new Vector2(xMin, 0f), new Vector2(xMax, 1f), new Vector2(10f, 0f), Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 12, color);
-        }
-
-        private static TextMeshProUGUI CreateHeaderChip(RectTransform header, string text, float rightOffset)
-        {
-            var chip = UiTheme.CreateBorderedPanel(header,
-                "Chip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-rightOffset - 150f, -18f), new Vector2(-rightOffset, 18f), UiTheme.CardWhite, 2f);
-            return UiFactory.CreateText(chip, "Text", text,
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
         }
 
         private static Color TickerColor(StockTickerSO ticker) => ticker.cultureGroup switch

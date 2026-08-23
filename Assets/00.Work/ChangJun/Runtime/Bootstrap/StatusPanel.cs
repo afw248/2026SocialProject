@@ -16,6 +16,7 @@ namespace ChangJun.Bootstrap
         private readonly GameObject _root;
         private readonly UnderstandingTreePanel _treePanel;
         private readonly RectTransform _stockContent;
+        private readonly UiTheme.HeaderMeta _headerMeta;
 
         public event Action OnBack;
 
@@ -29,6 +30,7 @@ namespace ChangJun.Bootstrap
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "정보", 72f, 78f);
             UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 20f);
 
@@ -77,7 +79,11 @@ namespace ChangJun.Bootstrap
             RebuildStockList();
         }
 
-        public void Show() => _root.SetActive(true);
+        public void Show()
+        {
+            UiTheme.RefreshHeaderMeta(_headerMeta);
+            _root.SetActive(true);
+        }
         public void Hide() => _root.SetActive(false);
 
         public void RefreshGauges() => RefreshTree();

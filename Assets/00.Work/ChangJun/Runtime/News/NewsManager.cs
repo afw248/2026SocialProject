@@ -16,6 +16,7 @@ namespace ChangJun.News
         private List<NewsSO> _newsPool = new();
         private NewsSO _todayNews;
         private readonly List<NewsSO> _todaySideStories = new();
+        private NewsSO _queuedShopNews;
 
         public NewsSO TodayNews => _todayNews;
         public IReadOnlyList<NewsSO> TodaySideStories => _todaySideStories;
@@ -43,17 +44,42 @@ namespace ChangJun.News
                 _multipliers[culture] = 1f;
         }
 
+        public void QueueShopNews(NewsSO news) => _queuedShopNews = news;
+
         public void RollDailyNews()
         {
+            var shopNews = _queuedShopNews;
+            _queuedShopNews = null;
+
             _todayNews = PickWeightedNews();
             _todaySideStories.Clear();
             ResetMultipliers();
+
+            if (shopNews != null && ShouldLeadWithShop(shopNews))
+            {
+                if (_todayNews != null)
+                    _todaySideStories.Add(_todayNews);
+                _todayNews = shopNews;
+            }
+            else if (shopNews != null)
+            {
+                _todaySideStories.Add(shopNews);
+            }
 
             if (_todayNews == null) return;
 
             _multipliers[_todayNews.cultureGroup] = _todayNews.priceMultiplier;
             PickSideStories(_todayNews, 2);
             OnNewsPublished?.Invoke(_todayNews);
+        }
+
+        private static bool ShouldLeadWithShop(NewsSO shopNews)
+        {
+            if (shopNews.sentiment == NewsSentiment.Discrimination) return true;
+            var rep = Social.StoreReputationService.Instance;
+            if (rep != null && (rep.Reputation >= 0.75f || rep.Reputation <= 0.25f))
+                return true;
+            return shopNews.sentiment == NewsSentiment.Positive && shopNews.priceMultiplier >= 1.1f;
         }
 
         public int ApplyPriceMultiplier(MenuRecipeSO menu, int basePrice)
@@ -71,7 +97,7 @@ namespace ChangJun.News
             var candidates = new List<NewsSO>();
             foreach (var n in _newsPool)
             {
-                if (n != null && n != main)
+                if (n != null && n != main && !_todaySideStories.Contains(n))
                     candidates.Add(n);
             }
 

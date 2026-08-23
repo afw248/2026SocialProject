@@ -118,7 +118,20 @@ namespace ChangJun.Progression
                 _ => 0,
             };
 
+            if (delta > 0)
+                delta = StaffManager.Instance?.ScaleUnderstandingGain(culture, delta) ?? delta;
+            if (success)
+                delta += ShopUpgradeManager.Instance?.GetUnderstandingBonus(culture, customer.diet) ?? 0;
+            if (success && customer.needsAccessibleService)
+                delta += 2;
+
             if (delta == 0) return;
+            ApplyDelta(culture, delta);
+        }
+
+        public void ApplyExternalDelta(CultureGroup culture, int delta)
+        {
+            if (culture == CultureGroup.None || delta == 0) return;
             ApplyDelta(culture, delta);
         }
 

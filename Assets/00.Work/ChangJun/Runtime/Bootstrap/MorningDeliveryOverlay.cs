@@ -42,13 +42,10 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new Vector2(-360f, -300f), new Vector2(360f, 260f));
 
-            var icon = UiFactory.CreatePanel(centerRt, "Icon",
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-110f, -260f), new Vector2(110f, -40f));
-            var iconBorder = icon.gameObject.AddComponent<Image>();
-            iconBorder.color = UiTheme.Border;
-            var iconFill = UiFactory.CreatePanel(icon, "Fill",
-                Vector2.zero, Vector2.one, new Vector2(5f, 5f), new Vector2(-5f, -5f));
-            iconFill.gameObject.AddComponent<Image>().color = new Color32(0xFF, 0xD9, 0xA0, 0xFF);
+            AnalogClockWidget.Create(centerRt, "Icon",
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(-90f, -220f), new Vector2(90f, -40f),
+                8, 0, true);
 
             UiFactory.CreateText(centerRt, "Title", "아침 준비",
                 new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, -300f), new Vector2(0f, -260f),
@@ -123,32 +120,30 @@ namespace ChangJun.Bootstrap
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            CreateStep(row, "아침 준비", true);
-            CreateStep(row, "영업", false);
-            CreateStep(row, "마감", false);
+            CreateStep(row, "아침 준비", 8, 0, true);
+            CreateStep(row, "영업", 10, 0, false);
+            CreateStep(row, "마감", 21, 0, false);
         }
 
-        private static void CreateStep(Transform parent, string label, bool active)
+        private static void CreateStep(Transform parent, string label, int hour, int minute, bool active)
         {
             var wrap = new GameObject($"Step_{label}", typeof(RectTransform));
             wrap.transform.SetParent(parent, false);
 
-            var dot = UiFactory.CreatePanel(wrap.transform, "Dot",
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-32f, -64f), new Vector2(32f, 0f));
-            dot.gameObject.AddComponent<Image>().color = UiTheme.Border;
-            var dotFill = UiFactory.CreatePanel(dot, "Fill", Vector2.zero, Vector2.one,
-                new Vector2(4f, 4f), new Vector2(-4f, -4f));
-            dotFill.gameObject.AddComponent<Image>().color = active ? UiTheme.Gold : DimStep;
+            AnalogClockWidget.Create(wrap.transform, "Clock",
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f),
+                new Vector2(-28f, -56f), new Vector2(28f, 0f),
+                hour, minute, active);
 
             UiFactory.CreateText(wrap.transform, "Label", label,
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-90f, -88f), new Vector2(90f, -68f),
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-90f, -88f), new Vector2(90f, -60f),
                 TextAlignmentOptions.Center, 14, active ? Color.white : CreamText);
         }
 
         public void Show()
         {
             DeliveryManager.Instance.RollMorningEvent();
-            _dayText.text = $"{DayLoopController.Instance.Day}일차 · {DayLoopController.Instance.FormatClock()}";
+            _dayText.text = DayLoopController.Instance.FormatDayClock();
             _bodyText.text = BuildMorningMessage();
             Canvas.ForceUpdateCanvases();
             LayoutRebuilder.ForceRebuildLayoutImmediate(_bodyContent);

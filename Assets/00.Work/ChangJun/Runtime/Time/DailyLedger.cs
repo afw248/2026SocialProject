@@ -67,6 +67,12 @@ namespace ChangJun.Time
             _menuSales[label] = (prev.Item1 + 1, prev.Item2 + amount);
         }
 
+        public void AddWalkout(string label)
+        {
+            _missedOrders.Add(label);
+            _lines.Add($"· {label}");
+        }
+
         public void AddPenalty(int amount, string label)
         {
             PenaltyLoss += amount;

@@ -20,10 +20,13 @@ namespace ChangJun.Bootstrap
         private readonly TextMeshProUGUI _headerText;
         private readonly TextMeshProUGUI _nameText;
         private readonly TextMeshProUGUI _orderText;
+        private readonly TextMeshProUGUI _extraText;
         private readonly RectTransform _iconRow;
+        private readonly PatienceMeter _patience;
         private static int _orderCounter;
 
         public event Action OnAccepted;
+        public event Action OnWalkedOut;
 
         public CustomerOrderBubble(RectTransform dock)
         {
@@ -36,21 +39,21 @@ namespace ChangJun.Bootstrap
             var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
             bg.gameObject.AddComponent<Image>().color = NightBg;
 
-            // ── 인내심 표시(장식용) ──
             var patienceZone = UiFactory.CreatePanel(_root.transform, "Patience",
-                new Vector2(0.06f, 0.85f), new Vector2(0.32f, 0.94f), Vector2.zero, Vector2.zero);
+                new Vector2(0.06f, 0.85f), new Vector2(0.42f, 0.94f), Vector2.zero, Vector2.zero);
             UiFactory.CreateText(patienceZone, "Label", "인내심",
-                new Vector2(0f, 0.6f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero,
+                new Vector2(0f, 0.58f), new Vector2(1f, 1f), Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 13, Color.white);
-            var patienceBar = UiTheme.CreateBorderedPanel(patienceZone, "Bar",
-                new Vector2(0f, 0f), new Vector2(1f, 0.55f), Vector2.zero, Vector2.zero, UiTheme.CardWhite, 2f);
-            var pHlg = patienceBar.gameObject.AddComponent<HorizontalLayoutGroup>();
-            pHlg.childControlWidth = true;
-            pHlg.childControlHeight = true;
-            pHlg.childForceExpandWidth = true;
-            CreatePatienceSegment(patienceBar, UiTheme.Danger);
-            CreatePatienceSegment(patienceBar, UiTheme.Gold);
-            CreatePatienceSegment(patienceBar, UiTheme.Success);
+
+            var track = UiTheme.CreateBorderedPanel(patienceZone, "Bar",
+                new Vector2(0f, 0f), new Vector2(1f, 0.52f), Vector2.zero, Vector2.zero, UiTheme.CardWhite, 2f);
+            var fillRt = UiFactory.CreatePanel(track, "Fill",
+                Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
+            var fill = fillRt.gameObject.AddComponent<Image>();
+            fill.color = UiTheme.Success;
+            fillRt.pivot = new Vector2(0f, 0.5f);
+            _patience = fillRt.gameObject.AddComponent<PatienceMeter>();
+            _patience.Bind(fill);
 
             // ── 손님 슬롯 (장식용 플레이스홀더) ──
             var slot = UiTheme.CreateBorderedPanel(_root.transform, "CustomerSlot",
@@ -101,13 +104,19 @@ namespace ChangJun.Bootstrap
                 new Vector2(0.06f, 0.7f), new Vector2(0.94f, 0.73f));
 
             _orderText = UiFactory.CreateText(panel, "Order", "",
-                new Vector2(0.06f, 0.52f), new Vector2(0.94f, 0.69f),
+                new Vector2(0.06f, 0.56f), new Vector2(0.94f, 0.69f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.TopLeft, 17, UiTheme.TextDark);
             _orderText.textWrappingMode = TextWrappingModes.Normal;
 
+            _extraText = UiFactory.CreateText(panel, "Extra", "",
+                new Vector2(0.06f, 0.40f), new Vector2(0.94f, 0.55f),
+                Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.TopLeft, 14, UiTheme.TextMuted);
+            _extraText.textWrappingMode = TextWrappingModes.Normal;
+
             _iconRow = UiFactory.CreatePanel(panel, "IconRow",
-                new Vector2(0.06f, 0.24f), new Vector2(0.94f, 0.5f),
+                new Vector2(0.06f, 0.18f), new Vector2(0.94f, 0.39f),
                 Vector2.zero, Vector2.zero);
             var hlg = _iconRow.gameObject.AddComponent<HorizontalLayoutGroup>();
             hlg.spacing = 6;
@@ -124,13 +133,6 @@ namespace ChangJun.Bootstrap
             _root.SetActive(false);
         }
 
-        private static void CreatePatienceSegment(Transform parent, Color color)
-        {
-            var seg = new GameObject("Seg", typeof(RectTransform));
-            seg.transform.SetParent(parent, false);
-            seg.AddComponent<Image>().color = color;
-        }
-
         public void Show(CraftCustomerSO customer)
         {
             if (customer == null) return;
@@ -139,15 +141,46 @@ namespace ChangJun.Bootstrap
             _headerText.text = $"주문번호 #{_orderCounter}  ·  {DayLoopController.Instance.Day}일차";
 
             string dietLabel = customer.diet == Diet.None ? "" : $" · {customer.diet}";
-            _nameText.text = customer.customerName + dietLabel;
+            int visits = Social.RegularCustomerService.Instance?.GetVisits(customer) ?? 0;
+            string regularTag = visits >= 2 ? " · 단골" : "";
+            _nameText.text = customer.customerName + dietLabel + regularTag;
             _orderText.text = customer.orderLine;
+            _extraText.text = BuildExtra(customer);
 
             RebuildIcons(customer);
 
+            float seconds = customer.needsAccessibleService ? 24f : 16f;
+            _patience.Begin(seconds, () =>
+            {
+                _root.SetActive(false);
+                OnWalkedOut?.Invoke();
+            });
             _root.SetActive(true);
         }
 
-        public void HideImmediate() => _root.SetActive(false);
+        public void HideImmediate()
+        {
+            _patience?.Stop();
+            _root.SetActive(false);
+        }
+
+        private static string BuildExtra(CraftCustomerSO customer)
+        {
+            var sb = new System.Text.StringBuilder();
+            var story = Social.RegularCustomerService.Instance?.PeekStoryLine(customer);
+            if (!string.IsNullOrWhiteSpace(story))
+                sb.AppendLine(story);
+            if (customer.needsAccessibleService && !string.IsNullOrWhiteSpace(customer.accessibleRequestLine))
+                sb.AppendLine(customer.accessibleRequestLine);
+            else if (customer.needsAccessibleService)
+                sb.AppendLine("천천히, 자리와 응대를 배려해 주세요.");
+            if (customer.canBargain)
+                sb.AppendLine($"가격이 부담돼요. {Mathf.RoundToInt(customer.bargainDiscount * 100)}%만 깎아주실 수 있나요?");
+            var hint = Social.StaffManager.Instance?.GetTabooHint(customer);
+            if (!string.IsNullOrWhiteSpace(hint))
+                sb.AppendLine(hint);
+            return sb.ToString().Trim();
+        }
 
         private void RebuildIcons(CraftCustomerSO customer)
         {
@@ -206,6 +239,7 @@ namespace ChangJun.Bootstrap
 
         private void Accept()
         {
+            _patience?.Stop();
             _root.SetActive(false);
             OnAccepted?.Invoke();
         }

@@ -19,7 +19,7 @@ namespace ChangJun.Bootstrap
     {
         private readonly GameObject _root;
         private readonly TextMeshProUGUI _titleText;
-        private readonly TextMeshProUGUI _moneyChip;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly RectTransform _salesContent;
         private readonly TextMeshProUGUI _satisfactionText;
         private readonly TextMeshProUGUI _missedText;
@@ -44,14 +44,9 @@ namespace ChangJun.Bootstrap
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "");
             _titleText = UiFactory.CreateText(header, "DynamicTitle", "정산",
-                Vector2.zero, Vector2.one, new Vector2(26f, 0f), new Vector2(-26f, 0f),
+                Vector2.zero, Vector2.one, new Vector2(26f, 0f), new Vector2(-440f, 0f),
                 TextAlignmentOptions.MidlineLeft, 24, UiTheme.CardWhite);
-            var moneyChip = UiTheme.CreateBorderedPanel(header,
-                "MoneyChip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-176f, -18f), new Vector2(-26f, 18f), UiTheme.CardWhite, 2f);
-            _moneyChip = UiFactory.CreateText(moneyChip, "Text", "",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
@@ -156,11 +151,14 @@ namespace ChangJun.Bootstrap
             _communityUsed = false;
             _communityDonatedUnits = 0;
             _communityButton.interactable = true;
+            StaffManager.Instance?.PayDailyWages(DayLoopController.Instance.Ledger);
             StoreReputationService.Instance?.PayDailySubsidy(DayLoopController.Instance.Ledger);
+            ChangJun.News.NewsManager.Instance?.QueueShopNews(
+                ChangJun.News.ShopNewsFactory.BuildFromYesterday());
 
             int day = DayLoopController.Instance.Day;
             _titleText.text = $"정산 · {day}일차 마감";
-            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
+            UiTheme.RefreshHeaderMeta(_headerMeta);
 
             RebuildContent();
             _root.SetActive(true);
@@ -203,6 +201,8 @@ namespace ChangJun.Bootstrap
                 var lunch = SchoolLunchContractService.Instance;
                 satisfaction += $"\n급식 계약 {lunch.Successes}/{lunch.Target} (D-{lunch.DaysLeft})";
             }
+            if (StaffManager.Instance != null && StaffManager.Instance.HiredCount > 0)
+                satisfaction += $"\n직원 {StaffManager.Instance.HiredCount}명 근무";
             _satisfactionText.text = satisfaction;
 
             _missedText.text = ledger.MissedOrders.Count == 0

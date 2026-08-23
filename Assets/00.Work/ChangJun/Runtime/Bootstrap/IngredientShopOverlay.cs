@@ -26,7 +26,7 @@ namespace ChangJun.Bootstrap
         private readonly Button _actionButton;
         private readonly TextMeshProUGUI _actionButtonLabel;
         private readonly RectTransform _upgradeContent;
-        private readonly TextMeshProUGUI _moneyChip;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly Dictionary<string, int> _cart = new();
         private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
@@ -43,18 +43,13 @@ namespace ChangJun.Bootstrap
             bg.gameObject.AddComponent<Image>().color = UiTheme.Background;
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "재료 상점");
-            var moneyChip = UiTheme.CreateBorderedPanel(header,
-                "MoneyChip", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f),
-                new Vector2(-176f, -18f), new Vector2(-26f, 18f), UiTheme.CardWhite, 2f);
-            _moneyChip = UiFactory.CreateText(moneyChip, "Text", "",
-                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 15, UiTheme.TextDark);
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var panel = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
             // ── 왼쪽: 재료 목록 ──
             var upgradeScroll = UiTheme.CreateBorderedPanel(panel, "UpgradeScroll",
-                new Vector2(0.03f, 0.82f), new Vector2(0.74f, 0.9f),
+                new Vector2(0.03f, 0.80f), new Vector2(0.74f, 0.92f),
                 Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             var upgradeHlg = upgradeScroll.gameObject.AddComponent<HorizontalLayoutGroup>();
             upgradeHlg.spacing = 6;
@@ -65,7 +60,7 @@ namespace ChangJun.Bootstrap
             _upgradeContent = upgradeScroll;
 
             var scrollRt = UiFactory.CreatePanel(panel, "Scroll",
-                new Vector2(0.03f, 0.14f), new Vector2(0.74f, 0.81f),
+                new Vector2(0.03f, 0.14f), new Vector2(0.74f, 0.79f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -81,11 +76,12 @@ namespace ChangJun.Bootstrap
             _gridContent.anchorMax = new Vector2(1, 1);
 
             var grid = _gridContent.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(300, 190);
-            grid.spacing = new Vector2(14, 14);
+            grid.cellSize = new Vector2(268, 196);
+            grid.spacing = new Vector2(16, 16);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 4;
-            grid.padding = new RectOffset(6, 6, 6, 6);
+            grid.constraintCount = 3;
+            grid.padding = new RectOffset(8, 8, 8, 8);
+            grid.childAlignment = TextAnchor.UpperCenter;
             _gridContent.gameObject.AddComponent<ContentSizeFitter>().verticalFit =
                 ContentSizeFitter.FitMode.PreferredSize;
 
@@ -175,7 +171,7 @@ namespace ChangJun.Bootstrap
             _ingredients = ingredients;
             _cart.Clear();
             _showingReceipt = false;
-            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
+            RefreshHeader();
             _cartHeader.SetActive(true);
             _receiptBanner.gameObject.SetActive(false);
             _actionButtonLabel.text = "구매 완료";
@@ -188,6 +184,8 @@ namespace ChangJun.Bootstrap
 
         public void Hide() => _root.SetActive(false);
 
+        private void RefreshHeader() => UiTheme.RefreshHeaderMeta(_headerMeta);
+
         private void RebuildUpgrades()
         {
             foreach (Transform child in _upgradeContent)
@@ -199,35 +197,87 @@ namespace ChangJun.Bootstrap
             {
                 if (upgrade == null) continue;
                 bool owned = ShopUpgradeManager.Instance.Owns(upgrade.upgradeType);
+                bool equipped = ShopUpgradeManager.Instance.IsEquipped(upgrade.upgradeType);
                 var cap = upgrade;
                 var btnGo = new GameObject($"Up_{upgrade.upgradeType}", typeof(RectTransform));
                 btnGo.transform.SetParent(_upgradeContent, false);
+                btnGo.AddComponent<LayoutElement>().preferredHeight = 48;
+                var img = btnGo.AddComponent<Image>();
+                img.color = !owned ? UiTheme.Gold
+                    : equipped ? UiTheme.Success
+                    : UiTheme.TextFaint;
+                var btn = btnGo.AddComponent<Button>();
+                btn.targetGraphic = img;
+                btn.onClick.AddListener(() =>
+                {
+                    if (!ShopUpgradeManager.Instance.Owns(cap.upgradeType))
+                    {
+                        if (ShopUpgradeManager.Instance.TryPurchase(cap))
+                        {
+                            RefreshHeader();
+                            RebuildUpgrades();
+                        }
+                        return;
+                    }
+                    ShopUpgradeManager.Instance.ToggleEquipped(cap.upgradeType);
+                    RebuildUpgrades();
+                });
+
+                var label = new GameObject("L", typeof(RectTransform));
+                label.transform.SetParent(btnGo.transform, false);
+                UiFactory.Stretch(label.GetComponent<RectTransform>());
+                var tmp = label.AddComponent<TextMeshProUGUI>();
+                tmp.text = !owned
+                    ? $"{upgrade.displayName}\n{upgrade.purchaseCost:N0}원 · {upgrade.description}"
+                    : equipped
+                        ? $"{upgrade.displayName}\n사용중 · 눌러서 해제"
+                        : $"{upgrade.displayName}\n꺼짐 · 눌러서 사용";
+                tmp.fontSize = 11;
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.color = owned && equipped ? UiTheme.CardWhite : UiTheme.TextDark;
+                tmp.textWrappingMode = TextWrappingModes.Normal;
+                tmp.overflowMode = TextOverflowModes.Ellipsis;
+                tmp.raycastTarget = false;
+                KoreanUiFont.Apply(tmp);
+            }
+
+            if (StaffManager.Instance == null) return;
+            foreach (var staff in StaffManager.Instance.Catalog)
+            {
+                if (staff == null) continue;
+                var cap = staff;
+                bool hired = StaffManager.Instance.IsHired(staff);
+                var btnGo = new GameObject($"Staff_{staff.staffId}", typeof(RectTransform));
+                btnGo.transform.SetParent(_upgradeContent, false);
                 btnGo.AddComponent<LayoutElement>().preferredHeight = 36;
                 var img = btnGo.AddComponent<Image>();
-                img.color = owned ? UiTheme.Success : UiTheme.Gold;
-                if (!owned)
+                img.color = hired ? UiTheme.Info : new Color32(0xD9, 0x8C, 0xB0, 0xFF);
+                if (!hired)
                 {
                     var btn = btnGo.AddComponent<Button>();
                     btn.targetGraphic = img;
                     btn.onClick.AddListener(() =>
                     {
-                        if (ShopUpgradeManager.Instance.TryPurchase(cap))
+                        if (StaffManager.Instance.TryHire(cap))
+                        {
+                            RefreshHeader();
                             RebuildUpgrades();
+                        }
                     });
                 }
 
                 var label = new GameObject("L", typeof(RectTransform));
                 label.transform.SetParent(btnGo.transform, false);
                 UiFactory.Stretch(label.GetComponent<RectTransform>());
-                var tmp = label.AddComponent<TextMeshProUGUI>();
-                tmp.text = owned
-                    ? $"✓ {upgrade.displayName}"
-                    : $"{upgrade.displayName} ({upgrade.purchaseCost:N0}원)";
-                tmp.fontSize = 13;
-                tmp.alignment = TextAlignmentOptions.Center;
-                tmp.color = owned ? UiTheme.CardWhite : UiTheme.TextDark;
-                tmp.raycastTarget = false;
-                KoreanUiFont.Apply(tmp);
+                var tmpStaff = label.AddComponent<TextMeshProUGUI>();
+                tmpStaff.text = hired
+                    ? $"✓ 직원 {staff.displayName}"
+                    : $"고용 {staff.displayName} ({staff.hireCost:N0}원)";
+                tmpStaff.fontSize = 13;
+                tmpStaff.alignment = TextAlignmentOptions.Center;
+                tmpStaff.color = hired ? UiTheme.CardWhite : UiTheme.TextDark;
+                tmpStaff.raycastTarget = false;
+                KoreanUiFont.Apply(tmpStaff);
             }
         }
 
@@ -249,18 +299,16 @@ namespace ChangJun.Bootstrap
         private void CreateShopCard(IngredientSO ing)
         {
             var cardWrap = UiFactory.CreateStretchChild(_gridContent, $"Card_{ing.code}");
-            var le = cardWrap.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 160;
-            le.preferredWidth = 260;
             var card = UiTheme.CreateBorderedPanel(cardWrap, "Fill",
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             var iconRt = UiFactory.CreatePanel(card, "Icon",
-                new Vector2(0.04f, 0.58f), new Vector2(0.22f, 0.92f),
-                Vector2.zero, Vector2.zero);
+                new Vector2(0f, 0.52f), new Vector2(0f, 0.52f),
+                new Vector2(14f, -36f), new Vector2(86f, 36f));
             var iconImg = iconRt.gameObject.AddComponent<Image>();
             iconImg.sprite = IngredientVisualCatalog.GetButtonIcon(ing.code);
             iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
             iconImg.color = iconImg.sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
 
             int stock = InventoryManager.Instance.GetStock(ing.code);
@@ -269,20 +317,20 @@ namespace ChangJun.Bootstrap
             int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
 
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원",
-                new Vector2(0.24f, 0.58f), new Vector2(0.96f, 0.92f),
-                Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 17, UiTheme.TextDark);
+                new Vector2(0f, 0.52f), new Vector2(1f, 0.94f),
+                new Vector2(98f, 0f), new Vector2(-10f, 0f),
+                TextAlignmentOptions.MidlineLeft, 16, UiTheme.TextDark);
 
             UiFactory.CreateText(card, "Stock",
                 $"보유 {stock}  ·  배달대기 {warehouse}",
-                new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
+                new Vector2(0.05f, 0.40f), new Vector2(0.95f, 0.52f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 14, UiTheme.TextMuted);
+                TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
 
             string code = ing.code;
             int initial = _cart.TryGetValue(code, out var q) ? q : 0;
             _qtySelectors[code] = new QuantitySelectorWidget(
-                card, new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.42f),
+                card, new Vector2(0.04f, 0.06f), new Vector2(0.96f, 0.38f),
                 qty => SetCartQuantity(code, qty), initial);
         }
 
@@ -358,7 +406,7 @@ namespace ChangJun.Bootstrap
             _cartTotalText.text = totalLine;
             _totalText.text = $"합계: {total:N0}원{bulkNote}";
             _balanceText.text = $"잔액: {MoneyManager.Instance.Money:N0}원";
-            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
+            RefreshHeader();
         }
 
         private static float GetBulkDiscountMultiplier(Dictionary<string, int> cart, out int unitCount)
@@ -566,7 +614,7 @@ namespace ChangJun.Bootstrap
             _cartTotalText.text = $"결제  {total:N0}원";
             _totalText.text = $"합계: {total:N0}원";
             _balanceText.text = $"잔액: {MoneyManager.Instance.Money:N0}원";
-            _moneyChip.text = $"{MoneyManager.Instance.Money:N0}원";
+            RefreshHeader();
         }
     }
 }

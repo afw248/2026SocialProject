@@ -76,6 +76,8 @@ namespace ChangJun.Bootstrap
 
         private ExpressDeliveryOverlay _expressDelivery;
 
+        private SocialChoiceOverlay _choiceOverlay;
+
         private ScreenFadeController _fade;
 
 
@@ -115,6 +117,8 @@ namespace ChangJun.Bootstrap
             _menus = new List<MenuRecipeSO>(Resources.LoadAll<MenuRecipeSO>("Craft/Menus"));
 
             _customers = new List<CraftCustomerSO>(Resources.LoadAll<CraftCustomerSO>("Craft/Customers"));
+
+            CustomerSocialDefaults.Apply(_customers);
 
             _menus.Sort((a, b) => string.CompareOrdinal(a.code, b.code));
 
@@ -214,6 +218,18 @@ namespace ChangJun.Bootstrap
 
                 new GameObject("ShopUpgrades").AddComponent<ShopUpgradeManager>();
 
+            if (RegularCustomerService.Instance == null)
+
+                new GameObject("Regulars").AddComponent<RegularCustomerService>();
+
+            if (StaffManager.Instance == null)
+
+                new GameObject("Staff").AddComponent<StaffManager>();
+
+            if (CustomerConflictService.Instance == null)
+
+                new GameObject("Conflicts").AddComponent<CustomerConflictService>();
+
 
 
             var config = DayLoopController.Instance.Config;
@@ -292,8 +308,9 @@ namespace ChangJun.Bootstrap
             _fade = new ScreenFadeController(this);
 
             var topBar = UiTheme.CreateHeaderBar(root, string.Empty, 72f);
+            var headerMeta = UiTheme.CreateHeaderMeta(topBar);
             _topBar = topBar.gameObject;
-            _ = new DayClockHud(topBar);
+            _ = new DayClockHud(headerMeta);
 
 
 
@@ -305,9 +322,7 @@ namespace ChangJun.Bootstrap
 
 
 
-            _hud = new CraftHudPresenter(root, _contentArea, _controller, _ingredients, topBar);
-
-            _hud.BindMoney(MoneyManager.Instance);
+            _hud = new CraftHudPresenter(root, _contentArea, _controller, _ingredients);
 
 
 
@@ -355,6 +370,8 @@ namespace ChangJun.Bootstrap
             _expressDelivery = new ExpressDeliveryOverlay();
 
             _businessTransition = new BusinessTransitionOverlay();
+
+            _choiceOverlay = new SocialChoiceOverlay();
 
         }
 
@@ -435,6 +452,7 @@ namespace ChangJun.Bootstrap
             _controller.OnSelectionChanged += list => _hud.UpdateSlot(list);
 
             _orderBubble.OnAccepted += OnOrderAccepted;
+            _orderBubble.OnWalkedOut += HandlePatienceWalkout;
 
             _settlement.OnDismissed += OnSettlementDismissed;
 
@@ -443,6 +461,7 @@ namespace ChangJun.Bootstrap
             _morningDelivery.OnReceived += OnMorningReceived;
 
             _tabBar.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
+            _tabBar.OnEarlyClose += RequestEarlyClose;
 
             var express = ExpressDeliveryService.Instance;
 
@@ -584,6 +603,8 @@ namespace ChangJun.Bootstrap
 
             StoreReputationService.Instance?.ResetDailyStats();
 
+            CustomerConflictService.Instance?.BeginDay();
+
             SchoolLunchContractService.Instance?.AdvanceDay();
 
             SchoolLunchContractService.Instance?.TryStartContract(day);
@@ -662,6 +683,7 @@ namespace ChangJun.Bootstrap
 
 
 
+            var previous = _lastCustomer;
             _lastCustomer = next;
 
             _orderAccepted = false;
@@ -673,33 +695,84 @@ namespace ChangJun.Bootstrap
             _hud.SetCookViewVisible(false);
 
             _controller.Initialize(new RecipeBook(_menus), next, _ingredients);
+            RegularCustomerService.Instance?.RecordVisit(next);
+
+            if (CustomerConflictService.Instance != null
+                && CustomerConflictService.Instance.TryStart(previous, next, out var conflict)
+                && conflict != null)
+            {
+                PresentConflictThenOrder(conflict, next);
+                return;
+            }
 
             _orderBubble.Show(next);
 
         }
 
+        private void HandlePatienceWalkout()
+        {
+            DayLoopController.Instance.Ledger.AddWalkout("인내심 소진 — 손님이 떠남");
+            DayLoopController.Instance.AdvanceAfterCustomer();
+            SpawnNextCustomer();
+        }
 
+        private void RequestEarlyClose()
+        {
+            if (DayLoopController.Instance == null) return;
+            if (DayLoopController.Instance.Phase != DayPhase.Open) return;
+            _orderBubble.HideImmediate();
+            DayLoopController.Instance.CloseShop();
+        }
+
+
+
+        private void PresentConflictThenOrder(ConflictEventSO conflict, CraftCustomerSO next)
+        {
+            string body = $"{conflict.prompt}\n\n\"{conflict.prejudiceLine}\"";
+            _choiceOverlay.Show("대기줄에서", body, conflict.interveneLabel, conflict.ignoreLabel,
+                () =>
+                {
+                    CustomerConflictService.Instance.Resolve(conflict, true);
+                    _orderBubble.Show(next);
+                },
+                () =>
+                {
+                    CustomerConflictService.Instance.Resolve(conflict, false);
+                    _orderBubble.Show(next);
+                });
+        }
 
         private void OnOrderAccepted()
-
         {
-
-            _orderAccepted = true;
-
-            _memoPanel?.RecordCustomerOrder(_controller.CurrentCustomer);
-
-            if (DayLoopController.Instance.Phase == DayPhase.Open)
-
+            var customer = _controller.CurrentCustomer;
+            if (customer != null && customer.canBargain)
             {
-
-                _controller.SetCraftEnabled(true);
-
-                _hud.SetInteractable(true);
-
-                _hud.SetCookViewVisible(true);
-
+                int pct = Mathf.RoundToInt(customer.bargainDiscount * 100f);
+                _choiceOverlay.Show("가격 흥정",
+                    $"{customer.customerName} 님이 {pct}% 할인을 부탁합니다.",
+                    "들어준다", "정가로 받는다",
+                    () =>
+                    {
+                        _controller.BargainAccepted = true;
+                        EnableCraftAfterAccept();
+                    },
+                    EnableCraftAfterAccept);
+                return;
             }
 
+            EnableCraftAfterAccept();
+        }
+
+        private void EnableCraftAfterAccept()
+        {
+            _orderAccepted = true;
+            _memoPanel?.RecordCustomerOrder(_controller.CurrentCustomer);
+            if (DayLoopController.Instance.Phase == DayPhase.Open)
+            {
+                _controller.SetCraftEnabled(true);
+                _hud.SetInteractable(true);
+                _hud.SetCookViewVisible(true);
+            }
         }
 
 

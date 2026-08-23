@@ -61,9 +61,18 @@ namespace ChangJun.Social
         public void ApplyCommunityMeal(int donatedUnits)
         {
             if (donatedUnits <= 0) return;
-            Reputation = Mathf.Clamp01(Reputation + donatedUnits * 0.008f);
+            ApplyDirectDelta(donatedUnits * 0.008f);
+        }
+
+        public void ApplyDirectDelta(float delta)
+        {
+            Reputation = Mathf.Clamp01(Reputation + delta);
             OnReputationChanged?.Invoke(Reputation);
         }
+
+        public int TodaySuccessCount => _successCount;
+        public int TodayOrderCount => _totalOrders;
+        public int TodayTabooCount => _tabooCount;
 
         public void PayDailySubsidy(DailyLedger ledger)
         {

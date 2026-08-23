@@ -19,6 +19,7 @@ namespace ChangJun.Bootstrap
         private readonly RectTransform _orderHistoryContent;
         private readonly List<GameObject> _orderRows = new();
         private GameObject _placeholderRow;
+        private readonly UiTheme.HeaderMeta _headerMeta;
 
         public event Action OnBack;
 
@@ -31,6 +32,7 @@ namespace ChangJun.Bootstrap
 
             var header = UiTheme.CreateHeaderBar(_root.transform, "메모장", 72f, 78f);
             UiTheme.CreateBackButton(header, () => OnBack?.Invoke());
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
 
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 24f);
 
@@ -73,7 +75,11 @@ namespace ChangJun.Bootstrap
             AddOrderHistoryPlaceholder();
         }
 
-        public void Show() => _root.SetActive(true);
+        public void Show()
+        {
+            UiTheme.RefreshHeaderMeta(_headerMeta);
+            _root.SetActive(true);
+        }
         public void Hide() => _root.SetActive(false);
 
         public void RecordCustomerOrder(CraftCustomerSO customer)

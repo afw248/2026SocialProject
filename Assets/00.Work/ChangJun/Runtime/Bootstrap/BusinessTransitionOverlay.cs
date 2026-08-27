@@ -26,6 +26,7 @@ namespace ChangJun.Bootstrap
         private readonly TextMeshProUGUI _prepLabel;
         private readonly TextMeshProUGUI _openLabel;
         private readonly TextMeshProUGUI _closeLabel;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private Action _onAction;
 
         public BusinessTransitionOverlay()
@@ -36,8 +37,13 @@ namespace ChangJun.Bootstrap
             var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
             bg.gameObject.AddComponent<Image>().color = NightBg;
 
+            var hudBar = UiFactory.CreatePanel(_root.transform, "HudBar",
+                new Vector2(0f, 1f), new Vector2(1f, 1f),
+                new Vector2(0f, -56f), Vector2.zero);
+            _headerMeta = UiTheme.CreateHeaderMeta(hudBar);
+
             var row = UiFactory.CreatePanel(_root.transform, "PhaseSteps",
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-360f, -104f), new Vector2(360f, -40f));
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-360f, -168f), new Vector2(360f, -104f));
             var hlg = row.gameObject.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.childControlWidth = true;
@@ -104,6 +110,7 @@ namespace ChangJun.Bootstrap
 
             _titleText.text = "영업 시작";
             _dayText.text = DayLoopController.Instance.FormatDayClock();
+            UiTheme.RefreshHeaderMeta(_headerMeta);
             _buttonFill.color = UiTheme.Accent;
             _buttonText.text = "영업 시작하기";
             _buttonText.color = UiTheme.CardWhite;
@@ -124,6 +131,7 @@ namespace ChangJun.Bootstrap
 
             _titleText.text = "영업 종료";
             _dayText.text = DayLoopController.Instance.FormatDayClock();
+            UiTheme.RefreshHeaderMeta(_headerMeta);
             _buttonFill.color = new Color32(0xD9, 0x8C, 0xB0, 0xFF);
             _buttonText.text = "정산하러 가기";
             _buttonText.color = UiTheme.CardWhite;

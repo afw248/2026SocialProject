@@ -42,14 +42,14 @@ namespace ChangJun.Bootstrap
             var body = UiTheme.CreateScreenBody(_root.transform, 72f, 20f);
 
             _eventBanner = UiFactory.CreateText(body, "EventBanner", "",
-                new Vector2(0f, 0.93f), new Vector2(1f, 1f),
+                new Vector2(0f, 0.94f), new Vector2(1f, 1f),
                 Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 16, UiTheme.Danger);
             _eventBanner.fontStyle = FontStyles.Bold;
             _eventBanner.gameObject.SetActive(false);
 
             var listPanel = UiFactory.CreatePanel(body, "List",
-                new Vector2(0f, 0.10f), new Vector2(0.32f, 0.92f),
+                new Vector2(0f, 0.14f), new Vector2(0.32f, 0.93f),
                 Vector2.zero, Vector2.zero);
 
             UiTheme.CreateSectionLabel(listPanel, "ListLabel", "최근 소식",
@@ -84,7 +84,7 @@ namespace ChangJun.Bootstrap
             scroll.content = _listContent;
 
             var detail = UiTheme.CreateBorderedPanel(body, "Detail",
-                new Vector2(0.34f, 0.10f), new Vector2(1f, 0.92f),
+                new Vector2(0.34f, 0.14f), new Vector2(1f, 0.93f),
                 Vector2.zero, Vector2.zero, UiTheme.CardWhite, 4f);
 
             UiTheme.CreateSectionLabel(detail, "DetailLabel", "선택한 뉴스",
@@ -134,9 +134,11 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.TopLeft, 14, UiTheme.TextDark);
             _reputationImpactText.textWrappingMode = TextWrappingModes.Normal;
 
+            var footer = UiFactory.CreatePanel(body, "Footer",
+                new Vector2(0f, 0f), new Vector2(1f, 0.12f), Vector2.zero, Vector2.zero);
             UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(body, "ContinueBtn",
-                    new Vector2(0.78f, 0f), new Vector2(1f, 0.08f), Vector2.zero, Vector2.zero),
+                UiFactory.CreatePanel(footer, "ContinueBtn",
+                    new Vector2(0.72f, 0.12f), new Vector2(1f, 0.88f), Vector2.zero, Vector2.zero),
                 "다음으로", UiTheme.Accent, ContinueClicked, 20);
         }
 

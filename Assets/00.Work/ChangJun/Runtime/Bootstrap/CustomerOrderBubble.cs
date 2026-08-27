@@ -21,6 +21,11 @@ namespace ChangJun.Bootstrap
         private readonly TextMeshProUGUI _nameText;
         private readonly TextMeshProUGUI _orderText;
         private readonly TextMeshProUGUI _extraText;
+        private readonly TextMeshProUGUI _slotTitle;
+        private readonly TextMeshProUGUI _slotSub;
+        private readonly TextMeshProUGUI _originText;
+        private readonly Image _portraitImage;
+        private readonly Image _cultureBar;
         private readonly RectTransform _iconRow;
         private readonly PatienceMeter _patience;
         private static int _orderCounter;
@@ -31,6 +36,7 @@ namespace ChangJun.Bootstrap
         public CustomerOrderBubble(RectTransform dock)
         {
             IngredientVisualCatalog.EnsureLoaded();
+            CustomerPortraitCatalog.EnsureLoaded();
 
             _root = new GameObject("OrderScreen", typeof(RectTransform));
             _root.transform.SetParent(dock, false);
@@ -51,34 +57,30 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.one, new Vector2(3f, 3f), new Vector2(-3f, -3f));
             var fill = fillRt.gameObject.AddComponent<Image>();
             fill.color = UiTheme.Success;
-            fillRt.pivot = new Vector2(0f, 0.5f);
             _patience = fillRt.gameObject.AddComponent<PatienceMeter>();
             _patience.Bind(fill);
 
-            // ── 손님 슬롯 (장식용 플레이스홀더) ──
+            // ── 손님 슬롯 (픽셀 초상화) ──
             var slot = UiTheme.CreateBorderedPanel(_root.transform, "CustomerSlot",
                 new Vector2(0.06f, 0.14f), new Vector2(0.42f, 0.80f), Vector2.zero, Vector2.zero,
                 new Color32(0xFF, 0xD9, 0xA0, 0xFF), 3f);
-            UiFactory.CreateText(slot, "SlotTitle", "CUSTOMER SLOT",
-                new Vector2(0f, 0.9f), new Vector2(1f, 0.98f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 16, UiTheme.TextDark);
-            UiFactory.CreateText(slot, "SlotSub", "손님 캐릭터 자리 (placeholder)",
-                new Vector2(0f, 0.84f), new Vector2(1f, 0.9f), Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.Center, 12, new Color(0.35f, 0.25f, 0.16f));
-            var head = UiFactory.CreatePanel(slot, "Head",
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-70f, 40f), new Vector2(70f, 180f));
-            var headBorder = head.gameObject.AddComponent<Image>();
-            headBorder.color = UiTheme.Border;
-            var headFill = UiFactory.CreatePanel(head, "Fill", Vector2.zero, Vector2.one,
-                new Vector2(3f, 3f), new Vector2(-3f, -3f));
-            headFill.gameObject.AddComponent<Image>().color = UiTheme.Accent;
-            var body = UiFactory.CreatePanel(slot, "Body",
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-130f, -140f), new Vector2(130f, 46f));
-            var bodyBorder = body.gameObject.AddComponent<Image>();
-            bodyBorder.color = UiTheme.Border;
-            var bodyFill = UiFactory.CreatePanel(body, "Fill", Vector2.zero, Vector2.one,
-                new Vector2(3f, 3f), new Vector2(-3f, -3f));
-            bodyFill.gameObject.AddComponent<Image>().color = UiTheme.Gold;
+            _slotTitle = UiFactory.CreateText(slot, "SlotTitle", "손님",
+                new Vector2(0.04f, 0.90f), new Vector2(0.96f, 0.98f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 18, UiTheme.TextDark);
+            _slotTitle.fontStyle = FontStyles.Bold;
+            _slotSub = UiFactory.CreateText(slot, "SlotSub", "",
+                new Vector2(0.04f, 0.84f), new Vector2(0.96f, 0.90f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 13, new Color(0.35f, 0.25f, 0.16f));
+            _portraitImage = UiTheme.CreateCenteredIcon(slot, "Portrait", null,
+                new Vector2(0.08f, 0.16f), new Vector2(0.92f, 0.83f), Vector2.zero, Vector2.zero);
+            _originText = UiFactory.CreateText(slot, "Origin", "",
+                new Vector2(0.06f, 0.04f), new Vector2(0.94f, 0.15f), Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.Center, 12, UiTheme.TextMuted);
+            _originText.textWrappingMode = TextWrappingModes.Normal;
+            var barRt = UiFactory.CreatePanel(slot, "CultureBar",
+                new Vector2(0.18f, 0.01f), new Vector2(0.82f, 0.035f), Vector2.zero, Vector2.zero);
+            _cultureBar = barRt.gameObject.AddComponent<Image>();
+            _cultureBar.color = UiTheme.Accent;
 
             // ── 주문서 티켓 ──
             UiFactory.CreateText(_root.transform, "TicketLabel", "주문서 · ORDER TICKET",
@@ -146,6 +148,7 @@ namespace ChangJun.Bootstrap
             _nameText.text = customer.customerName + dietLabel + regularTag;
             _orderText.text = customer.orderLine;
             _extraText.text = BuildExtra(customer);
+            ApplyPortrait(customer);
 
             RebuildIcons(customer);
 
@@ -180,6 +183,27 @@ namespace ChangJun.Bootstrap
             if (!string.IsNullOrWhiteSpace(hint))
                 sb.AppendLine(hint);
             return sb.ToString().Trim();
+        }
+
+        private void ApplyPortrait(CraftCustomerSO customer)
+        {
+            var sprite = CustomerPortraitCatalog.Get(customer);
+            _portraitImage.sprite = sprite;
+            _portraitImage.color = sprite != null ? Color.white : new Color(0.35f, 0.28f, 0.20f, 0.9f);
+            var fitter = _portraitImage.GetComponent<AspectRatioFitter>();
+            if (fitter != null)
+            {
+                fitter.aspectRatio = sprite != null && sprite.rect.height > 1f
+                    ? sprite.rect.width / sprite.rect.height
+                    : 0.75f;
+            }
+
+            _slotTitle.text = customer.customerName;
+            _slotSub.text = CustomerPortraitCatalog.CultureCaption(customer);
+            _originText.text = string.IsNullOrWhiteSpace(customer.originNote)
+                ? ""
+                : customer.originNote;
+            _cultureBar.color = CustomerPortraitCatalog.CultureColor(customer.cultureGroup);
         }
 
         private void RebuildIcons(CraftCustomerSO customer)

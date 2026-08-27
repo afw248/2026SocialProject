@@ -27,6 +27,7 @@ namespace ChangJun.Bootstrap
         private readonly Button _economyBtn;
         private readonly Image _hanjipBtnImg;
         private readonly Image _economyBtnImg;
+        private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly Dictionary<string, int> _cart = new();
         private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
         private IReadOnlyList<IngredientSO> _ingredients;
@@ -39,14 +40,17 @@ namespace ChangJun.Bootstrap
             _root = UiFactory.CreateOverlayRoot("ExpressDelivery", 72);
             _root.SetActive(false);
 
+            var header = UiTheme.CreateHeaderBar(_root.transform, "영업 중 배달");
+            _headerMeta = UiTheme.CreateHeaderMeta(header);
+
             var panel = UiTheme.CreateBorderedPanel(_root.transform, "Panel",
-                new Vector2(0.08f, 0.1f), new Vector2(0.92f, 0.9f),
+                new Vector2(0.04f, 0.04f), new Vector2(0.96f, 0.88f),
                 Vector2.zero, Vector2.zero, UiTheme.Background);
 
-            UiFactory.CreateText(panel, "Title", "영업 중 배달",
+            UiFactory.CreateText(panel, "Title", "한집 / 알뜰 배달",
                 new Vector2(0.03f, 0.92f), new Vector2(0.5f, 0.99f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.MidlineLeft, 28, UiTheme.TextDark);
+                TextAlignmentOptions.MidlineLeft, 22, UiTheme.TextDark);
 
             var tierBar = UiFactory.CreatePanel(panel, "TierBar",
                 new Vector2(0.52f, 0.92f), new Vector2(0.97f, 0.99f),
@@ -175,6 +179,7 @@ namespace ChangJun.Bootstrap
             RebuildGrid();
             RefreshCartTotal();
             RefreshPending();
+            UiTheme.RefreshHeaderMeta(_headerMeta);
             _root.SetActive(true);
         }
 
@@ -282,13 +287,9 @@ namespace ChangJun.Bootstrap
                 : 1f;
             int unitPrice = Mathf.RoundToInt(ing.purchasePrice * mult);
 
-            var iconRt = UiFactory.CreatePanel(card, "Icon",
-                new Vector2(0.04f, 0.58f), new Vector2(0.2f, 0.92f),
-                Vector2.zero, Vector2.zero);
-            var iconImg = iconRt.gameObject.AddComponent<Image>();
-            iconImg.sprite = IngredientVisualCatalog.GetButtonIcon(ing.code);
-            iconImg.preserveAspect = true;
-            iconImg.color = iconImg.sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
+            UiTheme.CreateCenteredIcon(card, "Icon", IngredientVisualCatalog.GetButtonIcon(ing.code),
+                new Vector2(0.04f, 0.58f), new Vector2(0.04f, 0.58f),
+                new Vector2(8f, -28f), new Vector2(64f, 28f));
 
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원/개",
                 new Vector2(0.22f, 0.58f), new Vector2(0.96f, 0.95f),

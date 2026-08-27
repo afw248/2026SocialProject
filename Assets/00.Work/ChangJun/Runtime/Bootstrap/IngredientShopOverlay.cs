@@ -26,6 +26,7 @@ namespace ChangJun.Bootstrap
         private readonly Button _actionButton;
         private readonly TextMeshProUGUI _actionButtonLabel;
         private readonly RectTransform _upgradeContent;
+        private readonly TextMeshProUGUI _upgradeHint;
         private readonly UiTheme.HeaderMeta _headerMeta;
         private readonly Dictionary<string, int> _cart = new();
         private readonly Dictionary<string, QuantitySelectorWidget> _qtySelectors = new();
@@ -49,7 +50,7 @@ namespace ChangJun.Bootstrap
 
             // ── 왼쪽: 재료 목록 ──
             var upgradeScroll = UiTheme.CreateBorderedPanel(panel, "UpgradeScroll",
-                new Vector2(0.03f, 0.80f), new Vector2(0.74f, 0.92f),
+                new Vector2(0.03f, 0.78f), new Vector2(0.74f, 0.96f),
                 Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             var upgradeHlg = upgradeScroll.gameObject.AddComponent<HorizontalLayoutGroup>();
             upgradeHlg.spacing = 6;
@@ -59,8 +60,13 @@ namespace ChangJun.Bootstrap
             upgradeHlg.childForceExpandWidth = true;
             _upgradeContent = upgradeScroll;
 
+            _upgradeHint = UiFactory.CreateText(panel, "UpgradeHint", "인증은 구매 후 다시 눌러 켜고 끌 수 있습니다.",
+                new Vector2(0.03f, 0.74f), new Vector2(0.74f, 0.78f),
+                Vector2.zero, Vector2.zero,
+                TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextMuted);
+
             var scrollRt = UiFactory.CreatePanel(panel, "Scroll",
-                new Vector2(0.03f, 0.14f), new Vector2(0.74f, 0.79f),
+                new Vector2(0.03f, 0.14f), new Vector2(0.74f, 0.76f),
                 Vector2.zero, Vector2.zero);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = false;
@@ -201,7 +207,7 @@ namespace ChangJun.Bootstrap
                 var cap = upgrade;
                 var btnGo = new GameObject($"Up_{upgrade.upgradeType}", typeof(RectTransform));
                 btnGo.transform.SetParent(_upgradeContent, false);
-                btnGo.AddComponent<LayoutElement>().preferredHeight = 48;
+                btnGo.AddComponent<LayoutElement>().preferredHeight = 64;
                 var img = btnGo.AddComponent<Image>();
                 img.color = !owned ? UiTheme.Gold
                     : equipped ? UiTheme.Success
@@ -214,12 +220,24 @@ namespace ChangJun.Bootstrap
                     {
                         if (ShopUpgradeManager.Instance.TryPurchase(cap))
                         {
+                            _upgradeHint.text = $"{cap.displayName} 구매 · 사용 중. 다시 누르면 해제됩니다.";
+                            _upgradeHint.color = UiTheme.Success;
                             RefreshHeader();
                             RebuildUpgrades();
+                        }
+                        else
+                        {
+                            _upgradeHint.text = $"잔액이 부족합니다. ({cap.purchaseCost:N0}원)";
+                            _upgradeHint.color = UiTheme.Danger;
                         }
                         return;
                     }
                     ShopUpgradeManager.Instance.ToggleEquipped(cap.upgradeType);
+                    bool nowOn = ShopUpgradeManager.Instance.IsEquipped(cap.upgradeType);
+                    _upgradeHint.text = nowOn
+                        ? $"{cap.displayName} 사용 중"
+                        : $"{cap.displayName} 해제됨";
+                    _upgradeHint.color = nowOn ? UiTheme.Success : UiTheme.TextMuted;
                     RebuildUpgrades();
                 });
 
@@ -228,11 +246,11 @@ namespace ChangJun.Bootstrap
                 UiFactory.Stretch(label.GetComponent<RectTransform>());
                 var tmp = label.AddComponent<TextMeshProUGUI>();
                 tmp.text = !owned
-                    ? $"{upgrade.displayName}\n{upgrade.purchaseCost:N0}원 · {upgrade.description}"
+                    ? $"{upgrade.displayName}\n구매 {upgrade.purchaseCost:N0}원"
                     : equipped
-                        ? $"{upgrade.displayName}\n사용중 · 눌러서 해제"
-                        : $"{upgrade.displayName}\n꺼짐 · 눌러서 사용";
-                tmp.fontSize = 11;
+                        ? $"{upgrade.displayName}\nON · 눌러서 해제"
+                        : $"{upgrade.displayName}\nOFF · 눌러서 사용";
+                tmp.fontSize = 13;
                 tmp.alignment = TextAlignmentOptions.Center;
                 tmp.color = owned && equipped ? UiTheme.CardWhite : UiTheme.TextDark;
                 tmp.textWrappingMode = TextWrappingModes.Normal;
@@ -302,14 +320,9 @@ namespace ChangJun.Bootstrap
             var card = UiTheme.CreateBorderedPanel(cardWrap, "Fill",
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
-            var iconRt = UiFactory.CreatePanel(card, "Icon",
+            UiTheme.CreateCenteredIcon(card, "Icon", IngredientVisualCatalog.GetButtonIcon(ing.code),
                 new Vector2(0f, 0.52f), new Vector2(0f, 0.52f),
-                new Vector2(14f, -36f), new Vector2(86f, 36f));
-            var iconImg = iconRt.gameObject.AddComponent<Image>();
-            iconImg.sprite = IngredientVisualCatalog.GetButtonIcon(ing.code);
-            iconImg.preserveAspect = true;
-            iconImg.raycastTarget = false;
-            iconImg.color = iconImg.sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
+                new Vector2(16f, -32f), new Vector2(80f, 32f));
 
             int stock = InventoryManager.Instance.GetStock(ing.code);
             int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);

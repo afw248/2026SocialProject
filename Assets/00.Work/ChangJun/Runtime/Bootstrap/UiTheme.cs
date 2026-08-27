@@ -27,6 +27,75 @@ namespace ChangJun.Bootstrap
         public const float DefaultBorderWidth = 4f;
         public const float DefaultShadowOffset = 6f;
 
+        private static Sprite _whiteSprite;
+        private static Sprite _circleSprite;
+
+        public static Sprite WhiteSprite => _whiteSprite ??= CreateSolidSprite(8, Color.white);
+        public static Sprite CircleSprite => _circleSprite ??= CreateCircleSprite(64);
+
+        private static Sprite CreateSolidSprite(int size, Color color)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = color;
+            tex.SetPixels(pixels);
+            tex.Apply(false, true);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+            sprite.name = "UiWhite";
+            return sprite;
+        }
+
+        private static Sprite CreateCircleSprite(int size)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            tex.wrapMode = TextureWrapMode.Clamp;
+            tex.filterMode = FilterMode.Bilinear;
+            var pixels = new Color[size * size];
+            float r = (size - 1) * 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - r;
+                    float dy = y - r;
+                    float a = Mathf.Clamp01(r - Mathf.Sqrt(dx * dx + dy * dy) + 0.5f);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, a);
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, true);
+            var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+            sprite.name = "UiCircle";
+            return sprite;
+        }
+
+        public static Image CreateCenteredIcon(Transform parent, string name, Sprite sprite,
+            Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax)
+        {
+            var slot = UiFactory.CreatePanel(parent, name, anchorMin, anchorMax, offsetMin, offsetMax);
+            var imgGo = new GameObject("Img", typeof(RectTransform));
+            imgGo.transform.SetParent(slot, false);
+            var rt = imgGo.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            var img = imgGo.AddComponent<Image>();
+            img.sprite = sprite;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            img.color = sprite != null ? Color.white : new Color(0.35f, 0.38f, 0.45f);
+            var fitter = imgGo.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
+            fitter.aspectRatio = sprite != null && sprite.rect.height > 1f
+                ? sprite.rect.width / sprite.rect.height
+                : 1f;
+            return img;
+        }
+
         /// <summary>검정 테두리 + 채움색 패널. 자식 콘텐츠는 반환된 inner RectTransform에 붙인다.</summary>
         public static RectTransform CreateBorderedPanel(Transform parent, string name,
             Vector2 anchorMin, Vector2 anchorMax, Vector2 offsetMin, Vector2 offsetMax,

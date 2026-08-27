@@ -33,6 +33,7 @@ namespace ChangJun.Bootstrap
         private readonly RectTransform _toppingLayer;
         private readonly TextMeshProUGUI _resultText;
         private readonly TextMeshProUGUI _orderStatusText;
+        private readonly Image _customerPortrait;
         private readonly Dictionary<string, Button> _ingredientButtons = new();
         private readonly Dictionary<string, Image> _ingredientImages = new();
         private readonly List<Image> _toppingImages = new();
@@ -70,10 +71,12 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
             var orderStatusChip = UiTheme.CreateBorderedPanel(_cookContent, "OrderStatusChip",
-                new Vector2(0f, 0.94f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(220f, 0f),
+                new Vector2(0f, 0.94f), new Vector2(0f, 1f), new Vector2(0f, 0f), new Vector2(360f, 0f),
                 UiTheme.CardWhite, 2f);
+            _customerPortrait = UiTheme.CreateCenteredIcon(orderStatusChip, "Portrait", null,
+                new Vector2(0f, 0.08f), new Vector2(0f, 0.92f), new Vector2(6f, 0f), new Vector2(44f, 0f));
             _orderStatusText = UiFactory.CreateText(orderStatusChip, "Text", "주문서 확인 중",
-                Vector2.zero, Vector2.one, new Vector2(10f, 0f), new Vector2(-10f, 0f),
+                Vector2.zero, Vector2.one, new Vector2(50f, 0f), new Vector2(-8f, 0f),
                 TextAlignmentOptions.MidlineLeft, 13, UiTheme.TextDark);
 
             // Cupbap Order UI 목업의 조리 화면처럼 메인/밥/소스/토핑을 밥그릇 둘레에 배치한다.
@@ -161,6 +164,21 @@ namespace ChangJun.Bootstrap
 
         /// <summary>주문받기 화면일 땐 숨기고, 조리하기 화면일 땐 보여준다.</summary>
         public void SetCookViewVisible(bool visible) => _cookContent.gameObject.SetActive(visible);
+
+        public void BindCustomer(CraftCustomerSO customer)
+        {
+            var sprite = CustomerPortraitCatalog.Get(customer);
+            _customerPortrait.sprite = sprite;
+            _customerPortrait.enabled = sprite != null;
+            _customerPortrait.color = Color.white;
+            var fitter = _customerPortrait.GetComponent<AspectRatioFitter>();
+            if (fitter != null && sprite != null && sprite.rect.height > 1f)
+                fitter.aspectRatio = sprite.rect.width / sprite.rect.height;
+
+            _orderStatusText.text = customer == null
+                ? "주문서 확인 중"
+                : $"{customer.customerName}  ·  {CustomerPortraitCatalog.CultureCaption(customer)}";
+        }
 
         public void UpdateSlot(IReadOnlyList<IngredientSO> list)
         {
@@ -331,20 +349,9 @@ namespace ChangJun.Bootstrap
 
             if (icon != null)
             {
-                var iconGo = new GameObject("Icon", typeof(RectTransform));
-                iconGo.transform.SetParent(plateRt, false);
-                var iconRt = iconGo.GetComponent<RectTransform>();
-                iconRt.pivot = new Vector2(0.5f, 0.5f);
-                iconRt.anchorMin = new Vector2(0.12f, 0.30f);
-                iconRt.anchorMax = new Vector2(0.88f, 0.94f);
-                iconRt.offsetMin = Vector2.zero;
-                iconRt.offsetMax = Vector2.zero;
-
-                img = iconGo.AddComponent<Image>();
-                img.sprite = icon;
-                img.preserveAspect = true;
-                img.color = Color.white;
-                img.raycastTarget = false;
+                img = UiTheme.CreateCenteredIcon(plateRt, "Icon", icon,
+                    new Vector2(0.5f, 0.64f), new Vector2(0.5f, 0.64f),
+                    new Vector2(-30f, -30f), new Vector2(30f, 30f));
                 _ingredientImages[ing.code] = img;
 
                 var badgeGo = new GameObject("StockBadge", typeof(RectTransform));

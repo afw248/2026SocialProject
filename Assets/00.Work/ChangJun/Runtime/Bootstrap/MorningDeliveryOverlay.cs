@@ -25,6 +25,7 @@ namespace ChangJun.Bootstrap
         private readonly TextMeshProUGUI _bodyText;
         private readonly RectTransform _bodyContent;
         private readonly ScrollRect _scroll;
+        private readonly UiTheme.HeaderMeta _headerMeta;
 
         public event Action OnReceived;
 
@@ -35,6 +36,11 @@ namespace ChangJun.Bootstrap
 
             var bg = UiFactory.CreateStretchChild(_root.transform, "Bg");
             bg.gameObject.AddComponent<Image>().color = NightBg;
+
+            var hudBar = UiFactory.CreatePanel(_root.transform, "HudBar",
+                new Vector2(0f, 1f), new Vector2(1f, 1f),
+                new Vector2(0f, -56f), Vector2.zero);
+            _headerMeta = UiTheme.CreateHeaderMeta(hudBar);
 
             CreatePhaseSteps(_root.transform);
 
@@ -112,7 +118,7 @@ namespace ChangJun.Bootstrap
         private static void CreatePhaseSteps(Transform parent)
         {
             var row = UiFactory.CreatePanel(parent, "PhaseSteps",
-                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-360f, -104f), new Vector2(360f, -40f));
+                new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(-360f, -168f), new Vector2(360f, -104f));
             var hlg = row.gameObject.AddComponent<HorizontalLayoutGroup>();
             hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.childControlWidth = true;
@@ -143,6 +149,7 @@ namespace ChangJun.Bootstrap
         public void Show()
         {
             DeliveryManager.Instance.RollMorningEvent();
+            UiTheme.RefreshHeaderMeta(_headerMeta);
             _dayText.text = DayLoopController.Instance.FormatDayClock();
             _bodyText.text = BuildMorningMessage();
             Canvas.ForceUpdateCanvases();

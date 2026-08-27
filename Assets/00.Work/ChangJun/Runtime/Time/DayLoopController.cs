@@ -147,7 +147,7 @@ namespace ChangJun.Time
         {
             int displayHour = _hour % 12;
             if (displayHour == 0) displayHour = 12;
-            string ampm = _hour < 12 ? "AM" : "PM";
+            string ampm = _hour < 12 ? "am" : "pm";
             return $"{ampm} {displayHour}:{_minute:00}";
         }
 

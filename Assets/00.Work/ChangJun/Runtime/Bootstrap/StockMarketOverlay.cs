@@ -59,8 +59,8 @@ namespace ChangJun.Bootstrap
                 new Vector2(0f, 0.87f), new Vector2(1f, 0.93f), Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
             CreateColumnText(headerRow, "종목명", 0f, 0.32f, UiTheme.TextMuted);
             CreateColumnText(headerRow, "현재가", 0.32f, 0.52f, UiTheme.TextMuted);
-            CreateColumnText(headerRow, "변동률", 0.52f, 0.74f, UiTheme.TextMuted);
-            CreateColumnText(headerRow, "상세", 0.74f, 1f, UiTheme.TextMuted);
+            CreateColumnText(headerRow, "변동률", 0.52f, 0.72f, UiTheme.TextMuted);
+            CreateColumnText(headerRow, "상세정보", 0.72f, 1f, UiTheme.TextMuted);
 
             var scrollRt = UiFactory.CreatePanel(listPanel, "Scroll",
                 new Vector2(0f, 0f), new Vector2(1f, 0.86f), Vector2.zero, Vector2.zero);
@@ -144,7 +144,7 @@ namespace ChangJun.Bootstrap
 
             var card = UiTheme.CreateShadowCard(popup.transform, "Card",
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new Vector2(-250f, -210f), new Vector2(250f, 210f),
+                new Vector2(-270f, -230f), new Vector2(270f, 230f),
                 UiTheme.CardWhite, 4f, 8f);
 
             var badge = UiFactory.CreatePanel(card, "Badge",
@@ -165,8 +165,11 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.Center, 16, UiTheme.TextDark);
             CreateStepButton(card, new Vector2(0.78f, 0.50f), new Vector2(0.92f, 0.64f), "+", () => AdjustTradeQty(1));
 
-            _popupTotal = UiFactory.CreateText(card, "Total", "총비용  0원",
-                new Vector2(0.08f, 0.36f), new Vector2(0.92f, 0.48f), Vector2.zero, Vector2.zero,
+            var totalBox = UiTheme.CreateBorderedPanel(card, "TotalBox",
+                new Vector2(0.08f, 0.34f), new Vector2(0.92f, 0.48f),
+                Vector2.zero, Vector2.zero, UiTheme.TanRow, 2f);
+            _popupTotal = UiFactory.CreateText(totalBox, "Value", "총비용  0원",
+                Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.Center, 18, UiTheme.TextDark);
 
             _popupFeedback = UiFactory.CreateText(card, "Feedback", "",
@@ -267,9 +270,9 @@ namespace ChangJun.Bootstrap
                 TextAlignmentOptions.MidlineLeft, 14, changeColor);
 
             UiTheme.CreateFlatButton(
-                UiFactory.CreatePanel(row, "Detail", new Vector2(0.76f, 0.18f), new Vector2(0.97f, 0.82f),
+                UiFactory.CreatePanel(row, "Detail", new Vector2(0.74f, 0.16f), new Vector2(0.97f, 0.84f),
                     Vector2.zero, Vector2.zero),
-                "상세보기", UiTheme.Accent, () => OpenPopup(ticker), 13);
+                "상세정보", UiTheme.Accent, () => OpenPopup(ticker), 13);
 
             _listRows.Add(rowWrap);
         }
@@ -399,9 +402,13 @@ namespace ChangJun.Bootstrap
             if (_popupName != null) _popupName.text = _selected.displayName;
             if (_popupPrice != null)
                 _popupPrice.text = $"현재가 {unit:N0}원  ·  보유 {holding}주";
+            int cash = MoneyManager.Instance != null ? MoneyManager.Instance.Money : 0;
             if (_popupQty != null) _popupQty.text = $"수량 {_tradeQty}";
             if (_popupTotal != null)
-                _popupTotal.text = $"총비용  {total:N0}원\n<size=70%><color=#8A6238>{_tradeQty}주 × {unit:N0}원</color></size>";
+            {
+                _popupTotal.text = $"총비용  {total:N0}원\n" +
+                    $"<size=70%><color=#8A6238>{_tradeQty}주 × {unit:N0}원  ·  잔액 {cash:N0}원 → {Mathf.Max(0, cash - total):N0}원</color></size>";
+            }
         }
 
         private static void CreateStepButton(Transform parent, Vector2 anchorMin, Vector2 anchorMax,

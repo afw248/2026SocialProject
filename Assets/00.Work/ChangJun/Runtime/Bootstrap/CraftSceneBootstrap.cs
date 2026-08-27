@@ -311,6 +311,7 @@ namespace ChangJun.Bootstrap
             var headerMeta = UiTheme.CreateHeaderMeta(topBar);
             _topBar = topBar.gameObject;
             _ = new DayClockHud(headerMeta);
+            _ = new UpgradeChipHud(topBar);
 
 
 
@@ -693,6 +694,7 @@ namespace ChangJun.Bootstrap
             _hud.SetInteractable(false);
 
             _hud.SetCookViewVisible(false);
+            _hud.BindCustomer(null);
 
             _controller.Initialize(new RecipeBook(_menus), next, _ingredients);
             RegularCustomerService.Instance?.RecordVisit(next);
@@ -720,8 +722,15 @@ namespace ChangJun.Bootstrap
         {
             if (DayLoopController.Instance == null) return;
             if (DayLoopController.Instance.Phase != DayPhase.Open) return;
-            _orderBubble.HideImmediate();
-            DayLoopController.Instance.CloseShop();
+            _choiceOverlay.Show("조기마감",
+                "오늘 영업을 지금 끝낼까요? 남은 손님은 받지 않고 정산으로 넘어갑니다.",
+                "마감하기", "계속 영업",
+                () =>
+                {
+                    _orderBubble.HideImmediate();
+                    DayLoopController.Instance.CloseShop();
+                },
+                null);
         }
 
 
@@ -772,6 +781,7 @@ namespace ChangJun.Bootstrap
                 _controller.SetCraftEnabled(true);
                 _hud.SetInteractable(true);
                 _hud.SetCookViewVisible(true);
+                _hud.BindCustomer(_controller.CurrentCustomer);
             }
         }
 

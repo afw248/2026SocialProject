@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ChangJun.Data;
 using ChangJun.Economy;
@@ -17,6 +18,8 @@ namespace ChangJun.Social
         private List<ShopUpgradeSO> _catalog = new();
 
         public IReadOnlyList<ShopUpgradeSO> Catalog => _catalog;
+
+        public event Action Changed;
 
         private void Awake()
         {
@@ -42,6 +45,7 @@ namespace ChangJun.Social
             MoneyManager.Instance.SpendMoney(upgrade.purchaseCost);
             _owned.Add(upgrade.upgradeType);
             _equipped.Add(upgrade.upgradeType);
+            Changed?.Invoke();
             return true;
         }
 
@@ -51,6 +55,7 @@ namespace ChangJun.Social
             if (!_owned.Contains(type)) return false;
             if (!_equipped.Add(type))
                 _equipped.Remove(type);
+            Changed?.Invoke();
             return true;
         }
 

@@ -20,10 +20,10 @@ namespace ChangJun.Delivery
             int arrivalMinutes, int paidCost)
         {
             IngredientCode = ingredientCode;
-            Quantity = quantity;
+            Quantity = EconomyClamp.ClampOrderQuantity(quantity);
             Tier = tier;
             ArrivalMinutes = arrivalMinutes;
-            PaidCost = paidCost;
+            PaidCost = EconomyClamp.ClampMoney(paidCost);
         }
     }
 
@@ -104,8 +104,10 @@ namespace ChangJun.Delivery
             foreach (var pair in cart)
             {
                 var ing = InventoryManager.Instance.GetIngredient(pair.Key);
-                if (ing == null || pair.Value <= 0) continue;
-                totalCost += Mathf.RoundToInt(ing.purchasePrice * priceMult) * pair.Value;
+                int qty = EconomyClamp.ClampOrderQuantity(pair.Value);
+                if (ing == null || qty <= 0) continue;
+                int unitPrice = Mathf.RoundToInt(ing.purchasePrice * priceMult);
+                totalCost = EconomyClamp.SafeAdd(totalCost, EconomyClamp.SafeMultiply(unitPrice, qty));
             }
 
             if (totalCost <= 0)
@@ -119,21 +121,23 @@ namespace ChangJun.Delivery
 
             foreach (var pair in cart)
             {
-                if (pair.Value <= 0) continue;
+                int qty = EconomyClamp.ClampOrderQuantity(pair.Value);
+                if (qty <= 0) continue;
                 var ing = InventoryManager.Instance.GetIngredient(pair.Key);
                 if (ing == null) continue;
 
-                int lineCost = Mathf.RoundToInt(ing.purchasePrice * priceMult) * pair.Value;
+                int unitPrice = Mathf.RoundToInt(ing.purchasePrice * priceMult);
+                int lineCost = EconomyClamp.SafeMultiply(unitPrice, qty);
                 _pending.Add(new ExpressDeliveryOrder(
                     pair.Key,
-                    pair.Value,
+                    qty,
                     tier,
                     arrival,
                     lineCost));
 
                 DayLoopController.Instance.Ledger.AddPurchase(
                     lineCost,
-                    $"{tierLabel} {ing.displayName} x{pair.Value}");
+                    $"{tierLabel} {ing.displayName} x{qty}");
             }
 
             MoneyManager.Instance.SpendMoney(totalCost);

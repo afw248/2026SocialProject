@@ -19,6 +19,7 @@ namespace ChangJun.Bootstrap
     public sealed class SideTabBar
     {
         private readonly GameObject _barRoot;
+        private readonly Image _earlyCloseFill;
 
         public event Action<MainTab> OnTabSelected;
         public event Action OnDeliveryRequested;
@@ -47,11 +48,18 @@ namespace ChangJun.Bootstrap
                 () => OnTabSelected?.Invoke(MainTab.Recipe));
             CreateNavButton(bar, "정보", new Color32(0xF2, 0xD2, 0x4A, 0xFF),
                 () => OnTabSelected?.Invoke(MainTab.Status));
-            CreateNavButton(bar, "조기마감", UiTheme.Danger,
+            _earlyCloseFill = CreateNavButton(bar, "조기마감", UiTheme.Danger,
                 () => OnEarlyClose?.Invoke());
         }
 
-        private static void CreateNavButton(RectTransform bar, string label, Color iconColor, Action onClick)
+        /// <summary>재료 소진 등으로 더 이상 영업이 어려울 때 조기마감 버튼을 강조한다.</summary>
+        public void SetEarlyCloseUrgent(bool urgent)
+        {
+            if (_earlyCloseFill == null) return;
+            _earlyCloseFill.color = urgent ? UiTheme.Danger : UiTheme.CardWhite;
+        }
+
+        private static Image CreateNavButton(RectTransform bar, string label, Color iconColor, Action onClick)
         {
             var go = new GameObject($"Nav_{label}", typeof(RectTransform));
             go.transform.SetParent(bar, false);
@@ -76,6 +84,7 @@ namespace ChangJun.Bootstrap
 
             AddButtonLabel(fillRt, label);
             btn.onClick.AddListener(() => onClick?.Invoke());
+            return fillImg;
         }
 
         private void CreateDeliveryButton(RectTransform bar)

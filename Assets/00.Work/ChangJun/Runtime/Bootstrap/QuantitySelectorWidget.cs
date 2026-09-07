@@ -1,4 +1,5 @@
 using System;
+using ChangJun.Economy;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,21 +7,28 @@ using UnityEngine.UI;
 namespace ChangJun.Bootstrap
 {
     /// <summary>
-    /// -10 / -1 / 입력 / +1 / +10 수량 선택 위젯.
+    /// -10 / -1 / 입력 / +1 / +10 수량 선택 위젯. min~max로 clamp한다.
     /// </summary>
     public sealed class QuantitySelectorWidget
     {
         private readonly TMP_InputField _input;
         private readonly Action<int> _onChanged;
+        private readonly int _min;
+        private readonly int _max;
         private int _quantity;
 
         public int Quantity => _quantity;
+        public int Min => _min;
+        public int Max => _max;
 
         public QuantitySelectorWidget(Transform parent, Vector2 anchorMin, Vector2 anchorMax,
-            Action<int> onChanged, int initial = 0)
+            Action<int> onChanged, int initial = 0,
+            int min = 0, int max = EconomyClamp.MaxOrderQuantity)
         {
             _onChanged = onChanged;
-            _quantity = Mathf.Max(0, initial);
+            _min = Mathf.Min(min, max);
+            _max = Mathf.Max(min, max);
+            _quantity = Mathf.Clamp(initial, _min, _max);
 
             var root = UiFactory.CreatePanel(parent, "QtySelector",
                 anchorMin, anchorMax, Vector2.zero, Vector2.zero);
@@ -42,17 +50,22 @@ namespace ChangJun.Bootstrap
 
         public void SetQuantity(int qty, bool notify = true)
         {
-            _quantity = Mathf.Max(0, qty);
+            _quantity = Mathf.Clamp(qty, _min, _max);
             _input.SetTextWithoutNotify(_quantity.ToString());
             if (notify) _onChanged?.Invoke(_quantity);
         }
 
-        private void Adjust(int delta) => SetQuantity(_quantity + delta);
+        private void Adjust(int delta)
+        {
+            // int 오버플로우 방지: long으로 합산 후 clamp
+            long next = (long)_quantity + delta;
+            SetQuantity((int)Math.Clamp(next, _min, _max));
+        }
 
         private void CommitInput(string text)
         {
-            if (!int.TryParse(text, out int parsed) || parsed < 0)
-                parsed = 0;
+            if (!int.TryParse(text, out int parsed))
+                parsed = _min;
             SetQuantity(parsed);
         }
 
@@ -62,7 +75,7 @@ namespace ChangJun.Bootstrap
                 min, max, Vector2.zero, Vector2.zero);
             fieldRt.gameObject.AddComponent<Image>().color = Color.white;
 
-            var textArea = new GameObject("TextArea", typeof(RectTransform));
+            var textArea = new GameObject("Text Area", typeof(RectTransform));
             textArea.transform.SetParent(fieldRt, false);
             UiFactory.Stretch(textArea.GetComponent<RectTransform>());
 
@@ -80,6 +93,7 @@ namespace ChangJun.Bootstrap
             input.textComponent = text;
             input.contentType = TMP_InputField.ContentType.IntegerNumber;
             input.lineType = TMP_InputField.LineType.SingleLine;
+            input.characterLimit = Mathf.Max(1, _max.ToString().Length);
             input.onEndEdit.AddListener(CommitInput);
             return input;
         }

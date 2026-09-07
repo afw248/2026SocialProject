@@ -31,27 +31,29 @@ namespace ChangJun.Economy
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            _money = _startMoney;
+            _money = EconomyClamp.ClampMoney(_startMoney);
         }
 
         /// <summary>돈을 더한다 (수입)</summary>
         public void AddMoney(int amount)
         {
-            _money += amount;
+            if (amount <= 0) return;
+            _money = EconomyClamp.SafeAdd(_money, amount);
             OnMoneyChanged?.Invoke(_money);
         }
 
         /// <summary>돈을 뺀다 (지출·환불)</summary>
         public void SpendMoney(int amount)
         {
-            _money -= amount;
+            if (amount <= 0) return;
+            _money = Mathf.Max(0, _money - amount);
             OnMoneyChanged?.Invoke(_money);
         }
 
         /// <summary>돈을 직접 설정한다</summary>
         public void SetMoney(int value)
         {
-            _money = value;
+            _money = EconomyClamp.ClampMoney(value);
             OnMoneyChanged?.Invoke(_money);
         }
     }

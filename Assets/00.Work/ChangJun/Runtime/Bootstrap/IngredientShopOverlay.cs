@@ -321,8 +321,8 @@ namespace ChangJun.Bootstrap
                 Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, UiTheme.CardWhite, 3f);
 
             UiTheme.CreateCenteredIcon(card, "Icon", IngredientVisualCatalog.GetButtonIcon(ing.code),
-                new Vector2(0f, 0.52f), new Vector2(0f, 0.52f),
-                new Vector2(16f, -32f), new Vector2(80f, 32f));
+                new Vector2(0.04f, 0.56f), new Vector2(0.30f, 0.94f),
+                Vector2.zero, Vector2.zero);
 
             int stock = InventoryManager.Instance.GetStock(ing.code);
             int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);
@@ -330,8 +330,8 @@ namespace ChangJun.Bootstrap
             int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
 
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원",
-                new Vector2(0f, 0.52f), new Vector2(1f, 0.94f),
-                new Vector2(98f, 0f), new Vector2(-10f, 0f),
+                new Vector2(0.32f, 0.56f), new Vector2(0.96f, 0.94f),
+                Vector2.zero, Vector2.zero,
                 TextAlignmentOptions.MidlineLeft, 16, UiTheme.TextDark);
 
             UiFactory.CreateText(card, "Stock",
@@ -351,6 +351,7 @@ namespace ChangJun.Bootstrap
         {
             if (_showingReceipt) return;
 
+            qty = EconomyClamp.ClampOrderQuantity(qty);
             if (qty <= 0) _cart.Remove(code);
             else _cart[code] = qty;
 
@@ -361,7 +362,8 @@ namespace ChangJun.Bootstrap
         {
             if (_showingReceipt) return;
 
-            int next = (_cart.TryGetValue(code, out var q) ? q : 0) + delta;
+            long raw = (_cart.TryGetValue(code, out var q) ? q : 0) + (long)delta;
+            int next = EconomyClamp.ClampOrderQuantity((int)Math.Clamp(raw, 0, EconomyClamp.MaxOrderQuantity));
             SetCartQuantity(code, next);
 
             if (_qtySelectors.TryGetValue(code, out var selector))
@@ -388,8 +390,8 @@ namespace ChangJun.Bootstrap
                 if (ing == null) continue;
 
                 int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
-                int lineTotal = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
-                total += lineTotal;
+                int lineTotal = EconomyClamp.SafeLineCost(unitPrice, pair.Value, bulk);
+                total = EconomyClamp.SafeAdd(total, lineTotal);
                 ReceiptUiHelper.CreateReceiptLine(_cartListContent, ing.displayName, pair.Value, lineTotal, false);
             }
 
@@ -426,7 +428,7 @@ namespace ChangJun.Bootstrap
         {
             unitCount = 0;
             foreach (var pair in cart)
-                unitCount += pair.Value;
+                unitCount = EconomyClamp.SafeAdd(unitCount, pair.Value);
             if (unitCount >= 20) return 0.9f;
             if (unitCount >= 10) return 0.95f;
             return 1f;
@@ -441,7 +443,7 @@ namespace ChangJun.Bootstrap
                 var ing = ResolveIngredient(pair.Key);
                 if (ing == null) continue;
                 int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
-                total += Mathf.RoundToInt(unitPrice * pair.Value * bulk);
+                total = EconomyClamp.SafeAdd(total, EconomyClamp.SafeLineCost(unitPrice, pair.Value, bulk));
             }
             return total;
         }
@@ -568,15 +570,18 @@ namespace ChangJun.Bootstrap
 
             foreach (var pair in purchased)
             {
-                InventoryManager.Instance.PurchaseToWarehouse(pair.Key, pair.Value);
+                int qty = EconomyClamp.ClampOrderQuantity(pair.Value);
+                if (qty <= 0) continue;
+
+                InventoryManager.Instance.PurchaseToWarehouse(pair.Key, qty);
                 var ing = ResolveIngredient(pair.Key);
                 if (ing != null)
                 {
                     int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
-                    int lineCost = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
+                    int lineCost = EconomyClamp.SafeLineCost(unitPrice, qty, bulk);
                     DayLoopController.Instance.Ledger.AddPurchase(
                         lineCost,
-                        $"{ing.displayName} x{pair.Value}");
+                        $"{ing.displayName} x{qty}");
                 }
             }
 
@@ -610,8 +615,8 @@ namespace ChangJun.Bootstrap
                 if (ing == null) continue;
 
                 int unitPrice = InventoryManager.Instance.GetEffectivePurchasePrice(ing);
-                int lineTotal = Mathf.RoundToInt(unitPrice * pair.Value * bulk);
-                total += lineTotal;
+                int lineTotal = EconomyClamp.SafeLineCost(unitPrice, pair.Value, bulk);
+                total = EconomyClamp.SafeAdd(total, lineTotal);
 
                 int warehouse = InventoryManager.Instance.GetWarehouse(ing.code);
                 int stock = InventoryManager.Instance.GetStock(ing.code);

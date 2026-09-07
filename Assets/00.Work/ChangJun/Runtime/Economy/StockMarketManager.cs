@@ -72,10 +72,10 @@ namespace ChangJun.Economy
             int total = 0;
             foreach (var kv in _holdings)
             {
-                int value = kv.Value * GetPrice(kv.Key);
+                int value = EconomyClamp.SafeMultiply(kv.Value, GetPrice(kv.Key));
                 int payout = Mathf.Max(0, Mathf.RoundToInt(value * rate));
                 if (payout <= 0) continue;
-                total += payout;
+                total = EconomyClamp.SafeAdd(total, payout);
             }
 
             if (total > 0)
@@ -108,19 +108,25 @@ namespace ChangJun.Economy
         {
             int total = 0;
             foreach (var kv in _holdings)
-                total += kv.Value * GetPrice(kv.Key);
+                total = EconomyClamp.SafeAdd(total, EconomyClamp.SafeMultiply(kv.Value, GetPrice(kv.Key)));
             return total;
         }
 
         public bool TryBuy(string code, int quantity = 1)
         {
-            if (quantity <= 0 || !_tickers.ContainsKey(code)) return false;
+            quantity = EconomyClamp.ClampStockTradeQuantity(quantity);
+            if (!_tickers.ContainsKey(code)) return false;
 
-            int cost = GetPrice(code) * quantity;
-            if (MoneyManager.Instance.Money < cost) return false;
+            int current = GetHolding(code);
+            int room = EconomyClamp.MaxHoldingQuantity - current;
+            if (room <= 0) return false;
+            if (quantity > room) quantity = room;
+
+            int cost = EconomyClamp.SafeMultiply(GetPrice(code), quantity);
+            if (cost <= 0 || MoneyManager.Instance.Money < cost) return false;
 
             MoneyManager.Instance.SpendMoney(cost);
-            _holdings[code] = GetHolding(code) + quantity;
+            _holdings[code] = EconomyClamp.SafeAddHolding(current, quantity);
             DayLoopController.Instance?.Ledger.AddStockPurchase(cost, $"{_tickers[code].displayName} x{quantity}");
             OnMarketUpdated?.Invoke();
             return true;
@@ -128,9 +134,10 @@ namespace ChangJun.Economy
 
         public bool TrySell(string code, int quantity = 1)
         {
+            quantity = Mathf.Clamp(quantity, 1, EconomyClamp.MaxStockTradeQuantity);
             if (quantity <= 0 || GetHolding(code) < quantity) return false;
 
-            int revenue = GetPrice(code) * quantity;
+            int revenue = EconomyClamp.SafeMultiply(GetPrice(code), quantity);
             _holdings[code] = GetHolding(code) - quantity;
             if (_holdings[code] <= 0)
                 _holdings.Remove(code);

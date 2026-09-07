@@ -26,20 +26,27 @@ namespace ChangJun.Judge
             // 선택 재료 코드 집합
             var selectedSet = new HashSet<string>();
             foreach (var ing in selected)
+            {
+                if (ing == null || string.IsNullOrEmpty(ing.code)) continue;
                 selectedSet.Add(ing.code);
+            }
 
+            if (selectedSet.Count == 0) return null;
+
+            MenuRecipeSO first = null;
             foreach (var menu in _menus)
             {
-                if (menu.ingredientCodes == null) continue;
+                if (menu?.ingredientCodes == null) continue;
                 if (menu.ingredientCodes.Length != selectedSet.Count) continue;
 
                 // 레시피 코드 집합과 완전 일치 여부 확인
                 var recipeSet = new HashSet<string>(menu.ingredientCodes);
-                if (recipeSet.SetEquals(selectedSet))
-                    return menu;
+                if (!recipeSet.SetEquals(selectedSet)) continue;
+
+                first ??= menu;
             }
 
-            return null;
+            return first;
         }
     }
 }

@@ -288,13 +288,13 @@ namespace ChangJun.Bootstrap
             int unitPrice = Mathf.RoundToInt(ing.purchasePrice * mult);
 
             UiTheme.CreateCenteredIcon(card, "Icon", IngredientVisualCatalog.GetButtonIcon(ing.code),
-                new Vector2(0.04f, 0.58f), new Vector2(0.04f, 0.58f),
-                new Vector2(8f, -28f), new Vector2(64f, 28f));
+                new Vector2(0.04f, 0.58f), new Vector2(0.22f, 0.95f),
+                Vector2.zero, Vector2.zero);
 
             UiFactory.CreateText(card, "Name", $"{ing.displayName}\n{unitPrice:N0}원/개",
-                new Vector2(0.22f, 0.58f), new Vector2(0.96f, 0.95f),
+                new Vector2(0.24f, 0.58f), new Vector2(0.96f, 0.95f),
                 Vector2.zero, Vector2.zero,
-                TextAlignmentOptions.TopLeft, 16, UiTheme.TextDark);
+                TextAlignmentOptions.MidlineLeft, 16, UiTheme.TextDark);
 
             UiFactory.CreateText(card, "Stock", $"보유 {InventoryManager.Instance.GetStock(ing.code)}",
                 new Vector2(0.05f, 0.46f), new Vector2(0.95f, 0.58f),
@@ -310,6 +310,7 @@ namespace ChangJun.Bootstrap
 
         private void SetCartQuantity(string code, int qty)
         {
+            qty = EconomyClamp.ClampOrderQuantity(qty);
             if (qty <= 0) _cart.Remove(code);
             else _cart[code] = qty;
             RefreshCartTotal();
@@ -317,7 +318,8 @@ namespace ChangJun.Bootstrap
 
         private void AdjustCart(string code, int delta)
         {
-            int next = (_cart.TryGetValue(code, out var q) ? q : 0) + delta;
+            long raw = (_cart.TryGetValue(code, out var q) ? q : 0) + (long)delta;
+            int next = EconomyClamp.ClampOrderQuantity((int)System.Math.Clamp(raw, 0, EconomyClamp.MaxOrderQuantity));
             SetCartQuantity(code, next);
             if (_qtySelectors.TryGetValue(code, out var selector))
                 selector.SetQuantity(next, notify: false);
@@ -335,7 +337,8 @@ namespace ChangJun.Bootstrap
             {
                 var ing = InventoryManager.Instance.GetIngredient(pair.Key);
                 if (ing == null) continue;
-                total += Mathf.RoundToInt(ing.purchasePrice * mult) * pair.Value;
+                int unitPrice = Mathf.RoundToInt(ing.purchasePrice * mult);
+                total = EconomyClamp.SafeAdd(total, EconomyClamp.SafeMultiply(unitPrice, pair.Value));
             }
 
             _totalText.text = $"합계: {total:N0}원";

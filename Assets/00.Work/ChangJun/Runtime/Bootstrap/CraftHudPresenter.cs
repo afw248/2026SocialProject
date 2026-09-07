@@ -94,13 +94,13 @@ namespace ChangJun.Bootstrap
             }
 
             CreateCategoryZone(_cookContent, "메인", UiTheme.Accent,
-                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.92f), mains, vertical: false, cellSize: 80f);
+                new Vector2(0.05f, 0.80f), new Vector2(0.95f, 0.92f), mains, vertical: false, cellSize: 88f);
 
             CreateCategoryZone(_cookContent, "토핑", UiTheme.Accent,
-                new Vector2(0.05f, 0.16f), new Vector2(0.95f, 0.28f), toppings, vertical: false, cellSize: 80f);
+                new Vector2(0.05f, 0.16f), new Vector2(0.95f, 0.28f), toppings, vertical: false, cellSize: 88f);
 
             CreateCategoryZone(_cookContent, "소스", UiTheme.Accent,
-                new Vector2(0.80f, 0.30f), new Vector2(0.95f, 0.78f), sauces, vertical: true, cellSize: 80f);
+                new Vector2(0.80f, 0.30f), new Vector2(0.95f, 0.78f), sauces, vertical: true, cellSize: 88f);
 
             // 가운데-좌측: 밥 (자동 지급 — 선택 불가, 장식용 표시)
             var riceZone = UiFactory.CreatePanel(_cookContent, "RiceZone",
@@ -349,9 +349,10 @@ namespace ChangJun.Bootstrap
 
             if (icon != null)
             {
+                // 재고 뱃지(하단 26%) 위 영역을 꽉 채우고 AspectRatioFitter로 중앙 정렬
                 img = UiTheme.CreateCenteredIcon(plateRt, "Icon", icon,
-                    new Vector2(0.5f, 0.64f), new Vector2(0.5f, 0.64f),
-                    new Vector2(-30f, -30f), new Vector2(30f, 30f));
+                    new Vector2(0.06f, 0.28f), new Vector2(0.94f, 0.96f),
+                    Vector2.zero, Vector2.zero);
                 _ingredientImages[ing.code] = img;
 
                 var badgeGo = new GameObject("StockBadge", typeof(RectTransform));

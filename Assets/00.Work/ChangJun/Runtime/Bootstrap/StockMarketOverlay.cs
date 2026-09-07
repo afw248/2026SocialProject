@@ -279,7 +279,9 @@ namespace ChangJun.Bootstrap
 
         private void AdjustTradeQty(int delta)
         {
-            _tradeQty = Mathf.Max(1, _tradeQty + delta);
+            long raw = (long)_tradeQty + delta;
+            _tradeQty = EconomyClamp.ClampStockTradeQuantity(
+                (int)System.Math.Clamp(raw, 1, EconomyClamp.MaxStockTradeQuantity));
             RefreshPopup();
         }
 
@@ -316,7 +318,7 @@ namespace ChangJun.Bootstrap
         private void ShowTradeFailure(string code, int qty)
         {
             if (_popupFeedback == null || StockMarketManager.Instance == null) return;
-            int cost = StockMarketManager.Instance.GetPrice(code) * qty;
+            int cost = EconomyClamp.SafeMultiply(StockMarketManager.Instance.GetPrice(code), qty);
             int cash = MoneyManager.Instance != null ? MoneyManager.Instance.Money : 0;
             _popupFeedback.text = cash < cost
                 ? $"잔액 부족 (필요 {cost:N0}원 · 보유 {cash:N0}원)"
@@ -395,7 +397,7 @@ namespace ChangJun.Bootstrap
             if (_selected == null || StockMarketManager.Instance == null) return;
 
             int unit = StockMarketManager.Instance.GetPrice(_selected.code);
-            int total = unit * _tradeQty;
+            int total = EconomyClamp.SafeMultiply(unit, _tradeQty);
             int holding = StockMarketManager.Instance.GetHolding(_selected.code);
 
             if (_popupBadge != null) _popupBadge.color = TickerColor(_selected);
@@ -403,7 +405,7 @@ namespace ChangJun.Bootstrap
             if (_popupPrice != null)
                 _popupPrice.text = $"현재가 {unit:N0}원  ·  보유 {holding}주";
             int cash = MoneyManager.Instance != null ? MoneyManager.Instance.Money : 0;
-            if (_popupQty != null) _popupQty.text = $"수량 {_tradeQty}";
+            if (_popupQty != null) _popupQty.text = $"수량 {_tradeQty} / 최대 {EconomyClamp.MaxStockTradeQuantity}";
             if (_popupTotal != null)
             {
                 _popupTotal.text = $"총비용  {total:N0}원\n" +

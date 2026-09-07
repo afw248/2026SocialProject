@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ChangJun.Data;
+using ChangJun.Economy;
 using UnityEngine;
 
 namespace ChangJun.Inventory
@@ -52,6 +53,18 @@ namespace ChangJun.Inventory
         public int GetWarehouse(string code) =>
             _warehouse.TryGetValue(code, out var qty) ? qty : 0;
 
+        /// <summary>해금된 재료 중 재고가 하나라도 있으면 true.</summary>
+        public bool HasAnyUsableStock(System.Func<string, bool> isUnlocked = null)
+        {
+            foreach (var pair in _stock)
+            {
+                if (pair.Value <= 0) continue;
+                if (isUnlocked != null && !isUnlocked(pair.Key)) continue;
+                return true;
+            }
+            return false;
+        }
+
         public bool HasStockForMenu(MenuRecipeSO menu)
         {
             if (menu?.ingredientCodes == null) return false;
@@ -82,15 +95,17 @@ namespace ChangJun.Inventory
 
         public void PurchaseToWarehouse(string code, int qty)
         {
+            qty = EconomyClamp.ClampOrderQuantity(qty);
             if (qty <= 0) return;
-            _warehouse[code] = GetWarehouse(code) + qty;
+            _warehouse[code] = EconomyClamp.SafeAddInventory(GetWarehouse(code), qty);
             OnStockChanged?.Invoke();
         }
 
         public void AddStock(string code, int qty)
         {
             if (qty <= 0) return;
-            _stock[code] = GetStock(code) + qty;
+            qty = EconomyClamp.ClampInventoryQuantity(qty);
+            _stock[code] = EconomyClamp.SafeAddInventory(GetStock(code), qty);
             OnStockChanged?.Invoke();
         }
 
@@ -100,7 +115,7 @@ namespace ChangJun.Inventory
             foreach (var pair in _warehouse)
             {
                 if (pair.Value <= 0) continue;
-                _stock[pair.Key] = GetStock(pair.Key) + pair.Value;
+                _stock[pair.Key] = EconomyClamp.SafeAddInventory(GetStock(pair.Key), pair.Value);
                 if (_ingredientMap.TryGetValue(pair.Key, out var ing))
                     sb.AppendLine($"{ing.displayName} x{pair.Value}");
             }

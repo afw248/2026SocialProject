@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ChangJun.Economy;
 
 namespace ChangJun.Time
 {
@@ -59,12 +60,15 @@ namespace ChangJun.Time
 
         public void AddRevenue(int amount, string label)
         {
-            Revenue += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            Revenue = EconomyClamp.SafeAdd(Revenue, amount);
             _lines.Add($"+ {label}: {amount:N0}원");
             CustomersServed++;
 
             var prev = _menuSales.TryGetValue(label, out var v) ? v : (0, 0);
-            _menuSales[label] = (prev.Item1 + 1, prev.Item2 + amount);
+            _menuSales[label] = (
+                EconomyClamp.SafeAdd(prev.Item1, 1),
+                EconomyClamp.SafeAdd(prev.Item2, amount));
         }
 
         public void AddWalkout(string label)
@@ -75,7 +79,8 @@ namespace ChangJun.Time
 
         public void AddPenalty(int amount, string label)
         {
-            PenaltyLoss += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            PenaltyLoss = EconomyClamp.SafeAdd(PenaltyLoss, amount);
             _lines.Add($"- {label}: {amount:N0}원");
             CustomersServed++;
             _missedOrders.Add(label);
@@ -83,37 +88,43 @@ namespace ChangJun.Time
 
         public void AddIngredientCost(int amount, string label)
         {
-            IngredientCost += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            IngredientCost = EconomyClamp.SafeAdd(IngredientCost, amount);
             _lines.Add($"- {label}: {amount:N0}원");
         }
 
         public void AddPurchase(int amount, string label)
         {
-            PurchaseCost += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            PurchaseCost = EconomyClamp.SafeAdd(PurchaseCost, amount);
             _lines.Add($"- {label}: {amount:N0}원");
         }
 
         public void AddStockPurchase(int amount, string label)
         {
-            StockPurchaseCost += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            StockPurchaseCost = EconomyClamp.SafeAdd(StockPurchaseCost, amount);
             _lines.Add($"- 주식 매수 {label}: {amount:N0}원");
         }
 
         public void AddStockSale(int amount, string label)
         {
-            StockSaleRevenue += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            StockSaleRevenue = EconomyClamp.SafeAdd(StockSaleRevenue, amount);
             _lines.Add($"+ 주식 매도 {label}: {amount:N0}원");
         }
 
         public void AddSubsidy(int amount, string label)
         {
-            SubsidyIncome += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            SubsidyIncome = EconomyClamp.SafeAdd(SubsidyIncome, amount);
             _lines.Add($"+ {label}: {amount:N0}원");
         }
 
         public void AddDividend(int amount, string label)
         {
-            DividendIncome += amount;
+            amount = EconomyClamp.ClampMoney(amount);
+            DividendIncome = EconomyClamp.SafeAdd(DividendIncome, amount);
             _lines.Add($"+ {label}: {amount:N0}원");
         }
     }

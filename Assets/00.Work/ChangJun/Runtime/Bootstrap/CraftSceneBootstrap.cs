@@ -105,6 +105,7 @@ namespace ChangJun.Bootstrap
         private Coroutine _dayTransitionRoutine;
 
         private bool _orderAccepted;
+        private bool _offeredStuckClose;
 
 
 
@@ -464,6 +465,9 @@ namespace ChangJun.Bootstrap
             _tabBar.OnDeliveryRequested += () => _expressDelivery.Toggle(_ingredients);
             _tabBar.OnEarlyClose += RequestEarlyClose;
 
+            if (InventoryManager.Instance != null)
+                InventoryManager.Instance.OnStockChanged += RefreshEarlyCloseState;
+
             var express = ExpressDeliveryService.Instance;
 
             if (express != null)
@@ -544,6 +548,7 @@ namespace ChangJun.Bootstrap
                 case DayPhase.Open:
 
                     ExpressDeliveryService.Instance?.BeginBusinessTracking();
+                    _offeredStuckClose = false;
 
                     _businessTransition.ShowOpen(() =>
                     {
@@ -551,6 +556,7 @@ namespace ChangJun.Bootstrap
                         SetGameplayHudVisible(true);
                         _hud.SetInteractable(_orderAccepted);
                         _controller.SetCraftEnabled(_orderAccepted);
+                        RefreshEarlyCloseState();
                         SpawnNextCustomer();
                     });
 
@@ -722,15 +728,74 @@ namespace ChangJun.Bootstrap
         {
             if (DayLoopController.Instance == null) return;
             if (DayLoopController.Instance.Phase != DayPhase.Open) return;
+
+            bool outOfStock = IsOutOfUsableStock();
+            string body = outOfStock
+                ? "재료가 모두 떨어졌습니다. 지금 마감하고 정산으로 넘어갈까요?\n(배달로 재료를 받을 수도 있습니다.)"
+                : "오늘 영업을 지금 끝낼까요? 남은 손님은 받지 않고 정산으로 넘어갑니다.";
+
             _choiceOverlay.Show("조기마감",
-                "오늘 영업을 지금 끝낼까요? 남은 손님은 받지 않고 정산으로 넘어갑니다.",
-                "마감하기", "계속 영업",
+                body,
+                "마감하기", outOfStock ? "배달 열기" : "계속 영업",
                 () =>
                 {
                     _orderBubble.HideImmediate();
                     DayLoopController.Instance.CloseShop();
                 },
-                null);
+                () =>
+                {
+                    if (outOfStock)
+                        _expressDelivery.Toggle(_ingredients);
+                });
+        }
+
+        private bool IsOutOfUsableStock()
+        {
+            if (InventoryManager.Instance == null) return false;
+            bool hasStock = InventoryManager.Instance.HasAnyUsableStock(code =>
+                UnderstandingManager.Instance == null || UnderstandingManager.Instance.IsUnlocked(code));
+            if (hasStock) return false;
+
+            var express = ExpressDeliveryService.Instance;
+            if (express != null && express.Pending.Count > 0)
+                return false;
+
+            return true;
+        }
+
+        private void RefreshEarlyCloseState()
+        {
+            if (_tabBar == null) return;
+            bool urgent = DayLoopController.Instance != null
+                && DayLoopController.Instance.Phase == DayPhase.Open
+                && IsOutOfUsableStock();
+            _tabBar.SetEarlyCloseUrgent(urgent);
+        }
+
+        private void MaybePromptEarlyCloseWhenStuck()
+        {
+            if (DayLoopController.Instance == null) return;
+            if (DayLoopController.Instance.Phase != DayPhase.Open) return;
+            if (!IsOutOfUsableStock()) return;
+            if (_offeredStuckClose) return;
+
+            _offeredStuckClose = true;
+            RefreshEarlyCloseState();
+            _choiceOverlay.Show("재료 소진",
+                "더 이상 조리할 재료가 없습니다. 조기 마감할까요?",
+                "조기 마감", "배달 열기",
+                () =>
+                {
+                    _orderBubble.HideImmediate();
+                    DayLoopController.Instance.CloseShop();
+                },
+                () =>
+                {
+                    _expressDelivery.Toggle(_ingredients);
+                    if (_nextCustomerRoutine != null)
+                        StopCoroutine(_nextCustomerRoutine);
+                    _nextCustomerRoutine = StartCoroutine(NextCustomerAfterDelay(0.4f));
+                });
         }
 
 
@@ -788,25 +853,22 @@ namespace ChangJun.Bootstrap
 
 
         private void HandleCraftJudged(CraftResult result, MenuRecipeSO matched)
-
         {
-
             _hud.ShowResult(result, matched);
-
-
+            RefreshEarlyCloseState();
 
             if (DayLoopController.Instance.Phase != DayPhase.Open)
-
                 return;
 
-
+            if (IsOutOfUsableStock())
+            {
+                MaybePromptEarlyCloseWhenStuck();
+                return;
+            }
 
             if (_nextCustomerRoutine != null)
-
                 StopCoroutine(_nextCustomerRoutine);
-
             _nextCustomerRoutine = StartCoroutine(NextCustomerAfterDelay(1.2f));
-
         }
 
 
@@ -842,15 +904,12 @@ namespace ChangJun.Bootstrap
 
 
         private void HandleExpressArrived(ExpressDeliveryOrder order)
-
         {
-
             var ing = InventoryManager.Instance.GetIngredient(order.IngredientCode);
-
             if (ing != null)
-
                 _hud.ShowDeliveryArrived(ing.displayName, order.Quantity);
-
+            _offeredStuckClose = false;
+            RefreshEarlyCloseState();
         }
 
 

@@ -1,0 +1,18 @@
+{
+    "name": "ChangJun.Ugs.Editor",
+    "rootNamespace": "ChangJun.EditorTools",
+    "references": [
+        "Unity.Services.Core.Editor",
+        "Unity.Services.Core.Environments.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

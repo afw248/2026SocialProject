@@ -893,12 +893,12 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 0862350a-1232-4171-a3d7-f0756d2cd7c2
+  cloudProjectId: d4b09d6a-687b-453d-b170-e6745c767d90
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: SocialGame
-  organizationId: chqwulmin0814
-  cloudEnabled: 0
+  projectName: CupbapSocial
+  organizationId: 
+  cloudEnabled: 1
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
   platformRequiresReadableAssets: 0

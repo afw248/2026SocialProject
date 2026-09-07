@@ -10,6 +10,7 @@ namespace ChangJun.Bootstrap
         Memo,
         Recipe,
         Status,
+        Ranking,
     }
 
     /// <summary>
@@ -48,6 +49,8 @@ namespace ChangJun.Bootstrap
                 () => OnTabSelected?.Invoke(MainTab.Recipe));
             CreateNavButton(bar, "정보", new Color32(0xF2, 0xD2, 0x4A, 0xFF),
                 () => OnTabSelected?.Invoke(MainTab.Status));
+            CreateNavButton(bar, "랭킹", UiTheme.Gold,
+                () => OnTabSelected?.Invoke(MainTab.Ranking));
             _earlyCloseFill = CreateNavButton(bar, "조기마감", UiTheme.Danger,
                 () => OnEarlyClose?.Invoke());
         }
@@ -64,7 +67,7 @@ namespace ChangJun.Bootstrap
             var go = new GameObject($"Nav_{label}", typeof(RectTransform));
             go.transform.SetParent(bar, false);
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 72;
+            le.preferredHeight = 62;
             le.preferredWidth = 72;
 
             var borderImg = go.AddComponent<Image>();
@@ -92,7 +95,7 @@ namespace ChangJun.Bootstrap
             var go = new GameObject("Tab_Delivery", typeof(RectTransform));
             go.transform.SetParent(bar, false);
             var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 72;
+            le.preferredHeight = 62;
             le.preferredWidth = 72;
 
             var borderImg = go.AddComponent<Image>();

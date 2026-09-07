@@ -57,6 +57,7 @@ namespace ChangJun.Bootstrap
         private CustomerOrderBubble _orderBubble;
 
         private StatusPanel _statusPanel;
+        private RankingOverlay _rankingPanel;
 
         private RecipeBookPanel _recipePanel;
 
@@ -112,6 +113,7 @@ namespace ChangJun.Bootstrap
         private void Start()
 
         {
+            MoneyRankingService.EnsureCreated();
 
             _ingredients = new List<IngredientSO>(Resources.LoadAll<IngredientSO>("Craft/Ingredients"));
 
@@ -333,10 +335,12 @@ namespace ChangJun.Bootstrap
             _memoPanel = new MemoPadPanel();
             _recipePanel = new RecipeBookPanel(_menus, _ingredients);
             _statusPanel = new StatusPanel();
+            _rankingPanel = new RankingOverlay();
 
             _memoPanel.OnBack += ReturnToCraftHome;
             _recipePanel.OnBack += ReturnToCraftHome;
             _statusPanel.OnBack += ReturnToCraftHome;
+            _rankingPanel.OnBack += ReturnToCraftHome;
 
             _tabBar = new SideTabBar(root);
             _tabBar.OnTabSelected += HandleTabSelected;
@@ -431,6 +435,9 @@ namespace ChangJun.Bootstrap
                     _statusPanel.RefreshTree();
                     _statusPanel.Show();
                     break;
+                case MainTab.Ranking:
+                    _rankingPanel.Show();
+                    break;
             }
         }
 
@@ -439,6 +446,7 @@ namespace ChangJun.Bootstrap
             _memoPanel.Hide();
             _recipePanel.Hide();
             _statusPanel.Hide();
+            _rankingPanel.Hide();
             _subScreenActive = false;
             RefreshHomeVisibility();
         }
@@ -516,6 +524,7 @@ namespace ChangJun.Bootstrap
             _memoPanel.Hide();
             _recipePanel.Hide();
             _statusPanel.Hide();
+            _rankingPanel.Hide();
 
             if (!visible)
                 _expressDelivery.Hide();
@@ -894,11 +903,11 @@ namespace ChangJun.Bootstrap
 
 
         private void OnSettlementDismissed()
-
         {
-
+            if (MoneyManager.Instance != null)
+                _ = MoneyRankingService.EnsureCreated()
+                    .SubmitQuietAsync(MoneyManager.Instance.Money);
             DayLoopController.Instance.EnterShopping();
-
         }
 
 
